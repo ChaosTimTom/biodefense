@@ -1,54 +1,125 @@
 // ═══════════════════════════════════════════════════
 // src/sim/constants.ts — All game constants
-// Bio Defence v5.0: Directional Growth (Chess-Piece)
+// Bio Defence v6.0: 9 Pathogens · 9 Medicines · 4 Worlds
 //
 // Each pathogen/medicine type spreads in a unique
 // directional pattern — like chess pieces:
-//   Bacteria / Antibiotic  → Cardinal (Rook)
-//   Virus   / Antiviral    → Knight L-jumps (Knight)
-//   Fungus  / Antifungal   → Diagonal (Bishop)
 //
-// Survival: a cell lives if ≥1 same-type ally is
-// visible in its growth pattern. Isolated cells die.
-// Dead zones form where pathogen + medicine fronts
-// both want to birth into the same empty cell.
+// Bacteria family (orthogonal):
+//   Coccus / Penicillin       → Cardinal ±1 (Rook step)
+//   Bacillus / Tetracycline   → Cardinal ±2 (Cannon leap)
+//   Spirillum / Streptomycin  → Narrow Knight [±1,±2]
+//
+// Virus family (L-shape jumpers):
+//   Influenza / Tamiflu       → Full Knight [±1,±2][±2,±1]
+//   Retrovirus / Zidovudine   → Wide Knight [±2,±1]
+//   Phage / Interferon        → Camel [±1,±3][±3,±1]
+//
+// Fungus family (diagonal):
+//   Mold / Fluconazole        → Diagonal ±1 (Bishop step)
+//   Yeast / Nystatin          → Diagonal ±2 (Long diagonal)
+//   Spore / Amphotericin      → Diagonal ±3 (Spore launch)
 // ═══════════════════════════════════════════════════
 
-import type { MedicineType, PathogenType } from "./types";
+import type { MedicineType, PathogenType, ToolId } from "./types";
+
+// ── Enumeration arrays ───────────────────────────
+
+export const ALL_PATHOGEN_TYPES: PathogenType[] = [
+  "coccus", "bacillus", "spirillum",
+  "influenza", "retrovirus", "phage",
+  "mold", "yeast", "spore",
+];
+
+export const ALL_MEDICINE_TYPES: MedicineType[] = [
+  "penicillin", "tetracycline", "streptomycin",
+  "tamiflu", "zidovudine", "interferon",
+  "fluconazole", "nystatin", "amphotericin",
+];
+
+export const ALL_TOOL_IDS: ToolId[] = [...ALL_MEDICINE_TYPES, "wall"];
 
 // ── Directional growth patterns ──────────────────
 
-/** Cardinal directions — Rook-like (bacteria / antibiotic) */
-export const CARDINAL_DIRS: [number, number][] = [
+/** Cardinal ±1 — Rook step (Coccus / Penicillin) */
+export const CARDINAL_1: [number, number][] = [
   [1, 0], [-1, 0], [0, 1], [0, -1],
 ];
 
-/** Diagonal directions — Bishop-like (fungus / antifungal) */
-export const DIAGONAL_DIRS: [number, number][] = [
-  [1, 1], [1, -1], [-1, 1], [-1, -1],
+/** Cardinal ±2 — Cannon leap (Bacillus / Tetracycline) */
+export const CARDINAL_2: [number, number][] = [
+  [2, 0], [-2, 0], [0, 2], [0, -2],
 ];
 
-/** Knight L-jump directions — Knight-like (virus / antiviral) */
-export const KNIGHT_DIRS: [number, number][] = [
+/** Narrow Knight [±1,±2] — (Spirillum / Streptomycin) */
+export const NARROW_KNIGHT: [number, number][] = [
+  [1, 2], [1, -2], [-1, 2], [-1, -2],
+];
+
+/** Full Knight [±1,±2][±2,±1] — 8 dirs (Influenza / Tamiflu) */
+export const FULL_KNIGHT: [number, number][] = [
   [1, 2], [1, -2], [-1, 2], [-1, -2],
   [2, 1], [2, -1], [-2, 1], [-2, -1],
 ];
 
+/** Wide Knight [±2,±1] — (Retrovirus / Zidovudine) */
+export const WIDE_KNIGHT: [number, number][] = [
+  [2, 1], [2, -1], [-2, 1], [-2, -1],
+];
+
+/** Camel [±1,±3][±3,±1] — 8 dirs (Phage / Interferon) */
+export const CAMEL: [number, number][] = [
+  [1, 3], [1, -3], [-1, 3], [-1, -3],
+  [3, 1], [3, -1], [-3, 1], [-3, -1],
+];
+
+/** Diagonal ±1 — Bishop step (Mold / Fluconazole) */
+export const DIAGONAL_1: [number, number][] = [
+  [1, 1], [1, -1], [-1, 1], [-1, -1],
+];
+
+/** Diagonal ±2 — Long diagonal (Yeast / Nystatin) */
+export const DIAGONAL_2: [number, number][] = [
+  [2, 2], [2, -2], [-2, 2], [-2, -2],
+];
+
+/** Diagonal ±3 — Spore launch (Spore / Amphotericin) */
+export const DIAGONAL_3: [number, number][] = [
+  [3, 3], [3, -3], [-3, 3], [-3, -3],
+];
+
 /** Backward-compat alias used by board.ts neighbor helpers */
-export const ORTHO_DIRS = CARDINAL_DIRS;
+export const ORTHO_DIRS = CARDINAL_1;
+
+// Legacy aliases for transition (used in old tests / imports)
+export const CARDINAL_DIRS = CARDINAL_1;
+export const DIAGONAL_DIRS = DIAGONAL_1;
+export const KNIGHT_DIRS = FULL_KNIGHT;
 
 /** Growth pattern lookup by pathogen type */
 export const PATHOGEN_GROWTH: Record<PathogenType, [number, number][]> = {
-  bacteria: CARDINAL_DIRS,
-  virus: KNIGHT_DIRS,
-  fungus: DIAGONAL_DIRS,
+  coccus: CARDINAL_1,
+  bacillus: CARDINAL_2,
+  spirillum: NARROW_KNIGHT,
+  influenza: FULL_KNIGHT,
+  retrovirus: WIDE_KNIGHT,
+  phage: CAMEL,
+  mold: DIAGONAL_1,
+  yeast: DIAGONAL_2,
+  spore: DIAGONAL_3,
 };
 
 /** Growth pattern lookup by medicine type (mirrors its target) */
 export const MEDICINE_GROWTH: Record<MedicineType, [number, number][]> = {
-  antibiotic: CARDINAL_DIRS,
-  antiviral: KNIGHT_DIRS,
-  antifungal: DIAGONAL_DIRS,
+  penicillin: CARDINAL_1,
+  tetracycline: CARDINAL_2,
+  streptomycin: NARROW_KNIGHT,
+  tamiflu: FULL_KNIGHT,
+  zidovudine: WIDE_KNIGHT,
+  interferon: CAMEL,
+  fluconazole: DIAGONAL_1,
+  nystatin: DIAGONAL_2,
+  amphotericin: DIAGONAL_3,
 };
 
 // ── Timing ───────────────────────────────────────
@@ -66,29 +137,41 @@ export const INFECTION_LOSE_PCT = 50;
  * Medicine overwhelm threshold.
  * If a pathogen has ≥ this many countering-medicine cells
  * in its growth directions, it dies regardless of allies.
- * - 4-dir types (bacteria, fungus):  2 of 4 → overwhelmed
- * - 8-dir type  (virus):             3 of 8 → overwhelmed
+ * - 4-dir types:  2 of 4 → overwhelmed
+ * - 8-dir types:  3 of 8 → overwhelmed
  */
 export const OVERWHELM_THRESHOLD: Record<PathogenType, number> = {
-  bacteria: 2,
-  fungus: 2,
-  virus: 3,
+  coccus: 2, bacillus: 2, spirillum: 2,      // 4-dir → 2
+  influenza: 3, phage: 3,                     // 8-dir → 3
+  retrovirus: 2, mold: 2, yeast: 2, spore: 2, // 4-dir → 2
 };
 
 // ── Type relationships ───────────────────────────
 
 /** Which medicine type counters which pathogen */
 export const COUNTERS: Record<MedicineType, PathogenType> = {
-  antibiotic: "bacteria",
-  antiviral: "virus",
-  antifungal: "fungus",
+  penicillin: "coccus",
+  tetracycline: "bacillus",
+  streptomycin: "spirillum",
+  tamiflu: "influenza",
+  zidovudine: "retrovirus",
+  interferon: "phage",
+  fluconazole: "mold",
+  nystatin: "yeast",
+  amphotericin: "spore",
 };
 
 /** Reverse lookup: which medicine counters this pathogen? */
 export const COUNTERED_BY: Record<PathogenType, MedicineType> = {
-  bacteria: "antibiotic",
-  virus: "antiviral",
-  fungus: "antifungal",
+  coccus: "penicillin",
+  bacillus: "tetracycline",
+  spirillum: "streptomycin",
+  influenza: "tamiflu",
+  retrovirus: "zidovudine",
+  phage: "interferon",
+  mold: "fluconazole",
+  yeast: "nystatin",
+  spore: "amphotericin",
 };
 
 // ── Star rating ──────────────────────────────────

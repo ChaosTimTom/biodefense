@@ -8,6 +8,7 @@ import Phaser from "phaser";
 import type { Board, Tile } from "../../sim/types";
 import { getTile } from "../../sim/board";
 import { MEDICINE_LIFESPAN } from "../../sim/constants";
+import type { PathogenShape } from "../config";
 import {
   TILE_SIZE,
   TILE_GAP,
@@ -194,7 +195,7 @@ export class Grid {
 
       // Fallback: procedural shape
       const color = PATHOGEN_COLORS[tile.pathogenType];
-      const shape = PATHOGEN_SHAPES[tile.pathogenType];
+      const shape: PathogenShape = PATHOGEN_SHAPES[tile.pathogenType];
 
       this.entityLayer.fillStyle(color, 1);
 
@@ -204,15 +205,40 @@ export class Grid {
           break;
         case "diamond":
           this.drawDiamond(cx, cy, r);
-          // Virus: age ring showing burst countdown
-          if (tile.pathogenType === "virus") {
-            const alpha = tile.age >= 2 ? 0.9 : 0.4;
-            this.entityLayer.lineStyle(2, 0xff0000, alpha);
-            this.entityLayer.strokeCircle(cx, cy, r + 4);
-          }
           break;
         case "branch":
           this.drawBranch(cx, cy, r, color);
+          break;
+        case "rod":
+          // Horizontal rounded rectangle
+          this.entityLayer.fillRoundedRect(cx - r, cy - r * 0.35, r * 2, r * 0.7, 4);
+          break;
+        case "spiral":
+          // Spiral approximation: 3 offset circles
+          this.entityLayer.fillCircle(cx - r * 0.25, cy - r * 0.2, r * 0.45);
+          this.entityLayer.fillCircle(cx + r * 0.15, cy + r * 0.1, r * 0.4);
+          this.entityLayer.fillCircle(cx - r * 0.05, cy + r * 0.3, r * 0.35);
+          break;
+        case "spike":
+          // Spiky circle (star-ish with many points)
+          this.drawSpikyCircle(cx, cy, r, 8, color);
+          break;
+        case "icosa":
+          // Hexagonal shape
+          this.drawHex(cx, cy, r);
+          break;
+        case "phage_t4":
+          // T4 phage: hexagonal head + legs
+          this.drawHex(cx, cy - r * 0.15, r * 0.55);
+          this.entityLayer.lineStyle(2, color, 0.8);
+          for (let i = 0; i < 3; i++) {
+            const lx = cx + (i - 1) * r * 0.4;
+            this.entityLayer.lineBetween(lx, cy + r * 0.3, lx, cy + r * 0.9);
+          }
+          break;
+        case "starburst":
+          // 6-pointed starburst
+          this.drawSpikyCircle(cx, cy, r, 6, color);
           break;
       }
 
@@ -292,6 +318,34 @@ export class Grid {
         cy + Math.sin(angle) * armLen,
       );
     }
+  }
+
+  private drawSpikyCircle(cx: number, cy: number, r: number, points: number, color: number): void {
+    const innerR = r * 0.55;
+    this.entityLayer.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const rad = i % 2 === 0 ? r : innerR;
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      const px = cx + rad * Math.cos(angle);
+      const py = cy + rad * Math.sin(angle);
+      if (i === 0) this.entityLayer.moveTo(px, py);
+      else this.entityLayer.lineTo(px, py);
+    }
+    this.entityLayer.closePath();
+    this.entityLayer.fillPath();
+  }
+
+  private drawHex(cx: number, cy: number, r: number): void {
+    this.entityLayer.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 - Math.PI / 6;
+      const px = cx + r * Math.cos(angle);
+      const py = cy + r * Math.sin(angle);
+      if (i === 0) this.entityLayer.moveTo(px, py);
+      else this.entityLayer.lineTo(px, py);
+    }
+    this.entityLayer.closePath();
+    this.entityLayer.fillPath();
   }
 
   /** Highlight a specific tile */

@@ -21,7 +21,7 @@ from PIL import Image
 
 MODEL_ID = "black-forest-labs/FLUX.1-schnell"
 MODEL_CACHE = r"c:\Users\timmy\Desktop\Projects\archive\Immersive Video\models"
-ASSETS_DIR = Path(r"c:\Users\timmy\Desktop\Projects\Bio Defence\assets")
+ASSETS_DIR = Path(r"c:\Users\timmy\Desktop\Projects\Bio Defence\public\assets")
 GEN_SIZE = 1024        # FLUX native resolution
 OUTPUT_SIZE = 1024     # no upscale needed
 

@@ -5,6 +5,7 @@
 
 import Phaser from "phaser";
 import { genToolIcons, genLockIcon } from "../ui/UIFactory";
+import { ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES } from "../../sim/constants";
 
 export class BootScene extends Phaser.Scene {
   private fontReady = false;
@@ -94,13 +95,13 @@ export class BootScene extends Phaser.Scene {
     pxCtx.fillRect(0, 0, 1, 1);
     this.textures.addCanvas("pixel", px);
 
-    // ── Game assets ──
-    this.load.image("bacteria", "assets/germs/bacteria.png");
-    this.load.image("virus", "assets/germs/virus.png");
-    this.load.image("fungus", "assets/germs/fungus.png");
-    this.load.image("antibacterial", "assets/germs/antibacterial.png");
-    this.load.image("antiviral", "assets/germs/antiviral.png");
-    this.load.image("antifungal", "assets/germs/antifungal.png");
+    // ── Game assets (dynamic: all pathogen + medicine types) ──
+    for (const g of ALL_PATHOGEN_TYPES) {
+      this.load.image(g, `assets/germs/${g}.png`);
+    }
+    for (const m of ALL_MEDICINE_TYPES) {
+      this.load.image(m, `assets/germs/${m}.png`);
+    }
     this.load.image("tile_empty", "assets/tiles/tile_empty.png");
     this.load.image("tile_wall", "assets/tiles/tile_wall.png");
   }

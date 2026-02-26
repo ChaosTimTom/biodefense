@@ -1,14 +1,21 @@
 // ═══════════════════════════════════════════════════
 // src/sim/types.ts — Core types
-// Bio Defence v5.0: Directional growth chess-piece game
+// Bio Defence v7.0: 9 Pathogens · 9 Medicines · 4 Worlds
 // ═══════════════════════════════════════════════════
 
 // ── Cell Types ───────────────────────────────────
-export type PathogenType = "bacteria" | "virus" | "fungus";
-export type MedicineType = "antibiotic" | "antiviral" | "antifungal";
+export type PathogenType =
+  | "coccus" | "bacillus" | "spirillum"          // bacteria family
+  | "influenza" | "retrovirus" | "phage"          // virus family
+  | "mold" | "yeast" | "spore";                   // fungus family
+
+export type MedicineType =
+  | "penicillin" | "tetracycline" | "streptomycin"  // anti-bacteria
+  | "tamiflu" | "zidovudine" | "interferon"         // anti-virus
+  | "fluconazole" | "nystatin" | "amphotericin";    // anti-fungus
 
 // ── Tools the player can place ───────────────────
-export type ToolId = "antibiotic" | "antiviral" | "antifungal" | "wall";
+export type ToolId = MedicineType | "wall";
 
 // ── Tile ─────────────────────────────────────────
 export type TileKind = "empty" | "wall" | "pathogen" | "medicine";
@@ -28,11 +35,16 @@ export interface Board {
 }
 
 // ── Tool Inventory ───────────────────────────────
-export interface ToolInventory {
-  antibiotic: number;
-  antiviral: number;
-  antifungal: number;
-  wall: number;
+export type ToolInventory = Record<ToolId, number>;
+
+/** Create a zeroed-out inventory with all tool slots at 0 */
+export function emptyInventory(): ToolInventory {
+  return {
+    penicillin: 0, tetracycline: 0, streptomycin: 0,
+    tamiflu: 0, zidovudine: 0, interferon: 0,
+    fluconazole: 0, nystatin: 0, amphotericin: 0,
+    wall: 0,
+  };
 }
 
 // ── Objectives ───────────────────────────────────

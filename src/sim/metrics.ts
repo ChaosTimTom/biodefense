@@ -54,11 +54,7 @@ export function computeScore(state: GameState): number {
   if (turnsSaved > 0) score += turnsSaved * 100;
 
   // Efficiency bonus — unused tools
-  const toolsLeft =
-    state.tools.antibiotic +
-    state.tools.antiviral +
-    state.tools.antifungal +
-    state.tools.wall;
+  const toolsLeft = Object.values(state.tools).reduce((a, b) => a + b, 0);
   score += toolsLeft * 50;
 
   // Low infection bonus — reward keeping infection low

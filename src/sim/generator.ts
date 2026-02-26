@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════
 // src/sim/generator.ts — Procedural Level Generator
-// Bio Defence v5.1 — Simulation-Validated Levels
+// Bio Defence v6.0 — 4-World Simulation-Validated Levels
 //
 // Every generated level is validated by running the
 // sim with zero placements. If pathogen growth can't
@@ -16,8 +16,9 @@
 //  5. Multiple growth fronts force multi-point defense.
 // ═══════════════════════════════════════════════════
 
-import type { LevelSpec, PathogenType, ToolInventory } from "./types";
-import { PATHOGEN_GROWTH } from "./constants";
+import type { LevelSpec, PathogenType } from "./types";
+import { emptyInventory } from "./types";
+import { PATHOGEN_GROWTH, COUNTERED_BY } from "./constants";
 import { createGameState } from "./board";
 import { advanceTurn } from "./step";
 
@@ -270,13 +271,252 @@ const tplLWall: TemplateFn = (w, h, rng) => {
 };
 
 const TEMPLATES: TemplateFn[] = [
-  tplOpen,
-  tplPillars,
-  tplDivider,
-  tplCross,
-  tplCorridors,
-  tplLWall,
+  tplOpen,       // 0
+  tplPillars,    // 1
+  tplDivider,    // 2
+  tplCross,      // 3
+  tplCorridors,  // 4
+  tplLWall,      // 5
+  tplVein,       // 6
+  tplChamber,    // 7
+  tplMaze,       // 8
+  tplHoneycomb,  // 9
+  tplCompound,   // 10
 ];
+
+// ── New templates (worlds 2-4) ───────────────────
+
+/**
+ * Vein — meandering narrow channels like blood vessels.
+ * 2-3 winding corridors of width 2-3, with occasional wider chambers.
+ */
+function tplVein(w: number, h: number, rng: () => number): [number, number][] {
+  const walls = tplOpen(w, h, rng);
+  const ws = new Set<string>();
+  // Start with interior filled, then carve veins
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++)
+      ws.add(key(x, y));
+
+  const numVeins = 2 + Math.floor(rng() * 2);
+  for (let v = 0; v < numVeins; v++) {
+    // Start from left or top edge
+    let cx = v % 2 === 0 ? 1 : 1 + Math.floor(rng() * (w - 2));
+    let cy = v % 2 === 0 ? 1 + Math.floor(rng() * (h - 2)) : 1;
+    const veinWidth = 2 + Math.floor(rng() * 2);
+    const steps = w + h;
+    for (let s = 0; s < steps; s++) {
+      // Carve a circle of veinWidth around current point
+      for (let dy = -Math.floor(veinWidth / 2); dy <= Math.floor(veinWidth / 2); dy++) {
+        for (let dx = -Math.floor(veinWidth / 2); dx <= Math.floor(veinWidth / 2); dx++) {
+          const nx = cx + dx, ny = cy + dy;
+          if (nx > 0 && nx < w - 1 && ny > 0 && ny < h - 1)
+            ws.delete(key(nx, ny));
+        }
+      }
+      // Meander
+      const dir = rng();
+      if (v % 2 === 0) {
+        cx += 1;
+        if (dir < 0.3) cy = Math.max(1, cy - 1);
+        else if (dir < 0.6) cy = Math.min(h - 2, cy + 1);
+      } else {
+        cy += 1;
+        if (dir < 0.3) cx = Math.max(1, cx - 1);
+        else if (dir < 0.6) cx = Math.min(w - 2, cx + 1);
+      }
+      if (cx >= w - 1 || cy >= h - 1) break;
+    }
+  }
+  for (const k of ws) {
+    const [sx, sy] = k.split(",").map(Number);
+    walls.push([sx, sy]);
+  }
+  return walls;
+}
+
+/**
+ * Chamber — 3-4 rectangular rooms connected by 2-wide doorways.
+ */
+function tplChamber(w: number, h: number, rng: () => number): [number, number][] {
+  const walls = tplOpen(w, h, rng);
+  const numRooms = 3 + Math.floor(rng() * 2);
+  const roomCols = numRooms <= 3 ? numRooms : Math.ceil(numRooms / 2);
+  const roomRows = numRooms <= 3 ? 1 : 2;
+
+  for (let ry = 0; ry < roomRows; ry++) {
+    for (let rx = 0; rx < roomCols; rx++) {
+      const roomIdx = ry * roomCols + rx;
+      if (roomIdx >= numRooms) break;
+      // Room boundaries
+      const x1 = 1 + Math.floor(((w - 2) * rx) / roomCols);
+      const x2 = Math.floor(((w - 2) * (rx + 1)) / roomCols);
+      const y1 = 1 + Math.floor(((h - 2) * ry) / roomRows);
+      const y2 = Math.floor(((h - 2) * (ry + 1)) / roomRows);
+
+      // Right wall (with doorway)
+      if (rx < roomCols - 1) {
+        const doorY = y1 + 1 + Math.floor(rng() * Math.max(1, y2 - y1 - 3));
+        for (let y = y1; y <= y2; y++) {
+          if (Math.abs(y - doorY) <= 1) continue;
+          if (x2 > 0 && x2 < w - 1) walls.push([x2, y]);
+        }
+      }
+      // Bottom wall (with doorway)
+      if (ry < roomRows - 1) {
+        const doorX = x1 + 1 + Math.floor(rng() * Math.max(1, x2 - x1 - 3));
+        for (let x = x1; x <= x2; x++) {
+          if (Math.abs(x - doorX) <= 1) continue;
+          if (y2 > 0 && y2 < h - 1) walls.push([x, y2]);
+        }
+      }
+    }
+  }
+  return walls;
+}
+
+/**
+ * Maze — dense wall network creating narrow 1-2 cell wide passages.
+ */
+function tplMaze(w: number, h: number, rng: () => number): [number, number][] {
+  const walls = tplOpen(w, h, rng);
+  // Create a grid-based maze using every-other-cell method
+  const cellW = 2, cellH = 2;
+  for (let cy = 1; cy < h - 1; cy += cellH) {
+    for (let cx = 1; cx < w - 1; cx += cellW) {
+      // Place wall in one of the two possible positions
+      if (rng() < 0.45) {
+        // Vertical wall segment
+        const wy = cy + 1;
+        if (wy < h - 1) walls.push([cx, wy]);
+      }
+      if (rng() < 0.45) {
+        // Horizontal wall segment
+        const wx = cx + 1;
+        if (wx < w - 1) walls.push([wx, cy]);
+      }
+    }
+  }
+  return walls;
+}
+
+/**
+ * Honeycomb — hexagonal-ish pattern: walls form a repeating cellular pattern.
+ */
+function tplHoneycomb(w: number, h: number, rng: () => number): [number, number][] {
+  const walls = tplOpen(w, h, rng);
+  const cellSize = 3 + Math.floor(rng() * 2); // 3-4
+
+  for (let cy = cellSize; cy < h - 1; cy += cellSize) {
+    const offset = (Math.floor(cy / cellSize) % 2) * Math.floor(cellSize / 2);
+    for (let cx = cellSize + offset; cx < w - 1; cx += cellSize) {
+      // Place a small wall cluster
+      walls.push([cx, cy]);
+      if (cx + 1 < w - 1 && rng() < 0.6) walls.push([cx + 1, cy]);
+      if (cy + 1 < h - 1 && rng() < 0.6) walls.push([cx, cy + 1]);
+    }
+  }
+  return walls;
+}
+
+/**
+ * Compound — 2-4 large sub-regions connected by narrow bridges.
+ */
+function tplCompound(w: number, h: number, rng: () => number): [number, number][] {
+  const walls = tplOpen(w, h, rng);
+  const numRegions = 2 + Math.floor(rng() * 3); // 2-4
+
+  if (numRegions <= 2) {
+    // Vertical split
+    const splitX = Math.floor(w / 2);
+    const bridgeY = Math.floor(h / 2) + Math.floor(rng() * 4) - 2;
+    for (let y = 1; y < h - 1; y++) {
+      if (Math.abs(y - bridgeY) <= 1) continue;
+      walls.push([splitX, y]);
+      if (splitX + 1 < w - 1) walls.push([splitX + 1, y]);
+    }
+  } else {
+    // Quad split
+    const splitX = Math.floor(w / 2);
+    const splitY = Math.floor(h / 2);
+    const bridgeH = splitY + Math.floor(rng() * 3) - 1;
+    const bridgeV = splitX + Math.floor(rng() * 3) - 1;
+
+    for (let y = 1; y < h - 1; y++) {
+      if (Math.abs(y - bridgeH) <= 1) continue;
+      walls.push([splitX, y]);
+    }
+    for (let x = 1; x < w - 1; x++) {
+      if (Math.abs(x - bridgeV) <= 1) continue;
+      walls.push([x, splitY]);
+    }
+  }
+  return walls;
+}
+
+// ── World configurations ─────────────────────────
+
+interface WorldConfig {
+  name: string;
+  /** Germ progression tiers: [L1-10, L11-20, L21-35, L36-50] */
+  germs: PathogenType[][];
+  /** Template pool per tier (indices into TEMPLATES) */
+  templates: number[][];
+  /** [min, max] grid dimension */
+  gridRange: [number, number];
+  starsNeeded: number;
+}
+
+export const WORLD_CONFIGS: Record<number, WorldConfig> = {
+  1: {
+    name: "Petri Dish",
+    germs: [
+      ["coccus"],
+      ["coccus", "mold"],
+      ["coccus", "mold", "bacillus"],
+      ["coccus", "mold", "bacillus"],
+    ],
+    templates: [[0, 1], [0, 1, 2], [0, 1, 2, 3], [0, 1, 2, 3, 4, 5]],
+    gridRange: [8, 14],
+    starsNeeded: 0,
+  },
+  2: {
+    name: "Bloodstream",
+    germs: [
+      ["influenza"],
+      ["influenza", "coccus"],
+      ["influenza", "coccus", "retrovirus"],
+      ["influenza", "coccus", "retrovirus"],
+    ],
+    templates: [[4, 6], [4, 6, 7], [4, 6, 7, 3], [4, 5, 6, 7, 3]],
+    gridRange: [10, 16],
+    starsNeeded: 40,
+  },
+  3: {
+    name: "Tissue",
+    germs: [
+      ["yeast"],
+      ["yeast", "spirillum"],
+      ["yeast", "spirillum", "retrovirus"],
+      ["yeast", "spirillum", "retrovirus"],
+    ],
+    templates: [[8, 3], [8, 3, 5], [8, 3, 5, 9], [8, 3, 5, 9, 4]],
+    gridRange: [10, 16],
+    starsNeeded: 100,
+  },
+  4: {
+    name: "Pandemic",
+    germs: [
+      ["phage"],
+      ["phage", "spore"],
+      ["phage", "spore", "spirillum"],
+      ["phage", "spore", "spirillum", "bacillus"],
+    ],
+    templates: [[10, 4], [10, 4, 6], [10, 4, 6, 7, 8], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]],
+    gridRange: [12, 18],
+    starsNeeded: 180,
+  },
+};
 
 // ── Difficulty parameters ────────────────────────
 
@@ -294,117 +534,94 @@ interface TierParams {
   targetDifficulty: number; // 0..1: how hard (affects threshold)
 }
 
-function tierParams(level: number, rng: () => number): TierParams {
-  // ── Tutorial (1-3): small open boards, 1 pair bacteria ──
+function tierParams(level: number, rng: () => number, worldNum: number = 1): TierParams {
+  const wc = WORLD_CONFIGS[worldNum] ?? WORLD_CONFIGS[1];
+  const [gridMin, gridMax] = wc.gridRange;
+
+  // Determine tier index: L1-10=0, L11-20=1, L21-35=2, L36-50=3
+  const tierIdx = level <= 10 ? 0 : level <= 20 ? 1 : level <= 35 ? 2 : 3;
+  const germs = wc.germs[tierIdx];
+  const templates = wc.templates[tierIdx];
+
+  // ── Tutorial (1-3): small boards, 1 pair, easiest germ ──
   if (level <= 3) {
     return {
-      gridW: 8, gridH: 8,
+      gridW: gridMin, gridH: gridMin,
       pairCount: 1,
-      germTypes: ["bacteria"],
+      germTypes: [germs[0]],
       toolsPerTurn: 3, turnLimit: 6, parTurns: 4,
-      templates: [0], // open only
+      templates: [templates[0]],
       initialTools: 4, grantPerTurn: 1,
       targetDifficulty: 0.2,
     };
   }
-  // ── Early (4-10): medium boards, 1-2 pairs, simple walls ──
+  // ── Early (4-10): medium boards, 1-2 pairs ──
   if (level <= 10) {
+    const t = (level - 4) / 6;
+    const gs = Math.round(gridMin + t * 2);
     return {
-      gridW: 10, gridH: 10,
+      gridW: gs, gridH: gs,
       pairCount: 1 + Math.floor(rng() * 2),
-      germTypes: ["bacteria"],
+      germTypes: germs.slice(0, 1),
       toolsPerTurn: 3, turnLimit: 8, parTurns: 5,
-      templates: [0, 1, 2], // open, pillars, divider
+      templates,
       initialTools: 4, grantPerTurn: 1,
       targetDifficulty: 0.3,
     };
   }
-  // ── Mid (11-18): larger boards, 2 pairs, more wall variety ──
-  if (level <= 18) {
+  // ── Mid (11-20): add second germ if available ──
+  if (level <= 20) {
+    const t = (level - 11) / 9;
+    const gs = Math.round(gridMin + 1 + t * 2);
     return {
-      gridW: 10 + Math.floor(rng() * 3), // 10-12
-      gridH: 10 + Math.floor(rng() * 3),
+      gridW: gs, gridH: gs,
       pairCount: 2,
-      germTypes: ["bacteria"],
+      germTypes: germs.slice(0, Math.min(2, germs.length)),
       toolsPerTurn: 3, turnLimit: 10, parTurns: 6,
-      templates: [0, 1, 2, 3, 4], // all but L-wall
+      templates,
       initialTools: 4, grantPerTurn: 1,
       targetDifficulty: 0.4,
     };
   }
-  // ── Advanced (19-24): introduce fungus alongside bacteria ──
-  if (level <= 24) {
+  // ── Advanced (21-35): full tier germs, bigger boards ──
+  if (level <= 35) {
+    const t = (level - 21) / 14;
+    const gs = Math.round(gridMin + 2 + t * (gridMax - gridMin - 2));
     return {
-      gridW: 12, gridH: 12,
+      gridW: gs + Math.floor(rng() * 2),
+      gridH: gs + Math.floor(rng() * 2),
       pairCount: 2 + Math.floor(rng() * 2),
-      germTypes: rng() < 0.6 ? ["bacteria", "fungus"] : ["bacteria"],
-      toolsPerTurn: 3, turnLimit: 10, parTurns: 7,
-      templates: [1, 2, 3, 4, 5],
-      initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.5,
-    };
-  }
-  // ── Mini-boss (25) ──
-  if (level === 25) {
-    return {
-      gridW: 14, gridH: 14,
-      pairCount: 3 + Math.floor(rng() * 2),
-      germTypes: ["bacteria", "fungus"],
+      germTypes: germs,
       toolsPerTurn: 3, turnLimit: 12, parTurns: 8,
-      templates: [3, 4], // cross or corridors
-      initialTools: 5, grantPerTurn: 2,
-      targetDifficulty: 0.6,
-    };
-  }
-  // ── Cooldown (26-30) ──
-  if (level <= 30) {
-    return {
-      gridW: 10, gridH: 10,
-      pairCount: 1 + Math.floor(rng() * 2),
-      germTypes: rng() < 0.4 ? ["bacteria", "fungus"] : ["bacteria"],
-      toolsPerTurn: 3, turnLimit: 8, parTurns: 5,
-      templates: [0, 1, 2],
-      initialTools: 5, grantPerTurn: 1,
-      targetDifficulty: 0.3,
-    };
-  }
-  // ── Late (31-38): introduce virus ──
-  if (level <= 38) {
-    return {
-      gridW: 12 + Math.floor(rng() * 3), // 12-14
-      gridH: 12 + Math.floor(rng() * 3),
-      pairCount: 2 + Math.floor(rng() * 2),
-      germTypes: rng() < 0.5
-        ? ["bacteria", "virus"]
-        : ["bacteria", "fungus"],
-      toolsPerTurn: 3, turnLimit: 12, parTurns: 8,
-      templates: [1, 2, 3, 4, 5],
+      templates,
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.55,
+      targetDifficulty: 0.5 + t * 0.1,
     };
   }
-  // ── Endgame (39-49): all types, big boards ──
+  // ── Endgame (36-49): big boards, all tier germs ──
   if (level <= 49) {
+    const t = (level - 36) / 13;
+    const gs = Math.round(gridMax - 2 + t * 2);
     return {
-      gridW: 14 + Math.floor(rng() * 3), // 14-16
-      gridH: 14 + Math.floor(rng() * 3),
+      gridW: gs + Math.floor(rng() * 2),
+      gridH: gs + Math.floor(rng() * 2),
       pairCount: 3 + Math.floor(rng() * 2),
-      germTypes: rng() < 0.5
-        ? ["bacteria", "fungus", "virus"]
-        : ["bacteria", "fungus"],
-      toolsPerTurn: 3, turnLimit: 14, parTurns: 10,
-      templates: [1, 2, 3, 4, 5],
+      germTypes: germs,
+      toolsPerTurn: germs.length >= 4 ? 4 : 3,
+      turnLimit: 14, parTurns: 10,
+      templates,
       initialTools: 4, grantPerTurn: 1,
       targetDifficulty: 0.6,
     };
   }
-  // ── Boss (50) ──
+  // ── Boss (50): max board, all germs, extra resources ──
   return {
-    gridW: 16, gridH: 16,
+    gridW: gridMax, gridH: gridMax,
     pairCount: 4 + Math.floor(rng() * 2),
-    germTypes: ["bacteria", "fungus", "virus"],
-    toolsPerTurn: 4, turnLimit: 16, parTurns: 12,
-    templates: [3, 4], // cross or corridors
+    germTypes: germs,
+    toolsPerTurn: germs.length >= 4 ? 4 : 3,
+    turnLimit: 16, parTurns: 12,
+    templates: [templates[0], templates[Math.min(1, templates.length - 1)]],
     initialTools: 6, grantPerTurn: 2,
     targetDifficulty: 0.65,
   };
@@ -533,20 +750,31 @@ function generateTitle(levelNum: number, rng: () => number): string {
   return `${adj} ${noun}`;
 }
 
+const PATHOGEN_HINT_NAMES: Record<PathogenType, string> = {
+  coccus: "Coccus", bacillus: "Bacillus", spirillum: "Spirillum",
+  influenza: "Influenza", retrovirus: "Retrovirus", phage: "Phage",
+  mold: "Mold", yeast: "Yeast", spore: "Spore",
+};
+
 function generateHint(types: PathogenType[], levelNum: number): string {
-  if (levelNum <= 3)
-    return "Place antibiotics to create dead zones that block bacterial growth.";
-  if (levelNum <= 10)
-    return "Bacteria spread up/down/left/right — block their cardinal paths.";
-  if (types.includes("fungus") && types.includes("bacteria"))
-    return "Fungus spreads diagonally! Use antifungals for diagonal threats, antibiotics for cardinal.";
-  if (types.includes("virus"))
-    return "Viruses jump in L-shapes like a knight. Anticipate where they'll land!";
-  if (types.includes("fungus"))
-    return "Fungus grows diagonally — a single antifungal pair can block a whole diagonal lane.";
-  if (levelNum >= 40)
-    return "Multiple pathogen types need different medicines. Prioritize the fastest spreader.";
-  return "Sandwich pathogens between dead zones to contain them.";
+  if (levelNum <= 3) {
+    const name = PATHOGEN_HINT_NAMES[types[0]] ?? "pathogens";
+    return `Place medicine to block ${name} growth. Match the spread pattern!`;
+  }
+  if (types.length === 1) {
+    const t = types[0];
+    if (t === "coccus") return "Coccus spreads cardinally — block up/down/left/right.";
+    if (t === "mold") return "Mold creeps diagonally — place Fluconazole on diagonal paths.";
+    if (t === "bacillus") return "Bacillus leaps 2 cells cardinally! Single walls won't stop it.";
+    if (t === "influenza") return "Influenza jumps in knight L-shapes — walls can't contain it!";
+    if (t === "yeast") return "Yeast leaps diagonally — long-range diagonal threat.";
+    if (t === "phage") return "Phage uses camel jumps — extreme range in L-shapes!";
+    if (t === "spore") return "Spore fires diagonal ±3 — the longest-range pathogen!";
+    if (t === "retrovirus") return "Retrovirus uses wide knight jumps — horizontal L-shapes.";
+    if (t === "spirillum") return "Spirillum moves in narrow knight L-jumps — tricky angles!";
+  }
+  if (types.length >= 3) return "Multiple pathogen families! Prioritize the fastest spreader.";
+  return "Different germs need different medicines — match the right counter!";
 }
 
 // ── Main generator ───────────────────────────────
@@ -579,7 +807,7 @@ function generateValidLevel(
   // Try multiple attempts with different sub-seeds
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const rng = mulberry32(baseSeed + attempt * 1301);
-    const params = tierParams(levelNum, rng);
+    const params = tierParams(levelNum, rng, worldNum);
     const { gridW, gridH } = params;
 
     // Pick template
@@ -607,28 +835,16 @@ function generateValidLevel(
 
     if (seeds.length < 2) continue; // need at least one pair
 
-    // Build tool inventory
-    const tools: ToolInventory = {
-      antibiotic: 0, antiviral: 0, antifungal: 0, wall: 0,
-    };
-    const toolGrant: ToolInventory = {
-      antibiotic: 0, antiviral: 0, antifungal: 0, wall: 0,
-    };
-    const typesUsed = new Set(params.germTypes);
-    const perType = Math.ceil(params.initialTools / typesUsed.size);
-    const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / typesUsed.size));
+    // Build tool inventory using COUNTERED_BY mapping
+    const tools = emptyInventory();
+    const toolGrant = emptyInventory();
+    const perType = Math.ceil(params.initialTools / params.germTypes.length);
+    const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / params.germTypes.length));
 
-    if (typesUsed.has("bacteria")) {
-      tools.antibiotic = perType;
-      toolGrant.antibiotic = perGrant;
-    }
-    if (typesUsed.has("fungus")) {
-      tools.antifungal = perType;
-      toolGrant.antifungal = perGrant;
-    }
-    if (typesUsed.has("virus")) {
-      tools.antiviral = perType;
-      toolGrant.antiviral = perGrant;
+    for (const germ of params.germTypes) {
+      const med = COUNTERED_BY[germ];
+      tools[med] = perType;
+      toolGrant[med] = perGrant;
     }
     tools.wall = 2 + Math.floor(rng() * 2);
 
@@ -702,7 +918,7 @@ function generateFallback(
   baseSeed: number,
 ): LevelSpec {
   const rng = mulberry32(baseSeed + 999_999);
-  const params = tierParams(levelNum, rng);
+  const params = tierParams(levelNum, rng, worldNum);
   const { gridW, gridH } = params;
 
   // Open box walls only
@@ -751,27 +967,15 @@ function generateFallback(
     }
   }
 
-  // Build tools
-  const tools: ToolInventory = {
-    antibiotic: 0, antiviral: 0, antifungal: 0, wall: 0,
-  };
-  const toolGrant: ToolInventory = {
-    antibiotic: 0, antiviral: 0, antifungal: 0, wall: 0,
-  };
-  const typesUsed = new Set(params.germTypes);
-  const perType = Math.ceil(params.initialTools / typesUsed.size);
-  const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / typesUsed.size));
-  if (typesUsed.has("bacteria")) {
-    tools.antibiotic = perType;
-    toolGrant.antibiotic = perGrant;
-  }
-  if (typesUsed.has("fungus")) {
-    tools.antifungal = perType;
-    toolGrant.antifungal = perGrant;
-  }
-  if (typesUsed.has("virus")) {
-    tools.antiviral = perType;
-    toolGrant.antiviral = perGrant;
+  // Build tools using COUNTERED_BY
+  const tools = emptyInventory();
+  const toolGrant = emptyInventory();
+  const perType = Math.ceil(params.initialTools / params.germTypes.length);
+  const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / params.germTypes.length));
+  for (const germ of params.germTypes) {
+    const med = COUNTERED_BY[germ];
+    tools[med] = perType;
+    toolGrant[med] = perGrant;
   }
   tools.wall = 2;
 

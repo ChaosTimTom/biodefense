@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { computeStars } from "@sim/metrics";
 import { createGameState, pathogenTile, setTile } from "@sim/board";
+import { emptyInventory } from "@sim/types";
 import type { LevelSpec, GameState } from "@sim/types";
 
 function mkSpec(overrides?: Partial<LevelSpec>): LevelSpec {
@@ -17,7 +18,7 @@ function mkSpec(overrides?: Partial<LevelSpec>): LevelSpec {
     grid: { w: 3, h: 3 },
     walls: [],
     seeds: [],
-    tools: { antibiotic: 0, antiviral: 0, antifungal: 0, wall: 0 },
+    tools: emptyInventory(),
     toolsPerTurn: 1,
     turnLimit: 10,
     objective: { type: "contain", maxPct: 35, maxTurns: 10 },
@@ -41,7 +42,7 @@ function wonContained(turn: number, turnLimit: number): GameState {
   state.turn = turn;
   state.result = "win";
   // Place a pathogen so board is NOT cleared
-  setTile(state.board, 1, 1, pathogenTile("bacteria"));
+  setTile(state.board, 1, 1, pathogenTile("coccus"));
   return state;
 }
 

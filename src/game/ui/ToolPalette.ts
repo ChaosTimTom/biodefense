@@ -5,14 +5,10 @@
 
 import Phaser from "phaser";
 import type { ToolId, ToolInventory } from "../../sim/types";
+import { ALL_TOOL_IDS } from "../../sim/constants";
 import { TOOL_COLORS, TOOL_LABELS, TOOL_NAMES, TOOL_DESCRIPTIONS, TOOL_TEXTURES, UI } from "../config";
 
-const ALL_TOOLS: ToolId[] = [
-  "antibiotic",
-  "antiviral",
-  "antifungal",
-  "wall",
-];
+const ALL_TOOLS: ToolId[] = ALL_TOOL_IDS;
 
 const BTN_W = 56;
 const BTN_H = 48;

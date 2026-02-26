@@ -26,6 +26,7 @@ import {
   getNeighbors,
   countAdjacentOfKind,
 } from "@sim/board";
+import { emptyInventory } from "@sim/types";
 import type { LevelSpec } from "@sim/types";
 
 const basicSpec: LevelSpec = {
@@ -35,8 +36,8 @@ const basicSpec: LevelSpec = {
   hint: "",
   grid: { w: 3, h: 3 },
   walls: [[0, 0]],
-  seeds: [{ type: "bacteria", x: 1, y: 1 }],
-  tools: { antibiotic: 1, antiviral: 0, antifungal: 0, wall: 0 },
+  seeds: [{ type: "coccus", x: 1, y: 1 }],
+  tools: { ...emptyInventory(), penicillin: 1 },
   toolsPerTurn: 1,
   turnLimit: 10,
   objective: { type: "clear_all" },
@@ -58,17 +59,17 @@ describe("Tile factories", () => {
   });
 
   it("pathogenTile", () => {
-    const t = pathogenTile("virus");
+    const t = pathogenTile("influenza");
     expect(t.kind).toBe("pathogen");
-    expect(t.pathogenType).toBe("virus");
+    expect(t.pathogenType).toBe("influenza");
     expect(t.medicineType).toBeNull();
     expect(t.age).toBe(0);
   });
 
   it("medicineTile", () => {
-    const t = medicineTile("antibiotic");
+    const t = medicineTile("penicillin");
     expect(t.kind).toBe("medicine");
-    expect(t.medicineType).toBe("antibiotic");
+    expect(t.medicineType).toBe("penicillin");
     expect(t.pathogenType).toBeNull();
     expect(t.age).toBe(0);
   });
@@ -86,7 +87,7 @@ describe("createBoard", () => {
     const board = createBoard(basicSpec);
     expect(getTile(board, 0, 0).kind).toBe("wall");
     expect(getTile(board, 1, 1).kind).toBe("pathogen");
-    expect(getTile(board, 1, 1).pathogenType).toBe("bacteria");
+    expect(getTile(board, 1, 1).pathogenType).toBe("coccus");
     expect(getTile(board, 2, 0).kind).toBe("empty");
   });
 });
@@ -96,7 +97,7 @@ describe("createGameState", () => {
     const state = createGameState(basicSpec);
     expect(state.levelId).toBe(1);
     expect(state.turn).toBe(0);
-    expect(state.tools.antibiotic).toBe(1);
+    expect(state.tools.penicillin).toBe(1);
     expect(state.toolsUsedThisTurn).toBe(0);
     expect(state.peakInfectionPct).toBe(0);
     expect(state.isOver).toBe(false);
@@ -127,7 +128,7 @@ describe("get/set/clone", () => {
   });
 
   it("cloneTile creates independent copy", () => {
-    const t = pathogenTile("bacteria");
+    const t = pathogenTile("coccus");
     const t2 = cloneTile(t);
     t2.age = 5;
     expect(t.age).toBe(0);
@@ -145,9 +146,9 @@ describe("get/set/clone", () => {
     const state = createGameState(basicSpec);
     const copy = cloneState(state);
     copy.turn = 99;
-    copy.tools.antibiotic = 0;
+    copy.tools.penicillin = 0;
     expect(state.turn).toBe(0);
-    expect(state.tools.antibiotic).toBe(1);
+    expect(state.tools.penicillin).toBe(1);
   });
 });
 
@@ -160,7 +161,7 @@ describe("Counting", () => {
   it("countMedicine", () => {
     const board = createBoard(basicSpec);
     expect(countMedicine(board)).toBe(0);
-    setTile(board, 2, 2, medicineTile("antibiotic"));
+    setTile(board, 2, 2, medicineTile("penicillin"));
     expect(countMedicine(board)).toBe(1);
   });
 

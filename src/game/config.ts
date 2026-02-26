@@ -32,29 +32,61 @@ export function gridPixelHeight(rows: number, tileSize = TILE_SIZE, tileGap = TI
 // ── Color Palette ────────────────────────────────
 
 export const PATHOGEN_COLORS: Record<PathogenType, number> = {
-  bacteria: 0x4caf50, // green — rod shaped
-  virus: 0xf44336,    // red — spiky
-  fungus: 0x9c27b0,   // purple — branching
+  // Bacteria family (greens)
+  coccus: 0x4caf50,      // green
+  bacillus: 0x8bc34a,    // lime
+  spirillum: 0x009688,   // teal
+  // Virus family (reds)
+  influenza: 0xf44336,   // red
+  retrovirus: 0xc62828,  // crimson
+  phage: 0xff5722,       // deep orange
+  // Fungus family (purples)
+  mold: 0x9c27b0,        // purple
+  yeast: 0xce93d8,       // lavender
+  spore: 0x4a148c,       // deep violet
 };
 
-export const PATHOGEN_SHAPES: Record<PathogenType, "circle" | "diamond" | "branch"> = {
-  bacteria: "circle",
-  virus: "diamond",
-  fungus: "branch",
+export type PathogenShape =
+  | "circle" | "diamond" | "branch"
+  | "rod" | "spiral" | "spike"
+  | "icosa" | "phage_t4" | "starburst";
+
+export const PATHOGEN_SHAPES: Record<PathogenType, PathogenShape> = {
+  coccus: "circle",
+  bacillus: "rod",
+  spirillum: "spiral",
+  influenza: "spike",
+  retrovirus: "icosa",
+  phage: "phage_t4",
+  mold: "branch",
+  yeast: "diamond",
+  spore: "starburst",
 };
 
 /** Seamless tile texture key for each pathogen type */
 export const PATHOGEN_TEXTURES: Record<PathogenType, string> = {
-  bacteria: "bacteria",
-  virus: "virus",
-  fungus: "fungus",
+  coccus: "coccus",
+  bacillus: "bacillus",
+  spirillum: "spirillum",
+  influenza: "influenza",
+  retrovirus: "retrovirus",
+  phage: "phage",
+  mold: "mold",
+  yeast: "yeast",
+  spore: "spore",
 };
 
 /** Seamless tile texture key for each medicine type */
 export const MEDICINE_TEXTURES: Record<MedicineType, string> = {
-  antibiotic: "antibacterial",
-  antiviral: "antiviral",
-  antifungal: "antifungal",
+  penicillin: "penicillin",
+  tetracycline: "tetracycline",
+  streptomycin: "streptomycin",
+  tamiflu: "tamiflu",
+  zidovudine: "zidovudine",
+  interferon: "interferon",
+  fluconazole: "fluconazole",
+  nystatin: "nystatin",
+  amphotericin: "amphotericin",
 };
 
 /** Background tile texture keyed by TileKind */
@@ -64,56 +96,107 @@ export const TILE_BG_TEXTURES: Partial<Record<TileKind, string>> = {
 };
 
 export const PATHOGEN_NAMES: Record<PathogenType, string> = {
-  bacteria: "Bacteria",
-  virus: "Virus",
-  fungus: "Fungus",
+  coccus: "Coccus",
+  bacillus: "Bacillus",
+  spirillum: "Spirillum",
+  influenza: "Influenza",
+  retrovirus: "Retrovirus",
+  phage: "Phage",
+  mold: "Mold",
+  yeast: "Yeast",
+  spore: "Spore",
 };
 
 export const MEDICINE_COLORS: Record<MedicineType, number> = {
-  antibiotic: 0x00e5ff, // cyan
-  antiviral: 0x76ff03,  // lime green
-  antifungal: 0xea80fc, // pink/magenta
+  // Anti-bacteria (cyan family)
+  penicillin: 0x00e5ff,
+  tetracycline: 0x18ffff,
+  streptomycin: 0x00bfa5,
+  // Anti-virus (lime family)
+  tamiflu: 0x76ff03,
+  zidovudine: 0xb2ff59,
+  interferon: 0xaeea00,
+  // Anti-fungus (pink family)
+  fluconazole: 0xea80fc,
+  nystatin: 0xe040fb,
+  amphotericin: 0xd500f9,
 };
 
 export const MEDICINE_NAMES: Record<MedicineType, string> = {
-  antibiotic: "Antibiotic",
-  antiviral: "Antiviral",
-  antifungal: "Antifungal",
+  penicillin: "Penicillin",
+  tetracycline: "Tetracycline",
+  streptomycin: "Streptomycin",
+  tamiflu: "Tamiflu",
+  zidovudine: "Zidovudine",
+  interferon: "Interferon",
+  fluconazole: "Fluconazole",
+  nystatin: "Nystatin",
+  amphotericin: "Amphotericin",
 };
 
 export const TOOL_COLORS: Record<ToolId, number> = {
-  antibiotic: 0x00e5ff,
-  antiviral: 0x76ff03,
-  antifungal: 0xea80fc,
+  penicillin: 0x00e5ff,
+  tetracycline: 0x18ffff,
+  streptomycin: 0x00bfa5,
+  tamiflu: 0x76ff03,
+  zidovudine: 0xb2ff59,
+  interferon: 0xaeea00,
+  fluconazole: 0xea80fc,
+  nystatin: 0xe040fb,
+  amphotericin: 0xd500f9,
   wall: 0x8d6e63,
 };
 
 export const TOOL_LABELS: Record<ToolId, string> = {
-  antibiotic: "💊",
-  antiviral: "💉",
-  antifungal: "🧬",
-  wall: "🧱",
+  penicillin: "PEN",
+  tetracycline: "TET",
+  streptomycin: "STR",
+  tamiflu: "TAM",
+  zidovudine: "ZDV",
+  interferon: "IFN",
+  fluconazole: "FLC",
+  nystatin: "NYS",
+  amphotericin: "AMB",
+  wall: "WALL",
 };
 
 /** Sprite texture keys for tool palette icons (normal + selected) */
 export const TOOL_TEXTURES: Record<ToolId, { normal: string; selected: string }> = {
-  antibiotic: { normal: "tool_antibiotic", selected: "tool_antibiotic_selected" },
-  antiviral:  { normal: "tool_antiviral",  selected: "tool_antiviral_selected" },
-  antifungal: { normal: "tool_antifungal", selected: "tool_antifungal_selected" },
-  wall:       { normal: "tool_barrier",    selected: "tool_barrier_selected" },
+  penicillin:   { normal: "icon_penicillin",   selected: "icon_penicillin_sel" },
+  tetracycline: { normal: "icon_tetracycline", selected: "icon_tetracycline_sel" },
+  streptomycin: { normal: "icon_streptomycin", selected: "icon_streptomycin_sel" },
+  tamiflu:      { normal: "icon_tamiflu",       selected: "icon_tamiflu_sel" },
+  zidovudine:   { normal: "icon_zidovudine",   selected: "icon_zidovudine_sel" },
+  interferon:   { normal: "icon_interferon",   selected: "icon_interferon_sel" },
+  fluconazole:  { normal: "icon_fluconazole",  selected: "icon_fluconazole_sel" },
+  nystatin:     { normal: "icon_nystatin",     selected: "icon_nystatin_sel" },
+  amphotericin: { normal: "icon_amphotericin", selected: "icon_amphotericin_sel" },
+  wall:         { normal: "icon_wall",         selected: "icon_wall_sel" },
 };
 
 export const TOOL_NAMES: Record<ToolId, string> = {
-  antibiotic: "Antibiotic",
-  antiviral: "Antiviral",
-  antifungal: "Antifungal",
+  penicillin: "Penicillin",
+  tetracycline: "Tetracycline",
+  streptomycin: "Streptomycin",
+  tamiflu: "Tamiflu",
+  zidovudine: "Zidovudine",
+  interferon: "Interferon",
+  fluconazole: "Fluconazole",
+  nystatin: "Nystatin",
+  amphotericin: "Amphotericin",
   wall: "Wall",
 };
 
 export const TOOL_DESCRIPTIONS: Record<ToolId, string> = {
-  antibiotic: "Living medicine cell — kills bacteria on contact, spreads each turn",
-  antiviral: "Living medicine cell — kills viruses on contact, spreads each turn",
-  antifungal: "Living medicine cell — kills fungi on contact, spreads each turn",
+  penicillin: "Kills Coccus — spreads cardinally",
+  tetracycline: "Kills Bacillus — leaps 2 cells",
+  streptomycin: "Kills Spirillum — narrow L-jumps",
+  tamiflu: "Kills Influenza — full knight jumps",
+  zidovudine: "Kills Retrovirus — wide L-jumps",
+  interferon: "Kills Phage — camel jumps",
+  fluconazole: "Kills Mold — spreads diagonally",
+  nystatin: "Kills Yeast — long diagonal leaps",
+  amphotericin: "Kills Spore — extreme diagonal range",
   wall: "Quarantine barrier — blocks all spread",
 };
 

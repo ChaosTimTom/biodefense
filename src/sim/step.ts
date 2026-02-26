@@ -30,6 +30,7 @@ import {
   PATHOGEN_GROWTH, MEDICINE_GROWTH,
   OVERWHELM_THRESHOLD,
   COUNTERED_BY,
+  ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES, ALL_TOOL_IDS,
 } from "./constants";
 import {
   coords, inBounds, idx, emptyTile, pathogenTile, medicineTile,
@@ -71,10 +72,9 @@ export function advanceTurn(state: GameState, spec?: LevelSpec): GameState {
   // Per-turn tool grant (drip-feed tools each turn)
   if (spec?.toolGrant) {
     const g = spec.toolGrant;
-    state.tools.antibiotic += g.antibiotic;
-    state.tools.antiviral += g.antiviral;
-    state.tools.antifungal += g.antifungal;
-    state.tools.wall += g.wall;
+    for (const k of ALL_TOOL_IDS) {
+      state.tools[k] += g[k];
+    }
   }
 
   for (let g = 0; g < GENS_PER_TURN; g++) {
@@ -174,9 +174,8 @@ function resolveBirth(
   tiles: Tile[], w: number, h: number, x: number, y: number,
 ): Tile {
   // Check which pathogen types want to grow here
-  const pathTypes: PathogenType[] = ["bacteria", "virus", "fungus"];
   let pathWants: PathogenType | null = null;
-  for (const ptype of pathTypes) {
+  for (const ptype of ALL_PATHOGEN_TYPES) {
     if (hasPathogenParent(tiles, w, h, x, y, ptype)) {
       pathWants = ptype;
       break; // first match wins (multi-type conflicts → first found)
@@ -184,9 +183,8 @@ function resolveBirth(
   }
 
   // Check which medicine types want to grow here
-  const medTypes: MedicineType[] = ["antibiotic", "antiviral", "antifungal"];
   let medWants: MedicineType | null = null;
-  for (const mtype of medTypes) {
+  for (const mtype of ALL_MEDICINE_TYPES) {
     if (hasMedicineParent(tiles, w, h, x, y, mtype)) {
       medWants = mtype;
       break;
@@ -259,8 +257,7 @@ function resolveSurvival(
     if (neighbor.kind !== "empty") continue;
     // Check if any medicine would contest this cell
     let contested = false;
-    const allMedTypes: MedicineType[] = ["antibiotic", "antiviral", "antifungal"];
-    for (const mt of allMedTypes) {
+    for (const mt of ALL_MEDICINE_TYPES) {
       if (hasMedicineParent(tiles, w, h, nx, ny, mt)) {
         contested = true;
         break;

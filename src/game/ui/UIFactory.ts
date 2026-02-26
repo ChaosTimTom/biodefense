@@ -331,28 +331,69 @@ export function genToolIcons(scene: Phaser.Scene): void {
 
   const icons: IconDef[] = [
     {
-      key: "icon_antibiotic",
+      // Penicillin — medical cross (cyan)
+      key: "icon_penicillin",
       draw: (ctx) => {
-        // Medical cross / plus
         const arm = S * 0.18;
         const len = S * 0.32;
         ctx.fillStyle = "#00e5ff";
         ctx.shadowColor = "rgba(0,229,255,0.6)";
         ctx.shadowBlur = 4 * sc;
-        // Vertical bar
         ctx.beginPath();
         ctx.roundRect(half - arm, half - len, arm * 2, len * 2, 3 * sc);
         ctx.fill();
-        // Horizontal bar
         ctx.beginPath();
         ctx.roundRect(half - len, half - arm, len * 2, arm * 2, 3 * sc);
         ctx.fill();
       },
     },
     {
-      key: "icon_antiviral",
+      // Tetracycline — pill capsule (cyan variant)
+      key: "icon_tetracycline",
       draw: (ctx) => {
-        // Shield shape
+        ctx.fillStyle = "#18ffff";
+        ctx.shadowColor = "rgba(24,255,255,0.5)";
+        ctx.shadowBlur = 4 * sc;
+        ctx.beginPath();
+        ctx.roundRect(S * 0.15, S * 0.32, S * 0.7, S * 0.36, S * 0.18);
+        ctx.fill();
+        // divider line
+        ctx.strokeStyle = "#0d2238";
+        ctx.lineWidth = 2 * sc;
+        ctx.beginPath();
+        ctx.moveTo(half, S * 0.32);
+        ctx.lineTo(half, S * 0.68);
+        ctx.stroke();
+      },
+    },
+    {
+      // Streptomycin — syringe (teal)
+      key: "icon_streptomycin",
+      draw: (ctx) => {
+        ctx.fillStyle = "#00bfa5";
+        ctx.shadowColor = "rgba(0,191,165,0.5)";
+        ctx.shadowBlur = 3 * sc;
+        // barrel
+        ctx.beginPath();
+        ctx.roundRect(S * 0.25, S * 0.2, S * 0.3, S * 0.6, 3 * sc);
+        ctx.fill();
+        // plunger handle
+        ctx.beginPath();
+        ctx.roundRect(S * 0.2, S * 0.12, S * 0.4, S * 0.1, 2 * sc);
+        ctx.fill();
+        // needle
+        ctx.strokeStyle = "#00bfa5";
+        ctx.lineWidth = 2 * sc;
+        ctx.beginPath();
+        ctx.moveTo(S * 0.4, S * 0.8);
+        ctx.lineTo(S * 0.4, S * 0.92);
+        ctx.stroke();
+      },
+    },
+    {
+      // Tamiflu — shield (lime)
+      key: "icon_tamiflu",
+      draw: (ctx) => {
         ctx.fillStyle = "#76ff03";
         ctx.shadowColor = "rgba(118,255,3,0.5)";
         ctx.shadowBlur = 4 * sc;
@@ -363,7 +404,7 @@ export function genToolIcons(scene: Phaser.Scene): void {
         ctx.quadraticCurveTo(S * 0.18, S * 0.65, S * 0.15, S * 0.28);
         ctx.closePath();
         ctx.fill();
-        // Inner checkmark
+        // checkmark
         ctx.shadowBlur = 0;
         ctx.strokeStyle = "#0d2210";
         ctx.lineWidth = 2.5 * sc;
@@ -377,16 +418,49 @@ export function genToolIcons(scene: Phaser.Scene): void {
       },
     },
     {
-      key: "icon_antifungal",
+      // Zidovudine — double ring (lime variant)
+      key: "icon_zidovudine",
       draw: (ctx) => {
-        // DNA double helix
+        ctx.strokeStyle = "#b2ff59";
+        ctx.shadowColor = "rgba(178,255,89,0.5)";
+        ctx.shadowBlur = 3 * sc;
+        ctx.lineWidth = 2.5 * sc;
+        ctx.beginPath();
+        ctx.arc(half - S * 0.1, half, S * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(half + S * 0.1, half, S * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+      },
+    },
+    {
+      // Interferon — lightning bolt (yellow-green)
+      key: "icon_interferon",
+      draw: (ctx) => {
+        ctx.fillStyle = "#aeea00";
+        ctx.shadowColor = "rgba(174,234,0,0.5)";
+        ctx.shadowBlur = 4 * sc;
+        ctx.beginPath();
+        ctx.moveTo(S * 0.55, S * 0.08);
+        ctx.lineTo(S * 0.35, S * 0.45);
+        ctx.lineTo(S * 0.52, S * 0.45);
+        ctx.lineTo(S * 0.42, S * 0.92);
+        ctx.lineTo(S * 0.68, S * 0.48);
+        ctx.lineTo(S * 0.5, S * 0.48);
+        ctx.closePath();
+        ctx.fill();
+      },
+    },
+    {
+      // Fluconazole — DNA helix (pink/magenta)
+      key: "icon_fluconazole",
+      draw: (ctx) => {
         ctx.lineWidth = 2.5 * sc;
         ctx.lineCap = "round";
         ctx.shadowColor = "rgba(234,128,252,0.5)";
         ctx.shadowBlur = 3 * sc;
         const steps = 24;
         const amp = S * 0.24;
-        // Strand 1
         ctx.strokeStyle = "#ea80fc";
         ctx.beginPath();
         for (let i = 0; i <= steps; i++) {
@@ -396,7 +470,6 @@ export function genToolIcons(scene: Phaser.Scene): void {
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();
-        // Strand 2
         ctx.strokeStyle = "#ce93d8";
         ctx.beginPath();
         for (let i = 0; i <= steps; i++) {
@@ -406,7 +479,6 @@ export function genToolIcons(scene: Phaser.Scene): void {
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();
-        // Cross rungs
         ctx.shadowBlur = 0;
         ctx.strokeStyle = "rgba(234,128,252,0.3)";
         ctx.lineWidth = 1.5 * sc;
@@ -422,9 +494,48 @@ export function genToolIcons(scene: Phaser.Scene): void {
       },
     },
     {
+      // Nystatin — droplet (pink variant)
+      key: "icon_nystatin",
+      draw: (ctx) => {
+        ctx.fillStyle = "#e040fb";
+        ctx.shadowColor = "rgba(224,64,251,0.5)";
+        ctx.shadowBlur = 4 * sc;
+        ctx.beginPath();
+        ctx.moveTo(half, S * 0.1);
+        ctx.quadraticCurveTo(S * 0.85, S * 0.55, half, S * 0.9);
+        ctx.quadraticCurveTo(S * 0.15, S * 0.55, half, S * 0.1);
+        ctx.closePath();
+        ctx.fill();
+      },
+    },
+    {
+      // Amphotericin — biohazard (deep magenta)
+      key: "icon_amphotericin",
+      draw: (ctx) => {
+        ctx.strokeStyle = "#d500f9";
+        ctx.shadowColor = "rgba(213,0,249,0.5)";
+        ctx.shadowBlur = 3 * sc;
+        ctx.lineWidth = 2.5 * sc;
+        const rad = S * 0.2;
+        for (let i = 0; i < 3; i++) {
+          const angle = (i * Math.PI * 2) / 3 - Math.PI / 2;
+          const ox = half + Math.cos(angle) * rad * 0.55;
+          const oy = half + Math.sin(angle) * rad * 0.55;
+          ctx.beginPath();
+          ctx.arc(ox, oy, rad, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        // center dot
+        ctx.fillStyle = "#d500f9";
+        ctx.beginPath();
+        ctx.arc(half, half, S * 0.06, 0, Math.PI * 2);
+        ctx.fill();
+      },
+    },
+    {
+      // Wall — brick pattern
       key: "icon_wall",
       draw: (ctx) => {
-        // Brick pattern
         ctx.fillStyle = "#8d6e63";
         ctx.shadowColor = "rgba(141,110,99,0.5)";
         ctx.shadowBlur = 2 * sc;
@@ -432,14 +543,11 @@ export function genToolIcons(scene: Phaser.Scene): void {
         const bh = S * 0.18;
         const g = S * 0.05;
         const rr = 2 * sc;
-        // Row 1 (2 bricks)
         ctx.beginPath(); ctx.roundRect(S * 0.12, S * 0.14, bw, bh, rr); ctx.fill();
         ctx.beginPath(); ctx.roundRect(S * 0.12 + bw + g, S * 0.14, bw, bh, rr); ctx.fill();
-        // Row 2 (offset)
         ctx.fillStyle = "#795548";
         ctx.beginPath(); ctx.roundRect(S * 0.28, S * 0.14 + bh + g, bw, bh, rr); ctx.fill();
         ctx.beginPath(); ctx.roundRect(S * 0.28 + bw + g, S * 0.14 + bh + g, bw, bh, rr); ctx.fill();
-        // Row 3
         ctx.fillStyle = "#8d6e63";
         ctx.beginPath(); ctx.roundRect(S * 0.12, S * 0.14 + (bh + g) * 2, bw, bh, rr); ctx.fill();
         ctx.beginPath(); ctx.roundRect(S * 0.12 + bw + g, S * 0.14 + (bh + g) * 2, bw, bh, rr); ctx.fill();

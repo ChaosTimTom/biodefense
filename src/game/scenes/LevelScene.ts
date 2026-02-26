@@ -313,10 +313,9 @@ export class LevelScene extends Phaser.Scene {
     // Per-turn tool grant (v5.0 drip-feed)
     if (this.levelSpec.toolGrant) {
       const g = this.levelSpec.toolGrant;
-      this.gameState.tools.antibiotic += g.antibiotic;
-      this.gameState.tools.antiviral += g.antiviral;
-      this.gameState.tools.antifungal += g.antifungal;
-      this.gameState.tools.wall += g.wall;
+      for (const k of Object.keys(g) as Array<keyof typeof g>) {
+        this.gameState.tools[k] += g[k];
+      }
     }
 
     this.animateGenerations(0);

@@ -13,7 +13,10 @@ import {
 } from "../ui/UIFactory";
 
 const WORLDS = [
-  { id: 1, name: "Petri Dish", color: 0x4caf50, starsNeeded: 0 },
+  { id: 1, name: "Petri Dish",   color: 0x4caf50, starsNeeded: 0 },
+  { id: 2, name: "Bloodstream",  color: 0xe53935, starsNeeded: 40 },
+  { id: 3, name: "Tissue",       color: 0xab47bc, starsNeeded: 100 },
+  { id: 4, name: "Pandemic",     color: 0xff6f00, starsNeeded: 180 },
 ];
 
 /** Cache generated level specs per world (generated once, reused) */

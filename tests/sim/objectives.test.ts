@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { checkObjective } from "@sim/objectives";
 import { createGameState, setTile, emptyTile, pathogenTile } from "@sim/board";
+import { emptyInventory } from "@sim/types";
 import type { LevelSpec } from "@sim/types";
 
 function mkSpec(overrides?: Partial<LevelSpec>): LevelSpec {
@@ -17,7 +18,7 @@ function mkSpec(overrides?: Partial<LevelSpec>): LevelSpec {
     grid: { w: 3, h: 3 },
     walls: [],
     seeds: [],
-    tools: { antibiotic: 1, antiviral: 0, antifungal: 0, wall: 0 },
+    tools: { ...emptyInventory(), penicillin: 1 },
     toolsPerTurn: 1,
     turnLimit: 10,
     objective: { type: "clear_all" },
@@ -35,7 +36,7 @@ describe("checkObjective", () => {
 
     it("returns 'playing' when pathogens exist", () => {
       const state = createGameState(mkSpec({
-        seeds: [{ type: "bacteria", x: 1, y: 1 }],
+        seeds: [{ type: "coccus", x: 1, y: 1 }],
       }));
       expect(checkObjective(state)).toBe("playing");
     });
@@ -63,7 +64,7 @@ describe("checkObjective", () => {
     it("returns 'playing' when below maxPct and before maxTurns", () => {
       const state = createGameState(mkSpec({
         objective: { type: "contain", maxPct: 50, maxTurns: 10 },
-        seeds: [{ type: "bacteria", x: 1, y: 1 }],
+        seeds: [{ type: "coccus", x: 1, y: 1 }],
       }));
       state.turn = 3;
       expect(checkObjective(state)).toBe("playing");
@@ -73,9 +74,9 @@ describe("checkObjective", () => {
       const state = createGameState(mkSpec({
         objective: { type: "contain", maxPct: 30, maxTurns: 10 },
         seeds: [
-          { type: "bacteria", x: 0, y: 0 },
-          { type: "bacteria", x: 1, y: 0 },
-          { type: "bacteria", x: 2, y: 0 },
+          { type: "coccus", x: 0, y: 0 },
+          { type: "coccus", x: 1, y: 0 },
+          { type: "coccus", x: 2, y: 0 },
         ],
       }));
       // 3/9 = 33.3% > 30%
@@ -85,7 +86,7 @@ describe("checkObjective", () => {
     it("returns 'win' at maxTurns when contained", () => {
       const state = createGameState(mkSpec({
         objective: { type: "contain", maxPct: 50, maxTurns: 5 },
-        seeds: [{ type: "bacteria", x: 1, y: 1 }],
+        seeds: [{ type: "coccus", x: 1, y: 1 }],
       }));
       state.turn = 5;
       expect(checkObjective(state)).toBe("win");

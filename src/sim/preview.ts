@@ -9,7 +9,7 @@
 
 import type { GameState, PathogenType } from "./types";
 import { coords, inBounds, idx } from "./board";
-import { PATHOGEN_GROWTH } from "./constants";
+import { PATHOGEN_GROWTH, ALL_PATHOGEN_TYPES } from "./constants";
 
 /**
  * Returns coordinates of empty cells where at least one
@@ -37,7 +37,7 @@ function wouldBirthPathogen(
   tiles: import("./types").Tile[], w: number, h: number,
   x: number, y: number,
 ): boolean {
-  const pathTypes: PathogenType[] = ["bacteria", "virus", "fungus"];
+  const pathTypes: PathogenType[] = ALL_PATHOGEN_TYPES;
 
   for (const ptype of pathTypes) {
     const dirs = PATHOGEN_GROWTH[ptype];

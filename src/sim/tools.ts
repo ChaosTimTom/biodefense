@@ -6,13 +6,6 @@
 import type { GameState, ToolId, MedicineType } from "./types";
 import { getTile, setTile, medicineTile, wallTile } from "./board";
 
-/** Map from tool ID to the medicine type it places */
-const TOOL_TO_MEDICINE: Partial<Record<ToolId, MedicineType>> = {
-  antibiotic: "antibiotic",
-  antiviral: "antiviral",
-  antifungal: "antifungal",
-};
-
 export function canPlaceTool(
   state: GameState, tool: ToolId, x: number, y: number,
 ): boolean {
@@ -46,8 +39,8 @@ export function applyTool(
   if (tool === "wall") {
     setTile(board, x, y, wallTile());
   } else {
-    const medType = TOOL_TO_MEDICINE[tool]!;
-    setTile(board, x, y, medicineTile(medType));
+    // ToolId = MedicineType | "wall", so non-wall is a MedicineType
+    setTile(board, x, y, medicineTile(tool as MedicineType));
   }
 
   state.tools[tool]--;

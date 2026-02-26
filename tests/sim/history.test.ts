@@ -6,6 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { createHistory, pushHistory, popHistory, canUndo, clearHistory } from "@sim/history";
 import { createGameState, emptyTile } from "@sim/board";
+import { emptyInventory } from "@sim/types";
 import type { LevelSpec, GameState } from "@sim/types";
 
 function mkSpec(): LevelSpec {
@@ -17,7 +18,7 @@ function mkSpec(): LevelSpec {
     grid: { w: 3, h: 3 },
     walls: [],
     seeds: [],
-    tools: { antibiotic: 1, antiviral: 0, antifungal: 0, wall: 0 },
+    tools: { ...emptyInventory(), penicillin: 1 },
     toolsPerTurn: 1,
     turnLimit: 10,
     objective: { type: "clear_all" },
