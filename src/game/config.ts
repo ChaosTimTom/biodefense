@@ -9,8 +9,8 @@ import type { PathogenType, MedicineType, ToolId, TileKind } from "../sim/types"
 // ── Grid Layout ──────────────────────────────────
 
 export const TILE_SIZE = 56;      // desired max — computeLayout may shrink
-export const TILE_GAP = 2;
-export const TILE_RADIUS = 6;
+export const TILE_GAP = 0;
+export const TILE_RADIUS = 0;
 export const GRID_PADDING = 16;
 
 export function tileX(x: number, gridOffsetX: number, tileSize = TILE_SIZE, tileGap = TILE_GAP): number {

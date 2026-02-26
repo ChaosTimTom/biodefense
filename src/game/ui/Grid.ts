@@ -156,7 +156,7 @@ export class Grid {
       // Draw a dark fallback in case the entity texture fails to load
       const color = TILE_BG[tile.kind] ?? TILE_BG.empty;
       this.tileGraphics.fillStyle(color, 1);
-      this.tileGraphics.fillRoundedRect(px, py, this.ts, this.ts, this.tr);
+      this.tileGraphics.fillRect(px, py, this.ts, this.ts);
       return;
     }
 
@@ -177,10 +177,10 @@ export class Grid {
       this.bgSprites.push(spr);
       return;
     }
-    // Fallback: procedural rounded rect
+    // Fallback: procedural rect
     const color = TILE_BG[tile.kind] ?? TILE_BG.empty;
     this.tileGraphics.fillStyle(color, 1);
-    this.tileGraphics.fillRoundedRect(px, py, this.ts, this.ts, this.tr);
+    this.tileGraphics.fillRect(px, py, this.ts, this.ts);
   }
 
   private drawEntity(px: number, py: number, tile: Tile, gx: number, gy: number): void {
@@ -367,9 +367,7 @@ export class Grid {
     const px = tileX(x, this.offsetX, this.ts, this.tg);
     const py = tileY(y, this.offsetY, this.ts, this.tg);
     this.entityLayer.lineStyle(2, color, 1);
-    this.entityLayer.strokeRoundedRect(
-      px - 1, py - 1, this.ts + 2, this.ts + 2, this.tr + 1,
-    );
+    this.entityLayer.strokeRect(px - 1, py - 1, this.ts + 2, this.ts + 2);
   }
 
   /** Show tool placement validity overlay */
@@ -378,7 +376,7 @@ export class Grid {
     const py = tileY(y, this.offsetY, this.ts, this.tg);
     const color = valid ? UI.successGreen : UI.dangerRed;
     this.entityLayer.fillStyle(color, 0.25);
-    this.entityLayer.fillRoundedRect(px, py, this.ts, this.ts, this.tr);
+    this.entityLayer.fillRect(px, py, this.ts, this.ts);
   }
 
   destroy(): void {
