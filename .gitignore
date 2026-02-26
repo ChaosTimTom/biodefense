@@ -7,3 +7,4 @@ ios/
 .env
 .env.*
 backup_old/
+_all_files.json
