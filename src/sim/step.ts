@@ -28,7 +28,7 @@ import {
   MEDICINE_LIFESPAN, GENS_PER_TURN,
   INFECTION_LOSE_PCT,
   PATHOGEN_GROWTH, MEDICINE_GROWTH,
-  OVERWHELM_THRESHOLD, MAX_CHILDREN_PER_CELL,
+  OVERWHELM_THRESHOLD, MAX_CHILDREN_PER_CELL, MAX_CHILDREN_PER_MED_CELL,
   COUNTERED_BY,
   ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES, ALL_TOOL_IDS,
 } from "./constants";
@@ -138,17 +138,19 @@ export function runGeneration(board: Board): void {
     next[i] = resolveSurvival(tiles, w, h, x, y, tile);
   }
 
-  // ── Phase 2: growth pruning (pathogens only) ──
+  // ── Phase 2: growth pruning (pathogens AND medicines) ──
   // Find all newly born pathogen cells
-  const born = new Set<number>();
+  const bornPath = new Set<number>();
+  const bornMed = new Set<number>();
   for (let i = 0; i < next.length; i++) {
-    if (tiles[i].kind === "empty" && next[i].kind === "pathogen") {
-      born.add(i);
+    if (tiles[i].kind === "empty") {
+      if (next[i].kind === "pathogen") bornPath.add(i);
+      else if (next[i].kind === "medicine") bornMed.add(i);
     }
   }
 
-  if (born.size > 0) {
-    // For each existing parent pathogen, decide which children it keeps
+  // Prune pathogen births
+  if (bornPath.size > 0) {
     const kept = new Set<number>();
 
     for (let i = 0; i < tiles.length; i++) {
@@ -159,33 +161,63 @@ export function runGeneration(board: Board): void {
       const maxC = MAX_CHILDREN_PER_CELL[ptype];
       const [px, py] = coords(w, i);
 
-      // Collect this parent's children (born cells in its growth dirs)
       const children: number[] = [];
       for (const [dx, dy] of dirs) {
         const nx = px + dx, ny = py + dy;
         if (!inBounds(w, h, nx, ny)) continue;
         const ni = idx(w, nx, ny);
-        if (born.has(ni) && next[ni].pathogenType === ptype) {
+        if (bornPath.has(ni) && next[ni].pathogenType === ptype) {
           children.push(ni);
         }
       }
 
       if (children.length <= maxC) {
-        // All children fit within the limit
         for (const c of children) kept.add(c);
       } else {
-        // Randomly select maxC children using a deterministic seed
         const selected = seededSelectN(children, maxC,
-          px * 7919 + py * 104729 + born.size * 31);
+          px * 7919 + py * 104729 + bornPath.size * 31);
         for (const c of selected) kept.add(c);
       }
     }
 
-    // Revert un-kept born pathogens to empty
-    for (const bi of born) {
-      if (!kept.has(bi)) {
-        next[bi] = emptyTile();
+    for (const bi of bornPath) {
+      if (!kept.has(bi)) next[bi] = emptyTile();
+    }
+  }
+
+  // Prune medicine births
+  if (bornMed.size > 0) {
+    const kept = new Set<number>();
+
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i].kind !== "medicine" || !tiles[i].medicineType) continue;
+
+      const mtype = tiles[i].medicineType!;
+      const dirs = MEDICINE_GROWTH[mtype];
+      const maxC = MAX_CHILDREN_PER_MED_CELL[mtype];
+      const [px, py] = coords(w, i);
+
+      const children: number[] = [];
+      for (const [dx, dy] of dirs) {
+        const nx = px + dx, ny = py + dy;
+        if (!inBounds(w, h, nx, ny)) continue;
+        const ni = idx(w, nx, ny);
+        if (bornMed.has(ni) && next[ni].medicineType === mtype) {
+          children.push(ni);
+        }
       }
+
+      if (children.length <= maxC) {
+        for (const c of children) kept.add(c);
+      } else {
+        const selected = seededSelectN(children, maxC,
+          px * 6271 + py * 88651 + bornMed.size * 37);
+        for (const c of selected) kept.add(c);
+      }
+    }
+
+    for (const bi of bornMed) {
+      if (!kept.has(bi)) next[bi] = emptyTile();
     }
   }
 

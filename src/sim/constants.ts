@@ -145,6 +145,19 @@ export const MAX_CHILDREN_PER_CELL: Record<PathogenType, number> = {
   spore: 4,       // 4 of 8 dirs → random selection
 };
 
+/** Same cap applied to medicine growth so tools don't outpace pathogens. */
+export const MAX_CHILDREN_PER_MED_CELL: Record<MedicineType, number> = {
+  penicillin: 4,    // mirrors coccus
+  tetracycline: 4,  // mirrors bacillus
+  streptomycin: 4,  // mirrors spirillum
+  tamiflu: 8,       // mirrors influenza
+  zidovudine: 4,    // mirrors retrovirus
+  interferon: 8,    // mirrors phage
+  fluconazole: 4,   // mirrors mold
+  nystatin: 4,      // mirrors yeast
+  amphotericin: 4,  // mirrors spore
+};
+
 // ── Timing ───────────────────────────────────────
 
 /** How many gens a medicine cell lives before expiring (999 ≈ permanent) */
