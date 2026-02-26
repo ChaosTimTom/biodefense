@@ -47,6 +47,8 @@ export function createGameState(spec: LevelSpec): GameState {
     objective: spec.objective,
     toolsUsedThisTurn: 0,
     toolsPerTurn: spec.toolsPerTurn,
+    switchesPerTurn: 1,
+    switchesUsedThisTurn: 0,
     turnLimit: spec.turnLimit,
     peakInfectionPct: 0,
     isOver: false,

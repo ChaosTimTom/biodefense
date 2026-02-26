@@ -34,7 +34,7 @@ import {
 } from "./constants";
 import {
   coords, inBounds, idx, emptyTile, pathogenTile, medicineTile,
-  cloneTile, infectionPct,
+  cloneTile, infectionPct, getTile, setTile,
 } from "./board";
 import { canPlaceTool, applyTool } from "./tools";
 import { checkObjective } from "./objectives";
@@ -53,6 +53,20 @@ export function applyAction(state: GameState, action: Action): boolean {
       state.toolsUsedThisTurn++;
       return true;
     }
+    case "switch": {
+      if (state.switchesUsedThisTurn >= state.switchesPerTurn) return false;
+      const { fromX, fromY, toX, toY } = action;
+      const from = getTile(state.board, fromX, fromY);
+      const to = getTile(state.board, toX, toY);
+      // Source must be a medicine or wall the player placed; target must be empty
+      if (from.kind !== "medicine" && from.kind !== "wall") return false;
+      if (to.kind !== "empty") return false;
+      // Perform the swap
+      setTile(state.board, toX, toY, from);
+      setTile(state.board, fromX, fromY, to);
+      state.switchesUsedThisTurn++;
+      return true;
+    }
     case "skip":
       return true;
   }
@@ -68,7 +82,7 @@ export function advanceTurn(state: GameState, spec?: LevelSpec): GameState {
 
   state.turn++;
   state.toolsUsedThisTurn = 0;
-
+  state.switchesUsedThisTurn = 0;
   // Per-turn tool grant (drip-feed tools each turn)
   if (spec?.toolGrant) {
     const g = spec.toolGrant;

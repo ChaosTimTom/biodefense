@@ -104,6 +104,23 @@ export class BootScene extends Phaser.Scene {
     }
     this.load.image("tile_empty", "assets/tiles/tile_empty.png");
     this.load.image("tile_wall", "assets/tiles/tile_wall.png");
+
+    // World-specific tiles
+    for (let w = 1; w <= 4; w++) {
+      this.load.image(`tile_empty_w${w}`, `assets/tiles/tile_empty_w${w}.png`);
+      this.load.image(`tile_wall_w${w}`, `assets/tiles/tile_wall_w${w}.png`);
+    }
+
+    // World backgrounds
+    const bgFiles: Record<number, string> = {
+      1: "world_1_petri.png",
+      2: "world_2_blood.png",
+      3: "world_3_tissue.png",
+      4: "world_4_pandemic.png",
+    };
+    for (const [wId, file] of Object.entries(bgFiles)) {
+      this.load.image(`bg_world_${wId}`, `assets/bg/${file}`);
+    }
   }
 
   create(): void {

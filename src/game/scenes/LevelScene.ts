@@ -40,7 +40,7 @@ import { PreviewOverlay } from "../ui/PreviewOverlay";
 import { StarDisplay } from "../ui/StarDisplay";
 import { RulesOverlay } from "../ui/RulesOverlay";
 import { tweenWinBurst, tweenLoseShake } from "../animation/tweens";
-import { addBackground, fadeIn } from "../ui/UIFactory";
+import { addWorldBackground, fadeIn } from "../ui/UIFactory";
 
 export class LevelScene extends Phaser.Scene {
   // State
@@ -49,6 +49,12 @@ export class LevelScene extends Phaser.Scene {
   private levelSpec!: LevelSpec;
   private initialState!: GameState;
   private selectedTool: ToolId | null = null;
+
+  // Switch mode
+  private switchMode = false;
+  private switchFrom: { x: number; y: number } | null = null;
+  private switchBtn!: Phaser.GameObjects.Text;
+  private switchBtnZone!: Phaser.GameObjects.Rectangle;
 
   // UI components
   private grid!: Grid;
@@ -98,7 +104,7 @@ export class LevelScene extends Phaser.Scene {
     this.history = createHistory();
 
     // ── Background ──
-    addBackground(this, "dark");
+    addWorldBackground(this, spec.world ?? 1);
     fadeIn(this, 250);
 
     // ── Header ──
@@ -168,6 +174,7 @@ export class LevelScene extends Phaser.Scene {
       layout.tileSize,
       layout.tileGap,
       layout.tileRadius,
+      spec.world ?? 1,
     );
 
     // ── Status Bar ──
@@ -191,6 +198,25 @@ export class LevelScene extends Phaser.Scene {
     });
     this.turnControls.setUndoEnabled(false);
 
+    // ── Switch Button (move medicine/wall to empty) ──
+    this.switchBtn = this.add
+      .text(w - 50, layout.toolPaletteY + 14, "⇄", {
+        fontSize: "18px",
+        color: "#aaaacc",
+        fontFamily: "'Orbitron', sans-serif",
+        backgroundColor: "#16162b",
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setDepth(50);
+
+    this.switchBtnZone = this.add
+      .rectangle(w - 50, layout.toolPaletteY + 14, 48, 44)
+      .setInteractive({ useHandCursor: true })
+      .setAlpha(0.001)
+      .setDepth(51);
+    this.switchBtnZone.on("pointerdown", () => this.toggleSwitchMode());
+
     // ── Preview Overlay ──
     this.previewOverlay = new PreviewOverlay(
       this,
@@ -206,9 +232,14 @@ export class LevelScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-R", () => this.doReset());
     this.input.keyboard?.on("keydown-P", () => this.previewOverlay.toggleVisible());
     this.input.keyboard?.on("keydown-ESC", () => {
-      this.toolPalette.selectTool(null);
-      this.selectedTool = null;
+      if (this.switchMode) {
+        this.exitSwitchMode();
+      } else {
+        this.toolPalette.selectTool(null);
+        this.selectedTool = null;
+      }
     });
+    this.input.keyboard?.on("keydown-S", () => this.toggleSwitchMode());
 
     // Initial render
     this.renderAll();
@@ -223,8 +254,86 @@ export class LevelScene extends Phaser.Scene {
 
   // ── State Mutation & Actions ───────────────────
 
+  private toggleSwitchMode(): void {
+    if (this.animating || this.gameState.isOver) return;
+    if (this.switchMode) {
+      this.exitSwitchMode();
+    } else {
+      this.enterSwitchMode();
+    }
+  }
+
+  private enterSwitchMode(): void {
+    if (this.gameState.switchesUsedThisTurn >= this.gameState.switchesPerTurn) {
+      return; // no switches left
+    }
+    this.switchMode = true;
+    this.switchFrom = null;
+    // Deselect any tool
+    this.toolPalette.selectTool(null);
+    this.selectedTool = null;
+    this.updateSwitchBtnVisual();
+  }
+
+  private exitSwitchMode(): void {
+    this.switchMode = false;
+    this.switchFrom = null;
+    this.updateSwitchBtnVisual();
+    this.renderAll();
+  }
+
+  private updateSwitchBtnVisual(): void {
+    const canSwitch = this.gameState.switchesUsedThisTurn < this.gameState.switchesPerTurn;
+    if (this.switchMode) {
+      this.switchBtn.setColor("#00e5ff");
+      this.switchBtn.setBackgroundColor("#1a3040");
+    } else if (!canSwitch) {
+      this.switchBtn.setColor("#444466");
+      this.switchBtn.setBackgroundColor("#16162b");
+    } else {
+      this.switchBtn.setColor("#aaaacc");
+      this.switchBtn.setBackgroundColor("#16162b");
+    }
+  }
+
   private handleTileClick(x: number, y: number): void {
     if (this.animating || this.gameState.isOver) return;
+
+    // ── Switch mode: two-click flow ──
+    if (this.switchMode) {
+      if (!this.switchFrom) {
+        // First click: select source (must be medicine or wall)
+        const tile = getTile(this.gameState.board, x, y);
+        if (tile.kind !== "medicine" && tile.kind !== "wall") {
+          this.showFloatingHint(x, y, "Select a medicine or wall");
+          return;
+        }
+        this.switchFrom = { x, y };
+        this.grid.render(this.gameState.board);
+        this.grid.highlightTile(x, y, 0x00e5ff);
+        return;
+      } else {
+        // Second click: select target (must be empty)
+        const tile = getTile(this.gameState.board, x, y);
+        if (tile.kind !== "empty") {
+          this.showFloatingHint(x, y, "Must be an empty cell");
+          return;
+        }
+        pushHistory(this.history, this.gameState);
+        const action: Action = {
+          type: "switch",
+          fromX: this.switchFrom.x, fromY: this.switchFrom.y,
+          toX: x, toY: y,
+        };
+        applyAction(this.gameState, action);
+        this.exitSwitchMode();
+        this.turnControls.setUndoEnabled(canUndo(this.history));
+        this.renderAll();
+        this.updateSwitchBtnVisual();
+        return;
+      }
+    }
+
     if (!this.selectedTool) return;
 
     if (this.gameState.toolsUsedThisTurn >= this.gameState.toolsPerTurn) {
@@ -309,6 +418,8 @@ export class LevelScene extends Phaser.Scene {
 
     this.gameState.turn++;
     this.gameState.toolsUsedThisTurn = 0;
+    this.gameState.switchesUsedThisTurn = 0;
+    if (this.switchMode) this.exitSwitchMode();
 
     // Per-turn tool grant (v5.0 drip-feed)
     if (this.levelSpec.toolGrant) {
@@ -434,6 +545,7 @@ export class LevelScene extends Phaser.Scene {
     this.toolPalette.updateCounts(this.gameState.tools);
     this.toolPalette.selectTool(null);
     this.selectedTool = null;
+    if (this.switchMode) this.exitSwitchMode();
     this.turnControls.setUndoEnabled(false);
     this.starDisplay.setStars(0);
     this.renderAll();
@@ -446,6 +558,7 @@ export class LevelScene extends Phaser.Scene {
     this.updateStatusBar();
     this.updateActionsIndicator();
     this.refreshPreview();
+    this.updateSwitchBtnVisual();
   }
 
   private updateActionsIndicator(): void {
@@ -633,6 +746,8 @@ export class LevelScene extends Phaser.Scene {
 
   shutdown(): void {
     this.tooltipText = undefined;
+    this.switchMode = false;
+    this.switchFrom = null;
     this.grid?.destroy();
     this.toolPalette?.destroy();
     this.turnControls?.destroy();

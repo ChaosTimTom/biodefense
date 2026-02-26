@@ -190,6 +190,19 @@ export function addBackground(scene: Phaser.Scene, variant: "dark" | "title" | "
   scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.6);
 }
 
+/** Add world-themed background image; falls back to dark gradient if not loaded */
+export function addWorldBackground(scene: Phaser.Scene, worldId: number): void {
+  const { width: w, height: h } = scene.cameras.main;
+  const key = `bg_world_${worldId}`;
+  if (scene.textures.exists(key)) {
+    scene.add.image(w / 2, h / 2, key).setDisplaySize(w, h).setDepth(0);
+    genVignette(scene, w, h);
+    scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.5);
+  } else {
+    addBackground(scene, "dark");
+  }
+}
+
 /** Floating bio-particle decorations */
 export function addBioParticles(scene: Phaser.Scene, count = 15): void {
   const { width: w, height: h } = scene.cameras.main;

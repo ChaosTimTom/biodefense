@@ -80,6 +80,8 @@ export interface GameState {
   objective: Objective;
   toolsUsedThisTurn: number;
   toolsPerTurn: number;
+  switchesPerTurn: number;
+  switchesUsedThisTurn: number;
   turnLimit: number;
   peakInfectionPct: number;
   isOver: boolean;
@@ -90,4 +92,5 @@ export interface GameState {
 // ── Player Actions ───────────────────────────────
 export type Action =
   | { type: "place_tool"; tool: ToolId; x: number; y: number }
+  | { type: "switch"; fromX: number; fromY: number; toX: number; toY: number }
   | { type: "skip" };

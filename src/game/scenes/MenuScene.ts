@@ -8,7 +8,7 @@ import type { LevelSpec } from "../../sim/types";
 import { generateWorld } from "../../sim/generator";
 import { loadSave, saveSave, type SaveData } from "../save";
 import {
-  UI_FONT, addBackground, addBioParticles, addButton,
+  UI_FONT, addWorldBackground, addBioParticles, addButton,
   genCircleTex, genPanelTex, genBtnTex, fadeIn, fadeToScene,
 } from "../ui/UIFactory";
 
@@ -84,7 +84,7 @@ export class MenuScene extends Phaser.Scene {
     fadeIn(this);
 
     // ── Background ──
-    addBackground(this, "dark");
+    addWorldBackground(this, this.selectedWorld);
     addBioParticles(this, 8);
 
     // ── Header panel ──

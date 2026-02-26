@@ -95,6 +95,11 @@ export const TILE_BG_TEXTURES: Partial<Record<TileKind, string>> = {
   wall:  "tile_wall",
 };
 
+/** World-specific tile texture lookup */
+export function worldTileTexture(kind: "empty" | "wall", world: number): string {
+  return `tile_${kind}_w${world}`;
+}
+
 export const PATHOGEN_NAMES: Record<PathogenType, string> = {
   coccus: "Coccus",
   bacillus: "Bacillus",

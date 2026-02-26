@@ -23,6 +23,7 @@ import {
   UI,
   tileX,
   tileY,
+  worldTileTexture,
 } from "../config";
 
 export interface GridEvents {
@@ -48,6 +49,7 @@ export class Grid {
   private ts: number;   // effective tile size
   private tg: number;   // effective tile gap
   private tr: number;   // effective tile radius
+  private world: number; // world number for themed tiles
 
   constructor(
     scene: Phaser.Scene,
@@ -59,6 +61,7 @@ export class Grid {
     tileSize = TILE_SIZE,
     tileGap = TILE_GAP,
     tileRadius = TILE_RADIUS,
+    world = 1,
   ) {
     this.scene = scene;
     this.cols = cols;
@@ -69,6 +72,7 @@ export class Grid {
     this.ts = tileSize;
     this.tg = tileGap;
     this.tr = tileRadius;
+    this.world = world;
 
     this.container = scene.add.container(0, 0);
 
@@ -156,7 +160,17 @@ export class Grid {
       return;
     }
 
-    // Background tile texture (empty, wall)
+    // Try world-specific texture first, then default
+    if (tile.kind === "empty" || tile.kind === "wall") {
+      const worldKey = worldTileTexture(tile.kind, this.world);
+      if (this.hasTexture(worldKey)) {
+        const spr = this.addTileSprite(px, py, worldKey);
+        this.bgSprites.push(spr);
+        return;
+      }
+    }
+
+    // Background tile texture (empty, wall) — default
     const texKey = TILE_BG_TEXTURES[tile.kind];
     if (texKey && this.hasTexture(texKey)) {
       const spr = this.addTileSprite(px, py, texKey);
