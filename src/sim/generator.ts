@@ -835,13 +835,14 @@ function generateValidLevel(
 
     if (seeds.length < 2) continue; // need at least one pair
 
-    // Build tool inventory using COUNTERED_BY mapping
+    // Build tool inventory from ACTUALLY placed seed types
+    const placedTypes = [...new Set(seeds.map(s => s.type))] as PathogenType[];
     const tools = emptyInventory();
     const toolGrant = emptyInventory();
-    const perType = Math.ceil(params.initialTools / params.germTypes.length);
-    const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / params.germTypes.length));
+    const perType = Math.ceil(params.initialTools / placedTypes.length);
+    const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / placedTypes.length));
 
-    for (const germ of params.germTypes) {
+    for (const germ of placedTypes) {
       const med = COUNTERED_BY[germ];
       tools[med] = perType;
       toolGrant[med] = perGrant;
@@ -849,7 +850,7 @@ function generateValidLevel(
     tools.wall = 2 + Math.floor(rng() * 2);
 
     const title = generateTitle(levelNum, rng);
-    const hint = generateHint(params.germTypes, levelNum);
+    const hint = generateHint(placedTypes, levelNum);
 
     // Build a preliminary spec with a generous threshold to simulate
     const prelimSpec: LevelSpec = {
@@ -967,12 +968,13 @@ function generateFallback(
     }
   }
 
-  // Build tools using COUNTERED_BY
+  // Build tools from ACTUALLY placed seed types
+  const placedTypes = [...new Set(seeds.map(s => s.type))] as PathogenType[];
   const tools = emptyInventory();
   const toolGrant = emptyInventory();
-  const perType = Math.ceil(params.initialTools / params.germTypes.length);
-  const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / params.germTypes.length));
-  for (const germ of params.germTypes) {
+  const perType = Math.ceil(params.initialTools / placedTypes.length);
+  const perGrant = Math.max(1, Math.ceil(params.grantPerTurn / placedTypes.length));
+  for (const germ of placedTypes) {
     const med = COUNTERED_BY[germ];
     tools[med] = perType;
     toolGrant[med] = perGrant;
