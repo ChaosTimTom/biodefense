@@ -319,6 +319,14 @@ export class MenuScene extends Phaser.Scene {
 
   private isLevelUnlocked(levelId: number): boolean {
     if (levelId <= 1) return true;
+
+    // First level of each world is unlocked if the world is star-gated open
+    const totalStars = Object.values(this.save.stars).reduce((a, b) => a + b, 0);
+    for (const world of WORLDS) {
+      const firstId = (world.id - 1) * 50 + 1;
+      if (levelId === firstId && totalStars >= world.starsNeeded) return true;
+    }
+
     const prevStars = this.save.stars[levelId - 1] ?? 0;
     return prevStars > 0;
   }
