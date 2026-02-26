@@ -1,12 +1,14 @@
 // ═══════════════════════════════════════════════════
 // src/game/ui/StatusBar.ts — Turn counter + infection % bar
+// 3-row layout: Row1 Turn/Actions | Row2 InfBar | Row3 Objective
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
 import { UI } from "../config";
 
-const BAR_H = 14;
-const BAR_RADIUS = 7;
+const BAR_H = 10;
+const BAR_RADIUS = 5;
+const ROW_GAP = 4;
 
 export class StatusBar {
   private scene: Phaser.Scene;
@@ -31,53 +33,56 @@ export class StatusBar {
     width: number,
   ) {
     this.scene = scene;
-    this.barX = x + 80;
-    this.barY = y + 2;
-    this.barW = Math.max(40, width - 160);
     this.totalW = width;
     this.container = scene.add.container(0, 0);
 
-    // Turn counter (left)
+    // ── Row 1: Turn (left) + Actions (right) ──
+    const row1Y = y + 2;
+
     this.turnText = scene.add
-      .text(x + 4, y + 4, "Turn 0", {
-        fontSize: "12px",
+      .text(x + 4, row1Y, "Turn 0", {
+        fontSize: "11px",
         color: "#ffffff",
         fontFamily: "'Orbitron', sans-serif",
         fontStyle: "bold",
       })
       .setOrigin(0, 0);
 
-    // Actions remaining (right-aligned on same line)
     this.actionsText = scene.add
-      .text(x + width - 4, y + 4, "", {
+      .text(x + width - 4, row1Y, "", {
         fontSize: "10px",
         color: "#88aadd",
         fontFamily: "'Orbitron', sans-serif",
       })
       .setOrigin(1, 0);
 
-    // Infection bar background
+    // ── Row 2: Infection bar + pct ──
+    const row2Y = row1Y + 16 + ROW_GAP;
+    this.barX = x + 4;
+    this.barW = Math.max(40, width - 56);
+    this.barY = row2Y;
+
     this.barBg = scene.add.graphics();
     this.barBg.fillStyle(0x333355, 0.8);
     this.barBg.fillRoundedRect(this.barX, this.barY, this.barW, BAR_H, BAR_RADIUS);
 
-    // Infection bar fill
     this.barFill = scene.add.graphics();
 
-    // Infection % text (right of bar)
     this.pctText = scene.add
-      .text(this.barX + this.barW + 8, y + 4, "0%", {
-        fontSize: "12px",
+      .text(this.barX + this.barW + 6, row2Y - 1, "0%", {
+        fontSize: "11px",
         color: "#ff4444",
         fontFamily: "'Orbitron', sans-serif",
+        fontStyle: "bold",
       })
       .setOrigin(0, 0);
 
-    // Objective hint (below bar)
+    // ── Row 3: Objective hint ──
+    const row3Y = row2Y + BAR_H + ROW_GAP + 2;
     this.objectiveText = scene.add
-      .text(x + width / 2, y + 22, "", {
-        fontSize: "11px",
-        color: "#aaaacc",
+      .text(x + width / 2, row3Y, "", {
+        fontSize: "9px",
+        color: "#8899bb",
         fontFamily: "'Orbitron', sans-serif",
       })
       .setOrigin(0.5, 0);

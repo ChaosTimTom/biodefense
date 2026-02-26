@@ -166,12 +166,12 @@ export function computeLayout(
   gridCols: number,
   gridRows: number,
 ): LayoutZones {
-  const headerH = 48;
-  const statusH = 44;
+  const headerH = 80;
+  const statusH = 52;
   const paletteH = 56;
   const controlsH = 48;
-  const bottomPad = 12;
-  const bottomTotal = statusH + paletteH + controlsH + bottomPad + 12;
+  const bottomPad = 8;
+  const bottomTotal = statusH + paletteH + controlsH + bottomPad + 8;
 
   const availH = canvasH - headerH - bottomTotal - GRID_PADDING * 2;
   const availW = canvasW - GRID_PADDING * 2;

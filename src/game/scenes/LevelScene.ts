@@ -144,11 +144,12 @@ export class LevelScene extends Phaser.Scene {
     // ── Level Hint ──
     const hintMsg = spec.hint || "";
     this.hintText = this.add
-      .text(w / 2, 30, hintMsg, {
-        fontSize: "10px",
-        color: "#88aadd",
+      .text(w / 2, 34, hintMsg, {
+        fontSize: "9px",
+        color: "#6688aa",
         fontFamily: "'Orbitron', sans-serif",
-        wordWrap: { width: w - 80 },
+        wordWrap: { width: w - 60 },
+        lineSpacing: 2,
       })
       .setOrigin(0.5, 0);
 
