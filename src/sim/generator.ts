@@ -500,7 +500,7 @@ export const WORLD_CONFIGS: Record<number, WorldConfig> = {
       ["yeast", "spirillum", "retrovirus"],
       ["yeast", "spirillum", "retrovirus"],
     ],
-    templates: [[8, 3], [8, 3, 5], [8, 3, 5, 9], [8, 3, 5, 9, 4]],
+    templates: [[0, 1], [0, 1, 9], [0, 1, 5, 9], [0, 1, 4, 5, 9, 10]],
     gridRange: [10, 16],
     starsNeeded: 100,
   },
@@ -872,8 +872,13 @@ function generateValidLevel(
     // ── SIMULATE: run with zero player actions ──
     const sim = simulateNoAction(prelimSpec);
 
-    // If peak infection is too low, this map can't challenge the player
-    if (sim.peakPct < 15) continue; // pathogen barely grows — bad level
+    // If peak infection is too low, this map can't challenge the player.
+    // Long-range movers (diagonal/knight) need higher minimum to ensure
+    // the seeds actually have room to spread meaningfully.
+    const minPeak = params.germTypes.some(g =>
+      ["yeast", "spore", "spirillum", "phage", "retrovirus", "bacillus"].includes(g)
+    ) ? 25 : 15;
+    if (sim.peakPct < minPeak) continue; // pathogen barely grows — bad level
 
     // Set threshold relative to simulated peak:
     // threshold = peak * (1 - targetDifficulty * 0.6)
