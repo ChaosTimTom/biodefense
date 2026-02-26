@@ -6,7 +6,7 @@
 import Phaser from "phaser";
 import type { LevelSpec } from "../../sim/types";
 import { generateWorld } from "../../sim/generator";
-import { loadSave, saveSave, type SaveData } from "../save";
+import { loadSave, saveSave, totalStars as getStars, totalScore as getScore, type SaveData } from "../save";
 import {
   UI_FONT, addWorldBackground, addBioParticles, addButton,
   genCircleTex, genPanelTex, genBtnTex, fadeIn, fadeToScene,
@@ -120,8 +120,8 @@ export class MenuScene extends Phaser.Scene {
       .setDepth(3);
 
     // Stars + Score
-    const totalStars = Object.values(this.save.stars).reduce((a, b) => a + b, 0);
-    const totalScore = Object.values(this.save.scores).reduce((a, b) => a + b, 0);
+    const totalStars = getStars(this.save);
+    const totalScore = getScore(this.save);
 
     this.add
       .text(w - 16, 23, `★ ${totalStars}`, {
@@ -321,10 +321,10 @@ export class MenuScene extends Phaser.Scene {
     if (levelId <= 1) return true;
 
     // First level of each world is unlocked if the world is star-gated open
-    const totalStars = Object.values(this.save.stars).reduce((a, b) => a + b, 0);
+    const ts = getStars(this.save);
     for (const world of WORLDS) {
       const firstId = (world.id - 1) * 50 + 1;
-      if (levelId === firstId && totalStars >= world.starsNeeded) return true;
+      if (levelId === firstId && ts >= world.starsNeeded) return true;
     }
 
     const prevStars = this.save.stars[levelId - 1] ?? 0;

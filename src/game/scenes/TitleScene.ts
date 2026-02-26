@@ -4,7 +4,10 @@
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
-import { loadSave } from "../save";
+import {
+  loadSave, totalStars as getStars, totalScore as getScore,
+  levelsCompleted as getCompleted,
+} from "../save";
 import {
   UI_FONT, addBackground, addBioParticles, addButton,
   genPanelTex, fadeIn, fadeToScene,
@@ -74,17 +77,17 @@ export class TitleScene extends Phaser.Scene {
 
     // ── Stats Panel ──
     const save = loadSave();
-    const totalStars = Object.values(save.stars).reduce((a, b) => a + b, 0);
-    const totalScore = Object.values(save.scores).reduce((a, b) => a + b, 0);
-    const levelsCompleted = Object.keys(save.stars).length;
+    const stars = getStars(save);
+    const score = getScore(save);
+    const completed = getCompleted(save);
 
-    if (levelsCompleted > 0) {
+    if (completed > 0) {
       genPanelTex(this, "stats_panel", 280, 28, 8, "rgba(13,21,37,0.8)", "rgba(0,229,255,0.08)");
       this.add.image(w / 2, h * 0.425, "stats_panel").setDepth(4);
       this.add
         .text(
           w / 2, h * 0.425,
-          `★ ${totalStars}   |   ${totalScore.toLocaleString()} pts   |   ${levelsCompleted} levels`,
+          `★ ${stars}   |   ${score.toLocaleString()} pts   |   ${completed} levels`,
           { fontSize: "9px", color: "#5577aa", fontFamily: UI_FONT },
         )
         .setOrigin(0.5)
