@@ -780,7 +780,11 @@ function generateHint(types: PathogenType[], levelNum: number): string {
 // ── Main generator ───────────────────────────────
 
 const LEVELS_PER_WORLD = 50;
-const MAX_ATTEMPTS = 15;
+const MAX_ATTEMPTS = 30;
+
+// Minimum gap between peak infection and threshold.
+// Ensures the player must block meaningful growth, not just 1-2 cells.
+const MIN_MARGIN = 8;
 
 /**
  * Generate all 50 levels for a world. Each level is
@@ -877,7 +881,7 @@ function generateValidLevel(
     // the seeds actually have room to spread meaningfully.
     const minPeak = params.germTypes.some(g =>
       ["yeast", "spore", "spirillum", "phage", "retrovirus", "bacillus"].includes(g)
-    ) ? 25 : 15;
+    ) ? 35 : 25;
     if (sim.peakPct < minPeak) continue; // pathogen barely grows — bad level
 
     // Set threshold relative to simulated peak:
@@ -886,7 +890,12 @@ function generateValidLevel(
     // Clamped to [15, 60].
     const rawThreshold =
       sim.peakPct * (1 - params.targetDifficulty * 0.6);
-    const maxPct = Math.max(15, Math.min(60, Math.round(rawThreshold)));
+    let maxPct = Math.max(15, Math.min(60, Math.round(rawThreshold)));
+
+    // Enforce minimum margin — player must block real growth, not just 1-2 cells
+    if (sim.peakPct - maxPct < MIN_MARGIN) {
+      maxPct = Math.max(10, Math.round(sim.peakPct - MIN_MARGIN));
+    }
 
     // Re-simulate with real threshold to verify it actually loses
     const finalSpec: LevelSpec = {
@@ -1004,10 +1013,28 @@ function generateFallback(
   };
 
   const sim = simulateNoAction(prelimSpec);
-  const maxPct = Math.max(15, Math.min(50, Math.round(sim.peakPct * 0.5)));
+  let maxPct = Math.max(15, Math.min(50, Math.round(sim.peakPct * 0.5)));
 
-  return {
+  // Enforce minimum margin in fallback too
+  if (sim.peakPct - maxPct < MIN_MARGIN) {
+    maxPct = Math.max(10, Math.round(sim.peakPct - MIN_MARGIN));
+  }
+
+  const finalSpec: LevelSpec = {
     ...prelimSpec,
     objective: { type: "contain", maxPct, maxTurns: params.turnLimit },
   };
+
+  // Verify fallback actually loses with no action
+  const verify = simulateNoAction(finalSpec);
+  if (verify.result !== "lose") {
+    // Force threshold down further
+    finalSpec.objective = {
+      type: "contain",
+      maxPct: Math.max(10, Math.round(sim.peakPct * 0.3)),
+      maxTurns: params.turnLimit,
+    };
+  }
+
+  return finalSpec;
 }
