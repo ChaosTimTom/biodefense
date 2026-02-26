@@ -188,9 +188,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private renderLevelGrid(w: number, _h: number): void {
-    const startY = 108;
+    const startY = 124;
     const cols = 5;
-    const diam = 48;
+    const diam = 46;
     const gap = 10;
     const gridW = cols * (diam + gap) - gap;
     const startX = (w - gridW) / 2 + diam / 2;
