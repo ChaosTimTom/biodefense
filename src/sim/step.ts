@@ -28,7 +28,7 @@ import {
   MEDICINE_LIFESPAN, GENS_PER_TURN,
   INFECTION_LOSE_PCT,
   PATHOGEN_GROWTH, MEDICINE_GROWTH,
-  OVERWHELM_THRESHOLD,
+  OVERWHELM_THRESHOLD, MAX_CHILDREN_PER_CELL,
   COUNTERED_BY,
   ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES, ALL_TOOL_IDS,
 } from "./constants";
@@ -108,10 +108,17 @@ export function executeTurn(state: GameState, actions: Action[], spec?: LevelSpe
 /**
  * Run a single generation (exposed for UI animation —
  * LevelScene can call this once per tick for visual stepping).
+ *
+ * Phase 1: Resolve all births & survival deterministically.
+ * Phase 2: Growth pruning — each parent pathogen cell may only
+ *   spawn up to MAX_CHILDREN_PER_CELL new cells. If a parent
+ *   has more eligible children, a seeded-random subset is kept.
+ *   A child that ANY parent keeps survives.
  */
 export function runGeneration(board: Board): void {
   const { w, h, tiles } = board;
 
+  // ── Phase 1: deterministic resolution ─────────
   const next: Tile[] = new Array(tiles.length);
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i];
@@ -131,7 +138,73 @@ export function runGeneration(board: Board): void {
     next[i] = resolveSurvival(tiles, w, h, x, y, tile);
   }
 
+  // ── Phase 2: growth pruning (pathogens only) ──
+  // Find all newly born pathogen cells
+  const born = new Set<number>();
+  for (let i = 0; i < next.length; i++) {
+    if (tiles[i].kind === "empty" && next[i].kind === "pathogen") {
+      born.add(i);
+    }
+  }
+
+  if (born.size > 0) {
+    // For each existing parent pathogen, decide which children it keeps
+    const kept = new Set<number>();
+
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i].kind !== "pathogen" || !tiles[i].pathogenType) continue;
+
+      const ptype = tiles[i].pathogenType!;
+      const dirs = PATHOGEN_GROWTH[ptype];
+      const maxC = MAX_CHILDREN_PER_CELL[ptype];
+      const [px, py] = coords(w, i);
+
+      // Collect this parent's children (born cells in its growth dirs)
+      const children: number[] = [];
+      for (const [dx, dy] of dirs) {
+        const nx = px + dx, ny = py + dy;
+        if (!inBounds(w, h, nx, ny)) continue;
+        const ni = idx(w, nx, ny);
+        if (born.has(ni) && next[ni].pathogenType === ptype) {
+          children.push(ni);
+        }
+      }
+
+      if (children.length <= maxC) {
+        // All children fit within the limit
+        for (const c of children) kept.add(c);
+      } else {
+        // Randomly select maxC children using a deterministic seed
+        const selected = seededSelectN(children, maxC,
+          px * 7919 + py * 104729 + born.size * 31);
+        for (const c of selected) kept.add(c);
+      }
+    }
+
+    // Revert un-kept born pathogens to empty
+    for (const bi of born) {
+      if (!kept.has(bi)) {
+        next[bi] = emptyTile();
+      }
+    }
+  }
+
   board.tiles = next;
+}
+
+/**
+ * Seeded deterministic selection of N items from an array.
+ * Uses a linear congruential generator for fast, reproducible shuffling.
+ */
+function seededSelectN(items: number[], n: number, seed: number): number[] {
+  const arr = [...items];
+  let s = (seed >>> 0) || 1;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    const j = (s >>> 0) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, n);
 }
 
 // ── Growth direction helpers ─────────────────────

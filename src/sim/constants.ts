@@ -96,30 +96,53 @@ export const CARDINAL_DIRS = CARDINAL_1;
 export const DIAGONAL_DIRS = DIAGONAL_1;
 export const KNIGHT_DIRS = FULL_KNIGHT;
 
-/** Growth pattern lookup by pathogen type */
+/**
+ * Growth pattern lookup by pathogen type.
+ * Long-range types get their signature jumps PLUS 4 closer
+ * intermediate positions, making them harder to fully block.
+ * Growth per parent is capped by MAX_CHILDREN_PER_CELL.
+ */
 export const PATHOGEN_GROWTH: Record<PathogenType, [number, number][]> = {
-  coccus: CARDINAL_1,
-  bacillus: CARDINAL_2,
-  spirillum: NARROW_KNIGHT,
-  influenza: FULL_KNIGHT,
-  retrovirus: WIDE_KNIGHT,
-  phage: CAMEL,
-  mold: DIAGONAL_1,
-  yeast: DIAGONAL_2,
-  spore: DIAGONAL_3,
+  coccus: CARDINAL_1,                              // 4 dirs (short-range, unchanged)
+  bacillus: [...CARDINAL_2, ...CARDINAL_1],         // 8 dirs (leap ±2 + step ±1)
+  spirillum: [...NARROW_KNIGHT, ...DIAGONAL_1],     // 8 dirs (knight + diagonal step)
+  influenza: FULL_KNIGHT,                           // 8 dirs (already wide, unchanged)
+  retrovirus: [...WIDE_KNIGHT, ...CARDINAL_1],      // 8 dirs (wide knight + cardinal step)
+  phage: [...CAMEL, ...DIAGONAL_1],                 // 12 dirs (camel + diagonal step)
+  mold: DIAGONAL_1,                                 // 4 dirs (short-range, unchanged)
+  yeast: [...DIAGONAL_2, ...DIAGONAL_1],            // 8 dirs (long diag + step diag)
+  spore: [...DIAGONAL_3, ...DIAGONAL_1],            // 8 dirs (spore launch + step diag)
 };
 
-/** Growth pattern lookup by medicine type (mirrors its target) */
+/** Growth pattern lookup by medicine type (mirrors its target pathogen) */
 export const MEDICINE_GROWTH: Record<MedicineType, [number, number][]> = {
-  penicillin: CARDINAL_1,
-  tetracycline: CARDINAL_2,
-  streptomycin: NARROW_KNIGHT,
-  tamiflu: FULL_KNIGHT,
-  zidovudine: WIDE_KNIGHT,
-  interferon: CAMEL,
-  fluconazole: DIAGONAL_1,
-  nystatin: DIAGONAL_2,
-  amphotericin: DIAGONAL_3,
+  penicillin: CARDINAL_1,                           // mirrors coccus
+  tetracycline: [...CARDINAL_2, ...CARDINAL_1],     // mirrors bacillus
+  streptomycin: [...NARROW_KNIGHT, ...DIAGONAL_1],  // mirrors spirillum
+  tamiflu: FULL_KNIGHT,                             // mirrors influenza
+  zidovudine: [...WIDE_KNIGHT, ...CARDINAL_1],      // mirrors retrovirus
+  interferon: [...CAMEL, ...DIAGONAL_1],            // mirrors phage
+  fluconazole: DIAGONAL_1,                          // mirrors mold
+  nystatin: [...DIAGONAL_2, ...DIAGONAL_1],         // mirrors yeast
+  amphotericin: [...DIAGONAL_3, ...DIAGONAL_1],     // mirrors spore
+};
+
+/**
+ * Max new cells each parent pathogen cell can spawn per generation.
+ * Set to the original direction count so growth RATE stays the same,
+ * but the expanded options make WHERE it grows unpredictable.
+ * Types whose dir count matches their MAX_CHILDREN are effectively unlimited.
+ */
+export const MAX_CHILDREN_PER_CELL: Record<PathogenType, number> = {
+  coccus: 4,      // 4 of 4 dirs → all fire (unchanged)
+  bacillus: 4,    // 4 of 8 dirs → random selection
+  spirillum: 4,   // 4 of 8 dirs → random selection
+  influenza: 8,   // 8 of 8 dirs → all fire (unchanged)
+  retrovirus: 4,  // 4 of 8 dirs → random selection
+  phage: 8,       // 8 of 12 dirs → random selection
+  mold: 4,        // 4 of 4 dirs → all fire (unchanged)
+  yeast: 4,       // 4 of 8 dirs → random selection
+  spore: 4,       // 4 of 8 dirs → random selection
 };
 
 // ── Timing ───────────────────────────────────────
@@ -141,9 +164,13 @@ export const INFECTION_LOSE_PCT = 50;
  * - 8-dir types:  3 of 8 → overwhelmed
  */
 export const OVERWHELM_THRESHOLD: Record<PathogenType, number> = {
-  coccus: 2, bacillus: 2, spirillum: 2,      // 4-dir → 2
-  influenza: 3, phage: 3,                     // 8-dir → 3
-  retrovirus: 2, mold: 2, yeast: 2, spore: 2, // 4-dir → 2
+  coccus: 2,                                  // 4-dir → 2
+  bacillus: 3, spirillum: 3,                  // 8-dir → 3
+  influenza: 3,                               // 8-dir → 3
+  retrovirus: 3,                              // 8-dir → 3
+  phage: 4,                                   // 12-dir → 4
+  mold: 2,                                    // 4-dir → 2
+  yeast: 3, spore: 3,                         // 8-dir → 3
 };
 
 // ── Type relationships ───────────────────────────
