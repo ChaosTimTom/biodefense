@@ -32,6 +32,64 @@ function simulateNoAction(spec: LevelSpec) {
 
 const WORLD_NAMES = ["", "Petri Dish", "Bloodstream", "Tissue", "Pandemic"];
 
+// ── Find specific level by title ──
+for (let w = 1; w <= 4; w++) {
+  const levels = generateWorld(w);
+  for (const spec of levels) {
+    const levelNum = spec.id - (w - 1) * 50;
+    const totalCells = spec.grid.w * spec.grid.h;
+    const openCells = totalCells - spec.walls.length;
+    const wallPct = ((spec.walls.length / totalCells) * 100).toFixed(1);
+    const seedTypes = [...new Set(spec.seeds.map(s => s.type))];
+    
+    // Print levels with very high wall density (>50% walls)
+    if (spec.walls.length / totalCells > 0.45 || spec.title.includes("Plague")) {
+      console.log(
+        `W${w} L${String(levelNum).padStart(2)} id=${spec.id} "${spec.title}" ` +
+        `grid=${spec.grid.w}x${spec.grid.h} total=${totalCells} walls=${spec.walls.length} ` +
+        `open=${openCells} wallPct=${wallPct}% ` +
+        `seeds=${spec.seeds.length} types=[${seedTypes.join(",")}] ` +
+        `thresh=${spec.objective.maxPct}% turns=${spec.turnLimit}`
+      );
+      
+      // Print the grid visually for "Mutating Plague"
+      if (spec.title === "Mutating Plague") {
+        const wallSet = new Set(spec.walls.map(([x,y]) => `${x},${y}`));
+        const seedMap = new Map(spec.seeds.map(s => [`${s.x},${s.y}`, s.type[0].toUpperCase()]));
+        console.log("");
+        for (let y = 0; y < spec.grid.h; y++) {
+          let row = "";
+          for (let x = 0; x < spec.grid.w; x++) {
+            const k = `${x},${y}`;
+            if (seedMap.has(k)) row += seedMap.get(k);
+            else if (wallSet.has(k)) row += "█";
+            else row += "·";
+          }
+          console.log("  " + row);
+        }
+        console.log("");
+      }
+    }
+  }
+}
+
+console.log("\n" + "=".repeat(60));
+console.log("WALL DENSITY DISTRIBUTION:\n");
+
+// Wall density histogram
+const densityBuckets: Record<string, number> = {};
+for (let w = 1; w <= 4; w++) {
+  const levels = generateWorld(w);
+  for (const spec of levels) {
+    const wallPct = Math.floor((spec.walls.length / (spec.grid.w * spec.grid.h)) * 10) * 10;
+    const bucket = `${wallPct}-${wallPct+9}%`;
+    densityBuckets[bucket] = (densityBuckets[bucket] || 0) + 1;
+  }
+}
+for (const [bucket, count] of Object.entries(densityBuckets).sort()) {
+  console.log(`  ${bucket.padEnd(8)} ${"█".repeat(count)} (${count})`);
+}
+
 interface LevelDiag {
   world: number;
   levelNum: number;

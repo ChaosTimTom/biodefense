@@ -287,8 +287,9 @@ const TEMPLATES: TemplateFn[] = [
 // ── New templates (worlds 2-4) ───────────────────
 
 /**
- * Vein — meandering narrow channels like blood vessels.
- * 2-3 winding corridors of width 2-3, with occasional wider chambers.
+ * Vein — meandering wide channels like blood vessels.
+ * 3-4 winding corridors of width 3-4, with occasional wider chambers.
+ * Carves generously to ensure pathogens have room to spread.
  */
 function tplVein(w: number, h: number, rng: () => number): [number, number][] {
   const walls = tplOpen(w, h, rng);
@@ -298,17 +299,18 @@ function tplVein(w: number, h: number, rng: () => number): [number, number][] {
     for (let x = 1; x < w - 1; x++)
       ws.add(key(x, y));
 
-  const numVeins = 2 + Math.floor(rng() * 2);
+  const numVeins = 3 + Math.floor(rng() * 2);
   for (let v = 0; v < numVeins; v++) {
     // Start from left or top edge
     let cx = v % 2 === 0 ? 1 : 1 + Math.floor(rng() * (w - 2));
     let cy = v % 2 === 0 ? 1 + Math.floor(rng() * (h - 2)) : 1;
-    const veinWidth = 2 + Math.floor(rng() * 2);
-    const steps = w + h;
+    const veinWidth = 3 + Math.floor(rng() * 2); // wider: 3-4
+    const steps = w + h + 4; // extra steps for more carving
     for (let s = 0; s < steps; s++) {
       // Carve a circle of veinWidth around current point
-      for (let dy = -Math.floor(veinWidth / 2); dy <= Math.floor(veinWidth / 2); dy++) {
-        for (let dx = -Math.floor(veinWidth / 2); dx <= Math.floor(veinWidth / 2); dx++) {
+      const r = Math.floor(veinWidth / 2);
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
           const nx = cx + dx, ny = cy + dy;
           if (nx > 0 && nx < w - 1 && ny > 0 && ny < h - 1)
             ws.delete(key(nx, ny));
@@ -376,22 +378,21 @@ function tplChamber(w: number, h: number, rng: () => number): [number, number][]
 }
 
 /**
- * Maze — dense wall network creating narrow 1-2 cell wide passages.
+ * Maze — sparse wall pillars creating a maze-like feel with wide passages.
+ * Uses every-third-cell spacing and lower placement chance for breathing room.
  */
 function tplMaze(w: number, h: number, rng: () => number): [number, number][] {
   const walls = tplOpen(w, h, rng);
-  // Create a grid-based maze using every-other-cell method
-  const cellW = 2, cellH = 2;
-  for (let cy = 1; cy < h - 1; cy += cellH) {
-    for (let cx = 1; cx < w - 1; cx += cellW) {
-      // Place wall in one of the two possible positions
-      if (rng() < 0.45) {
-        // Vertical wall segment
+  // Wider spacing (every 3 cells) and lower chance → sparser maze
+  const cellW = 3, cellH = 3;
+  for (let cy = 2; cy < h - 2; cy += cellH) {
+    for (let cx = 2; cx < w - 2; cx += cellW) {
+      // Place wall in one of the two possible positions (lower probability)
+      if (rng() < 0.35) {
         const wy = cy + 1;
         if (wy < h - 1) walls.push([cx, wy]);
       }
-      if (rng() < 0.45) {
-        // Horizontal wall segment
+      if (rng() < 0.35) {
         const wx = cx + 1;
         if (wx < w - 1) walls.push([wx, cy]);
       }
@@ -427,16 +428,15 @@ function tplCompound(w: number, h: number, rng: () => number): [number, number][
   const numRegions = 2 + Math.floor(rng() * 3); // 2-4
 
   if (numRegions <= 2) {
-    // Vertical split
+    // Vertical split — single wall with wider bridge
     const splitX = Math.floor(w / 2);
     const bridgeY = Math.floor(h / 2) + Math.floor(rng() * 4) - 2;
     for (let y = 1; y < h - 1; y++) {
       if (Math.abs(y - bridgeY) <= 1) continue;
       walls.push([splitX, y]);
-      if (splitX + 1 < w - 1) walls.push([splitX + 1, y]);
     }
   } else {
-    // Quad split
+    // Quad split — single-thickness walls with wider bridges
     const splitX = Math.floor(w / 2);
     const splitY = Math.floor(h / 2);
     const bridgeH = splitY + Math.floor(rng() * 3) - 1;
@@ -786,6 +786,10 @@ const MAX_ATTEMPTS = 30;
 // Ensures the player must block meaningful growth, not just 1-2 cells.
 const MIN_MARGIN = 8;
 
+// Maximum wall density — levels with more walls than this are rejected.
+// Prevents templates from creating claustrophobic boards with no growth room.
+const MAX_WALL_PCT = 0.40;
+
 /**
  * Generate all 50 levels for a world. Each level is
  * simulation-validated: doing nothing MUST result in
@@ -830,6 +834,10 @@ function generateValidLevel(
         walls.push([wx, wy]);
       }
     }
+
+    // Reject boards that are too wall-heavy — pathogens need room to spread
+    const wallPct = walls.length / (gridW * gridH);
+    if (wallPct > MAX_WALL_PCT) continue;
 
     // Place seed pairs in open areas
     const seeds = placeSeedPairs(
