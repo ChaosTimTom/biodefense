@@ -7,10 +7,11 @@
  * actions. Reports levels where the player wins by doing nothing.
  */
 
-import { generateWorld } from "../src/sim/generator";
-import { createGameState } from "../src/sim/board";
-import { advanceTurn } from "../src/sim/step";
-import type { LevelSpec } from "../src/sim/types";
+import { generateWorld, greedySolve, WORLD_CONFIGS } from "../src/sim/generator";
+import { createGameState, getTile } from "../src/sim/board";
+import { advanceTurn, applyAction } from "../src/sim/step";
+import { COUNTERED_BY } from "../src/sim/constants";
+import type { LevelSpec, PathogenType } from "../src/sim/types";
 
 function simulateNoAction(spec: LevelSpec) {
   const state = createGameState(spec);
@@ -30,65 +31,120 @@ function simulateNoAction(spec: LevelSpec) {
   };
 }
 
+/**
+ * Check if placing a SINGLE medicine anywhere on player turn 1
+ * (then doing nothing for all remaining turns) can win the level.
+ * Returns the winning cell {x,y,tool} or null if no single-place win exists.
+ */
+function checkSinglePlaceWin(
+  spec: LevelSpec,
+): { x: number; y: number; tool: string } | null {
+  // Only concern levels with contain objective
+  if (spec.objective.type !== "contain") return null;
+
+  // Collect unique pathogen types on the board
+  const seedTypes = [...new Set(spec.seeds.map(s => s.type))] as PathogenType[];
+
+  // For each medicine type the player has, try every empty cell
+  for (const ptype of seedTypes) {
+    const med = COUNTERED_BY[ptype];
+    // Check the player actually has this medicine
+    if (!spec.tools[med] || spec.tools[med] <= 0) continue;
+
+    for (let y = 0; y < spec.grid.h; y++) {
+      for (let x = 0; x < spec.grid.w; x++) {
+        // Create fresh state for each attempt
+        const state = createGameState(spec);
+        const tile = getTile(state.board, x, y);
+        if (tile.kind !== "empty") continue;
+
+        // Place one medicine
+        const ok = applyAction(state, { type: "place_tool", tool: med, x, y });
+        if (!ok) continue;
+
+        // Simulate remaining turns with no further actions
+        for (let t = 0; t < spec.turnLimit && !state.isOver; t++) {
+          advanceTurn(state, spec);
+        }
+
+        // Check if player won
+        if (state.result === "win") {
+          return { x, y, tool: med };
+        }
+      }
+    }
+  }
+  return null;
+}
+
 const WORLD_NAMES = ["", "Petri Dish", "Bloodstream", "Tissue", "Pandemic"];
 
-// ── Find specific level by title ──
+function getMaxPct(spec: LevelSpec): number {
+  return spec.objective.type === "contain" ? spec.objective.maxPct : 0;
+}
+
+// ── Detect duplicate layouts ──
+console.log("=== DUPLICATE LAYOUT DETECTION ===\n");
+
+const layoutMap = new Map<string, { world: number; level: number; id: number; title: string }[]>();
+
 for (let w = 1; w <= 4; w++) {
   const levels = generateWorld(w);
   for (const spec of levels) {
     const levelNum = spec.id - (w - 1) * 50;
-    const totalCells = spec.grid.w * spec.grid.h;
-    const openCells = totalCells - spec.walls.length;
-    const wallPct = ((spec.walls.length / totalCells) * 100).toFixed(1);
-    const seedTypes = [...new Set(spec.seeds.map(s => s.type))];
+    // Create a layout fingerprint from walls + grid size
+    const wallStr = spec.walls.map(([x, y]) => `${x},${y}`).sort().join("|");
+    const fp = `${spec.grid.w}x${spec.grid.h}:${wallStr}`;
     
-    // Print levels with very high wall density (>50% walls)
-    if (spec.walls.length / totalCells > 0.45 || spec.title.includes("Plague")) {
-      console.log(
-        `W${w} L${String(levelNum).padStart(2)} id=${spec.id} "${spec.title}" ` +
-        `grid=${spec.grid.w}x${spec.grid.h} total=${totalCells} walls=${spec.walls.length} ` +
-        `open=${openCells} wallPct=${wallPct}% ` +
-        `seeds=${spec.seeds.length} types=[${seedTypes.join(",")}] ` +
-        `thresh=${spec.objective.maxPct}% turns=${spec.turnLimit}`
-      );
-      
-      // Print the grid visually for "Mutating Plague"
-      if (spec.title === "Mutating Plague") {
-        const wallSet = new Set(spec.walls.map(([x,y]) => `${x},${y}`));
-        const seedMap = new Map(spec.seeds.map(s => [`${s.x},${s.y}`, s.type[0].toUpperCase()]));
-        console.log("");
-        for (let y = 0; y < spec.grid.h; y++) {
-          let row = "";
-          for (let x = 0; x < spec.grid.w; x++) {
-            const k = `${x},${y}`;
-            if (seedMap.has(k)) row += seedMap.get(k);
-            else if (wallSet.has(k)) row += "█";
-            else row += "·";
-          }
-          console.log("  " + row);
-        }
-        console.log("");
-      }
+    if (!layoutMap.has(fp)) layoutMap.set(fp, []);
+    layoutMap.get(fp)!.push({ world: w, level: levelNum, id: spec.id, title: spec.title });
+  }
+}
+
+let dupeCount = 0;
+for (const [fp, entries] of layoutMap) {
+  if (entries.length > 1) {
+    dupeCount++;
+    const gridPart = fp.split(":")[0];
+    const wallCount = fp.split("|").length;
+    console.log(`  DUPLICATE (${entries.length}x) grid=${gridPart} walls=${wallCount}:`);
+    for (const e of entries) {
+      console.log(`    W${e.world} L${String(e.level).padStart(2)} id=${e.id} "${e.title}"`);
     }
   }
 }
 
-console.log("\n" + "=".repeat(60));
-console.log("WALL DENSITY DISTRIBUTION:\n");
+if (dupeCount === 0) {
+  console.log("  No duplicate layouts found!");
+} else {
+  console.log(`\n  ${dupeCount} duplicate layout groups found.`);
+}
 
-// Wall density histogram
-const densityBuckets: Record<string, number> = {};
+// ── Check how many levels use fallback ──
+console.log("\n=== FALLBACK DETECTION ===\n");
+
+// Fallback levels have only border walls (open box)
+let fallbackCount = 0;
 for (let w = 1; w <= 4; w++) {
   const levels = generateWorld(w);
   for (const spec of levels) {
-    const wallPct = Math.floor((spec.walls.length / (spec.grid.w * spec.grid.h)) * 10) * 10;
-    const bucket = `${wallPct}-${wallPct+9}%`;
-    densityBuckets[bucket] = (densityBuckets[bucket] || 0) + 1;
+    const levelNum = spec.id - (w - 1) * 50;
+    const { w: gw, h: gh } = spec.grid;
+    // Count how many walls are on the border
+    const borderWalls = spec.walls.filter(([x, y]) => 
+      x === 0 || x === gw - 1 || y === 0 || y === gh - 1
+    ).length;
+    const interiorWalls = spec.walls.length - borderWalls;
+    
+    if (interiorWalls === 0) {
+      fallbackCount++;
+      console.log(`  FALLBACK W${w} L${String(levelNum).padStart(2)} id=${spec.id} "${spec.title}" grid=${gw}x${gh}`);
+    }
   }
 }
-for (const [bucket, count] of Object.entries(densityBuckets).sort()) {
-  console.log(`  ${bucket.padEnd(8)} ${"█".repeat(count)} (${count})`);
-}
+console.log(`\n  ${fallbackCount} fallback (open-box) levels total.`);
+
+console.log("\n" + "=".repeat(60));
 
 interface LevelDiag {
   world: number;
@@ -128,7 +184,7 @@ for (let w = 1; w <= 4; w++) {
     // just like the generator does. Then compare to the actual threshold.
     const unlimitedSpec = {
       ...spec,
-      objective: { ...spec.objective, maxPct: 95 },
+      objective: { type: "contain" as const, maxPct: 95, maxTurns: spec.turnLimit },
     };
     const simUnlimited = simulateNoAction(unlimitedSpec);
 
@@ -136,7 +192,8 @@ for (let w = 1; w <= 4; w++) {
     const simReal = simulateNoAction(spec);
 
     const truePeak = simUnlimited.peakPct;
-    const margin = truePeak - spec.objective.maxPct;
+    const specMaxPct = getMaxPct(spec);
+    const margin = truePeak - specMaxPct;
 
     const diag: LevelDiag = {
       world: w,
@@ -146,7 +203,7 @@ for (let w = 1; w <= 4; w++) {
       result: simReal.result,
       peakPct: truePeak,
       finalPct: simUnlimited.finalPct,
-      maxPct: spec.objective.maxPct,
+      maxPct: specMaxPct,
       margin,
       gridW: spec.grid.w,
       gridH: spec.grid.h,
@@ -197,3 +254,138 @@ console.log(`Total instant-win levels: ${totalBad} / 200`);
 console.log(`Levels with margin < 5: ${allDiags.filter(d => d.margin < 5).length}`);
 console.log(`Levels with margin < 10: ${allDiags.filter(d => d.margin < 10).length}`);
 console.log(`Levels with margin < 15: ${allDiags.filter(d => d.margin < 15).length}`);
+
+// ── Template distribution ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("TEMPLATE DISTRIBUTION (by world):\n");
+
+const TPL_NAMES = [
+  "Open(0)", "Pillars(1)", "Divider(2)", "Cross(3)", "Corridors(4)",
+  "L-Wall(5)", "Vein(6)", "Chamber(7)", "Maze(8)", "Honeycomb(9)",
+  "Compound(10)", "Gateway(11)", "Island(12)", "AsymSplit(13)",
+];
+
+// We can't directly detect which template was used from the spec,
+// but we can analyze structural properties. For a rough count,
+// we can re-generate and track.
+// Instead, let's show the template POOL sizes per world.
+for (let w = 1; w <= 4; w++) {
+  const wc = WORLD_CONFIGS[w];
+  console.log(`  W${w} ${wc.name}:`);
+  console.log(`    Grid range: ${wc.gridRange[0]}–${wc.gridRange[1]}`);
+  for (let tier = 0; tier < wc.templates.length; tier++) {
+    const tierName = tier === 0 ? "Tutorial" : tier === 1 ? "Early" : tier === 2 ? "Mid" : tier === 3 ? "Advanced" : "Endgame";
+    const poolNames = wc.templates[tier].map(t => TPL_NAMES[t] || `?${t}`).join(", ");
+    console.log(`    ${tierName}: [${poolNames}]`);
+  }
+}
+
+// ── Greedy solver winnability check ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("WINNABILITY SOLVER (greedy strategy):\n");
+
+let solverWins = 0;
+let solverFails = 0;
+const failedLevels: { world: number; level: number; finalPct: number; threshold: number }[] = [];
+
+for (let w = 1; w <= 4; w++) {
+  const levels = generateWorld(w);
+  let worldWins = 0;
+  for (const spec of levels) {
+    const levelNum = spec.id - (w - 1) * 50;
+    const result = greedySolve(spec);
+    if (result.won) {
+      worldWins++;
+      solverWins++;
+    } else {
+      solverFails++;
+      failedLevels.push({
+        world: w,
+        level: levelNum,
+        finalPct: result.finalPct,
+        threshold: getMaxPct(spec),
+      });
+    }
+  }
+  console.log(`  W${w} ${WORLD_CONFIGS[w].name}: ${worldWins}/50 winnable by greedy solver`);
+}
+
+console.log(`\n  Total: ${solverWins}/200 winnable by greedy solver`);
+if (failedLevels.length > 0 && failedLevels.length <= 30) {
+  console.log(`\n  Failed levels (solver couldn't win):`);
+  for (const f of failedLevels) {
+    console.log(`    W${f.world} L${String(f.level).padStart(2)} — final ${f.finalPct.toFixed(1)}% vs threshold ${f.threshold}%`);
+  }
+}
+if (failedLevels.length > 30) {
+  console.log(`\n  ${failedLevels.length} failed levels (too many to list — showing first 15):`);
+  for (const f of failedLevels.slice(0, 15)) {
+    console.log(`    W${f.world} L${String(f.level).padStart(2)} — final ${f.finalPct.toFixed(1)}% vs threshold ${f.threshold}%`);
+  }
+}
+
+// ── Grid size distribution ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("GRID SIZE DISTRIBUTION:\n");
+const gridBuckets: Record<string, number> = {};
+for (const d of allDiags) {
+  const bucket = `${d.gridW}x${d.gridH}`;
+  gridBuckets[bucket] = (gridBuckets[bucket] || 0) + 1;
+}
+const sortedBuckets = Object.entries(gridBuckets).sort((a, b) => {
+  const [aw, ah] = a[0].split("x").map(Number);
+  const [bw, bh] = b[0].split("x").map(Number);
+  return aw * ah - bw * bh;
+});
+for (const [bucket, count] of sortedBuckets) {
+  const [gw, gh] = bucket.split("x").map(Number);
+  const tileSize = Math.min(56, Math.floor(412 / gh), Math.floor(368 / gw));
+  const bar = "█".repeat(count);
+  console.log(`  ${bucket.padStart(5)}: ${String(count).padStart(3)} levels (tile=${tileSize}px) ${bar}`);
+}
+
+// ── Threshold distribution ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("THRESHOLD DISTRIBUTION:\n");
+const threshBuckets = { "≤20%": 0, "21-30%": 0, "31-40%": 0, "41-45%": 0, ">45%": 0 };
+for (const d of allDiags) {
+  if (d.maxPct <= 20) threshBuckets["≤20%"]++;
+  else if (d.maxPct <= 30) threshBuckets["21-30%"]++;
+  else if (d.maxPct <= 40) threshBuckets["31-40%"]++;
+  else if (d.maxPct <= 45) threshBuckets["41-45%"]++;
+  else threshBuckets[">45%"]++;
+}
+for (const [range, count] of Object.entries(threshBuckets)) {
+  console.log(`  ${range.padStart(7)}: ${count}`);
+}
+
+// ── Single-place instant win check ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("SINGLE-PLACE WIN CHECK (L4+ only):\n");
+console.log("  Testing if placing ONE medicine and doing nothing else can win...");
+
+let singlePlaceWins = 0;
+for (let w = 1; w <= 4; w++) {
+  const levels = generateWorld(w);
+  for (const spec of levels) {
+    const levelNum = spec.id - (w - 1) * 50;
+    if (levelNum <= 3) continue; // tutorials are expected to be trivial
+
+    const win = checkSinglePlaceWin(spec);
+    if (win) {
+      singlePlaceWins++;
+      console.log(
+        `  ❌ W${w} L${String(levelNum).padStart(2)} — placing ${win.tool} at (${win.x},${win.y}) wins!`
+      );
+    }
+  }
+}
+
+if (singlePlaceWins === 0) {
+  console.log("  ✅ No single-place wins found (L4+). All levels require real strategy.");
+} else {
+  console.log(`\n  ⚠️  ${singlePlaceWins} levels can be won with a single placement!`);
+}
+
+console.log(`\n${"=".repeat(60)}`);
+console.log("SCAN COMPLETE.\n");

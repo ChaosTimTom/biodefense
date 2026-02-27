@@ -19,8 +19,9 @@
 import type { LevelSpec, PathogenType } from "./types";
 import { emptyInventory } from "./types";
 import { PATHOGEN_GROWTH, COUNTERED_BY } from "./constants";
-import { createGameState } from "./board";
-import { advanceTurn } from "./step";
+import { createGameState, getTile, infectionPct } from "./board";
+import { advanceTurn, applyAction } from "./step";
+import { canPlaceTool } from "./tools";
 
 // ── Seeded PRNG (mulberry32) ─────────────────────
 
@@ -270,6 +271,99 @@ const tplLWall: TemplateFn = (w, h, rng) => {
   return walls;
 };
 
+/**
+ * Gateway — two horizontal wall lines creating a corridor with offset doorways.
+ * Creates 3 distinct zones that force the player to defend through chokepoints.
+ */
+const tplGateway: TemplateFn = (w, h, rng) => {
+  const walls = tplOpen(w, h, rng);
+  const upperY = Math.max(2, Math.floor(h / 3));
+  const lowerY = Math.min(h - 3, Math.floor(2 * h / 3));
+
+  // Upper wall with 2 doorways
+  const door1 = 2 + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 2));
+  const door2 = Math.floor(2 * w / 3) + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 2));
+  for (let x = 1; x < w - 1; x++) {
+    if (Math.abs(x - door1) <= 1 || Math.abs(x - door2) <= 1) continue;
+    walls.push([x, upperY]);
+  }
+
+  // Lower wall with 2 offset doorways
+  const door3 = Math.floor(w / 4) + Math.floor(rng() * Math.max(1, Math.floor(w / 4)));
+  const door4 = Math.floor(w / 2) + Math.floor(rng() * Math.max(1, Math.floor(w / 4)));
+  for (let x = 1; x < w - 1; x++) {
+    if (Math.abs(x - door3) <= 1 || Math.abs(x - door4) <= 1) continue;
+    walls.push([x, lowerY]);
+  }
+  return walls;
+};
+
+/**
+ * Island — central wall cluster creating a doughnut-shaped arena.
+ * Forces wrap-around play: germs spread around the obstacle.
+ */
+const tplIsland: TemplateFn = (w, h, rng) => {
+  const walls = tplOpen(w, h, rng);
+  const cx = Math.floor(w / 2);
+  const cy = Math.floor(h / 2);
+  // Island radius scales with grid size: 1-3
+  const rw = 1 + Math.floor(rng() * Math.min(3, Math.floor((w - 4) / 3)));
+  const rh = 1 + Math.floor(rng() * Math.min(3, Math.floor((h - 4) / 3)));
+
+  for (let dy = -rh; dy <= rh; dy++) {
+    for (let dx = -rw; dx <= rw; dx++) {
+      const x = cx + dx, y = cy + dy;
+      if (x > 0 && x < w - 1 && y > 0 && y < h - 1) {
+        walls.push([x, y]);
+      }
+    }
+  }
+
+  // Optional: add 1-2 small satellite pillars
+  const numSat = Math.floor(rng() * 3); // 0-2
+  for (let s = 0; s < numSat; s++) {
+    const angle = rng() * Math.PI * 2;
+    const dist = Math.max(rw, rh) + 2;
+    const sx = cx + Math.round(Math.cos(angle) * dist);
+    const sy = cy + Math.round(Math.sin(angle) * dist);
+    if (sx > 1 && sx < w - 2 && sy > 1 && sy < h - 2) {
+      walls.push([sx, sy]);
+    }
+  }
+  return walls;
+};
+
+/**
+ * AsymSplit — diagonal wall line creating asymmetric halves.
+ * Unlike H/V symmetric templates, this forces unequal resource allocation.
+ */
+const tplAsymSplit: TemplateFn = (w, h, rng) => {
+  const walls = tplOpen(w, h, rng);
+  const flip = rng() < 0.5;
+  const gapCount = 2 + Math.floor(rng() * 2); // 2-3 gaps
+  const gapYs: number[] = [];
+  for (let g = 0; g < gapCount; g++) {
+    gapYs.push(Math.floor(((h - 2) * (g + 1)) / (gapCount + 1)) + 1);
+  }
+
+  for (let y = 1; y < h - 1; y++) {
+    if (gapYs.some(gy => Math.abs(y - gy) <= 1)) continue;
+    // Diagonal: x progresses from ~1/4 width to ~3/4 width as y increases
+    const t = (y - 1) / Math.max(1, h - 3);
+    const rawX = Math.floor(1 + t * (w - 3));
+    const x = flip ? w - 1 - rawX : rawX;
+    if (x > 0 && x < w - 1) {
+      walls.push([x, y]);
+      // Make the wall 2-thick for better visual read
+      const x2 = flip ? x + 1 : x - 1;
+      if (x2 > 0 && x2 < w - 1 && rng() < 0.5) {
+        walls.push([x2, y]);
+      }
+    }
+  }
+  return walls;
+};
+
 const TEMPLATES: TemplateFn[] = [
   tplOpen,       // 0
   tplPillars,    // 1
@@ -282,14 +376,17 @@ const TEMPLATES: TemplateFn[] = [
   tplMaze,       // 8
   tplHoneycomb,  // 9
   tplCompound,   // 10
+  tplGateway,    // 11
+  tplIsland,     // 12
+  tplAsymSplit,  // 13
 ];
 
 // ── New templates (worlds 2-4) ───────────────────
 
 /**
  * Vein — meandering wide channels like blood vessels.
- * 3-4 winding corridors of width 3-4, with occasional wider chambers.
- * Carves generously to ensure pathogens have room to spread.
+ * Carves generously from a filled interior to create organic corridors.
+ * Guarantees < 30% interior wall density by carving extra if needed.
  */
 function tplVein(w: number, h: number, rng: () => number): [number, number][] {
   const walls = tplOpen(w, h, rng);
@@ -299,15 +396,17 @@ function tplVein(w: number, h: number, rng: () => number): [number, number][] {
     for (let x = 1; x < w - 1; x++)
       ws.add(key(x, y));
 
-  const numVeins = 3 + Math.floor(rng() * 2);
+  const interiorTotal = (w - 2) * (h - 2);
+  // Scale veins and width by grid size to ensure enough carving
+  const numVeins = 3 + Math.floor(rng() * 3); // 3-5 veins
   for (let v = 0; v < numVeins; v++) {
-    // Start from left or top edge
+    // Alternate starting from left/top edges
     let cx = v % 2 === 0 ? 1 : 1 + Math.floor(rng() * (w - 2));
     let cy = v % 2 === 0 ? 1 + Math.floor(rng() * (h - 2)) : 1;
-    const veinWidth = 3 + Math.floor(rng() * 2); // wider: 3-4
-    const steps = w + h + 4; // extra steps for more carving
+    // Wider veins for larger grids
+    const veinWidth = Math.max(3, Math.floor(Math.min(w, h) / 3));
+    const steps = w + h + 8;
     for (let s = 0; s < steps; s++) {
-      // Carve a circle of veinWidth around current point
       const r = Math.floor(veinWidth / 2);
       for (let dy = -r; dy <= r; dy++) {
         for (let dx = -r; dx <= r; dx++) {
@@ -316,7 +415,6 @@ function tplVein(w: number, h: number, rng: () => number): [number, number][] {
             ws.delete(key(nx, ny));
         }
       }
-      // Meander
       const dir = rng();
       if (v % 2 === 0) {
         cx += 1;
@@ -330,6 +428,17 @@ function tplVein(w: number, h: number, rng: () => number): [number, number][] {
       if (cx >= w - 1 || cy >= h - 1) break;
     }
   }
+
+  // Safety: ensure we stay under 25% interior wall density by random carving
+  const maxWalls = Math.floor(interiorTotal * 0.25);
+  if (ws.size > maxWalls) {
+    const wallArr = [...ws];
+    shuffle(wallArr, rng);
+    while (ws.size > maxWalls && wallArr.length > 0) {
+      ws.delete(wallArr.pop()!);
+    }
+  }
+
   for (const k of ws) {
     const [sx, sy] = k.split(",").map(Number);
     walls.push([sx, sy]);
@@ -458,9 +567,9 @@ function tplCompound(w: number, h: number, rng: () => number): [number, number][
 
 interface WorldConfig {
   name: string;
-  /** Germ progression tiers: [L1-10, L11-20, L21-35, L36-50] */
+  /** Germ progression tiers: [L1-3, L4-10, L11-20, L21-35, L36-50] */
   germs: PathogenType[][];
-  /** Template pool per tier (indices into TEMPLATES) */
+  /** Template pool per tier (indices into TEMPLATES) — 5 tiers */
   templates: number[][];
   /** [min, max] grid dimension */
   gridRange: [number, number];
@@ -472,48 +581,81 @@ export const WORLD_CONFIGS: Record<number, WorldConfig> = {
     name: "Petri Dish",
     germs: [
       ["coccus"],
+      ["coccus"],
       ["coccus", "mold"],
       ["coccus", "mold", "bacillus"],
       ["coccus", "mold", "bacillus"],
     ],
-    templates: [[0, 1], [0, 1, 2], [0, 1, 2, 3], [0, 1, 2, 3, 4, 5]],
-    gridRange: [8, 14],
+    // L1-3: simple intro; L4-10: add Divider+Island; L11-20: drop Open, add Cross+Gateway;
+    // L21-35: structural variety; L36-50: full spectrum
+    templates: [
+      [0, 1],                   // tutorial
+      [0, 1, 2, 12],            // early — add Divider, Island
+      [1, 2, 3, 11],            // mid — drop Open, add Cross, Gateway
+      [2, 3, 4, 5, 13],         // advanced — Divider, Cross, Corridors, L-Wall, AsymSplit
+      [3, 4, 5, 7, 10, 11],     // endgame — Cross, Corridors, L-Wall, Chamber, Compound, Gateway
+    ],
+    gridRange: [8, 12],
     starsNeeded: 0,
   },
   2: {
     name: "Bloodstream",
     germs: [
       ["influenza"],
+      ["influenza"],
       ["influenza", "coccus"],
       ["influenza", "coccus", "retrovirus"],
       ["influenza", "coccus", "retrovirus"],
     ],
-    templates: [[4, 6], [4, 6, 7], [4, 6, 7, 3], [4, 5, 6, 7, 3]],
-    gridRange: [10, 16],
+    // Vein-themed with corridors; expand gradually
+    templates: [
+      [4, 11],                  // tutorial — Corridors, Gateway
+      [4, 11, 12, 6],           // early — add Island, Vein
+      [4, 3, 11, 7],            // mid — Corridors, Cross, Gateway, Chamber
+      [4, 7, 3, 13, 10],        // advanced — add AsymSplit, Compound
+      [4, 5, 7, 10, 3, 13, 6],  // endgame — full variety incl Vein
+    ],
+    gridRange: [10, 14],
     starsNeeded: 40,
   },
   3: {
     name: "Tissue",
     germs: [
       ["yeast"],
+      ["yeast"],
       ["yeast", "spirillum"],
       ["yeast", "spirillum", "retrovirus"],
       ["yeast", "spirillum", "retrovirus"],
     ],
-    templates: [[0, 1], [0, 1, 9], [0, 1, 5, 9], [0, 1, 4, 5, 9, 10]],
-    gridRange: [10, 16],
+    // Honeycomb-themed for diagonal germs; diversified progression
+    templates: [
+      [0, 12],                  // tutorial — Open, Island
+      [0, 1, 9, 12],            // early — add Honeycomb, Island
+      [9, 1, 11, 13],           // mid — Honeycomb, Pillars, Gateway, AsymSplit
+      [9, 5, 3, 13, 4],         // advanced — Honeycomb, L-Wall, Cross, AsymSplit, Corridors
+      [9, 4, 5, 10, 7, 11],     // endgame — full variety
+    ],
+    gridRange: [10, 14],
     starsNeeded: 100,
   },
   4: {
     name: "Pandemic",
     germs: [
       ["phage"],
+      ["phage"],
       ["phage", "spore"],
       ["phage", "spore", "spirillum"],
       ["phage", "spore", "spirillum", "bacillus"],
     ],
-    templates: [[10, 4], [10, 4, 6], [10, 4, 6, 7, 8], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]],
-    gridRange: [12, 18],
+    // Most complex templates from the start
+    templates: [
+      [10, 4],                  // tutorial — Compound, Corridors
+      [10, 4, 12, 11],          // early — add Island, Gateway
+      [10, 4, 6, 7, 13],        // mid — add Vein, Chamber, AsymSplit
+      [10, 4, 6, 7, 8, 3, 13],  // advanced — add Maze, Cross
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], // endgame — all templates
+    ],
+    gridRange: [12, 16],
     starsNeeded: 180,
   },
 };
@@ -534,14 +676,35 @@ interface TierParams {
   targetDifficulty: number; // 0..1: how hard (affects threshold)
 }
 
+// ── Phase 4A: Smooth continuous difficulty function ──
+// Replaces per-tier constants with a smooth curve.
+// Returns 0.15 (L1) → 0.70 (L50) with slight ease-in.
+function continuousDifficulty(level: number): number {
+  const t = (level - 1) / 49; // 0.0 to 1.0
+  return 0.15 + 0.55 * (t * t * 0.3 + t * 0.7);
+}
+
+// ── Phase 3A: World-specific difficulty multiplier ──
+// Normalizes cross-world balance: W2 gets relief (high natural peaks),
+// W4 gets tightened (lower natural peaks must still feel expert).
+const WORLD_DIFF_SCALE: Record<number, number> = {
+  1: 1.0,   // baseline
+  2: 0.85,  // reduce W2 effective difficulty (Influenza peaks very high)
+  3: 1.0,   // W3 is balanced
+  4: 1.1,   // boost W4 (Phage peaks lower, needs tighter thresholds)
+};
+
 function tierParams(level: number, rng: () => number, worldNum: number = 1): TierParams {
   const wc = WORLD_CONFIGS[worldNum] ?? WORLD_CONFIGS[1];
   const [gridMin, gridMax] = wc.gridRange;
 
-  // Determine tier index: L1-10=0, L11-20=1, L21-35=2, L36-50=3
-  const tierIdx = level <= 10 ? 0 : level <= 20 ? 1 : level <= 35 ? 2 : 3;
+  // 5-tier index: L1-3=0, L4-10=1, L11-20=2, L21-35=3, L36-50=4
+  const tierIdx = level <= 3 ? 0 : level <= 10 ? 1 : level <= 20 ? 2 : level <= 35 ? 3 : 4;
   const germs = wc.germs[tierIdx];
   const templates = wc.templates[tierIdx];
+
+  // Continuous difficulty for every level (Phase 4A)
+  const baseDiff = continuousDifficulty(level);
 
   // ── Tutorial (1-3): small boards, 1 pair, easiest germ ──
   if (level <= 3) {
@@ -552,7 +715,7 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
       toolsPerTurn: 3, turnLimit: 6, parTurns: 4,
       templates: [templates[0]],
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.2,
+      targetDifficulty: baseDiff,
     };
   }
   // ── Early (4-10): medium boards, 1-2 pairs ──
@@ -566,7 +729,7 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
       toolsPerTurn: 3, turnLimit: 8, parTurns: 5,
       templates,
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.3,
+      targetDifficulty: baseDiff,
     };
   }
   // ── Mid (11-20): add second germ if available ──
@@ -580,7 +743,7 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
       toolsPerTurn: 3, turnLimit: 10, parTurns: 6,
       templates,
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.4,
+      targetDifficulty: baseDiff,
     };
   }
   // ── Advanced (21-35): full tier germs, bigger boards ──
@@ -588,14 +751,14 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
     const t = (level - 21) / 14;
     const gs = Math.round(gridMin + 2 + t * (gridMax - gridMin - 2));
     return {
-      gridW: gs + Math.floor(rng() * 2),
-      gridH: gs + Math.floor(rng() * 2),
+      gridW: Math.min(gridMax, gs + Math.floor(rng() * 2)),
+      gridH: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       pairCount: 2 + Math.floor(rng() * 2),
       germTypes: germs,
       toolsPerTurn: 3, turnLimit: 12, parTurns: 8,
       templates,
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.5 + t * 0.1,
+      targetDifficulty: baseDiff,
     };
   }
   // ── Endgame (36-49): big boards, all tier germs ──
@@ -603,27 +766,29 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
     const t = (level - 36) / 13;
     const gs = Math.round(gridMax - 2 + t * 2);
     return {
-      gridW: gs + Math.floor(rng() * 2),
-      gridH: gs + Math.floor(rng() * 2),
+      gridW: Math.min(gridMax, gs + Math.floor(rng() * 2)),
+      gridH: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       pairCount: 3 + Math.floor(rng() * 2),
       germTypes: germs,
       toolsPerTurn: germs.length >= 4 ? 4 : 3,
       turnLimit: 14, parTurns: 10,
       templates,
       initialTools: 4, grantPerTurn: 1,
-      targetDifficulty: 0.6,
+      targetDifficulty: baseDiff,
     };
   }
   // ── Boss (50): max board, all germs, extra resources ──
+  // Phase 3B: W4 boss gets 0.75 difficulty (hardest in game)
+  const bossDiff = worldNum === 4 ? 0.75 : baseDiff;
   return {
     gridW: gridMax, gridH: gridMax,
-    pairCount: 4 + Math.floor(rng() * 2),
+    pairCount: Math.max(5, 4 + Math.floor(rng() * 2)),
     germTypes: germs,
     toolsPerTurn: germs.length >= 4 ? 4 : 3,
     turnLimit: 16, parTurns: 12,
     templates: [templates[0], templates[Math.min(1, templates.length - 1)]],
     initialTools: 6, grantPerTurn: 2,
-    targetDifficulty: 0.65,
+    targetDifficulty: bossDiff,
   };
 }
 
@@ -782,17 +947,67 @@ function generateHint(types: PathogenType[], levelNum: number): string {
 const LEVELS_PER_WORLD = 50;
 const MAX_ATTEMPTS = 50;
 
-// Minimum gap between peak infection and threshold.
-const MIN_MARGIN = 8;
+// Phase 6B: Level-dependent minimum margin
+function minMarginForLevel(level: number): number {
+  return level <= 10 ? 10 : 8;
+}
 
 // Maximum INTERIOR wall density (excluding border).
 // Only counts walls that aren't on the outer edge of the grid.
 const MAX_INTERIOR_WALL_PCT = 0.30;
 
+// ── Phase 5: Template-Germ Affinity ──────────────
+// Scores > 1.0 = great combo (boost selection probability)
+// Scores < 1.0 = boring combo (reduce selection probability)
+// Absent entries = neutral (1.0)
+const TEMPLATE_GERM_AFFINITY: Record<number, Partial<Record<PathogenType, number>>> = {
+  // Corridors (4) — knight-jumpers leap barriers; cardinal-only germs are boring
+  4:  { influenza: 1.5, retrovirus: 1.3, phage: 1.2, coccus: 0.7, mold: 0.7 },
+  // Cross (3) — great for multi-germ (different quadrants = triage)
+  3:  {},
+  // Compound (10) — narrow bridges; long-range germs cross them brilliantly
+  10: { phage: 1.5, spore: 1.3, bacillus: 1.2, coccus: 0.5, mold: 0.6 },
+  // Honeycomb (9) — aligns with diagonal movement patterns
+  9:  { mold: 1.5, yeast: 1.4, spore: 1.3, coccus: 0.6 },
+  // Vein (6) — medium/long-range germs navigate channels well
+  6:  { influenza: 1.3, spirillum: 1.2, coccus: 0.5, mold: 0.5 },
+  // Gateway (11) — doorways force chokepoint defense; good for all
+  11: { influenza: 1.2, phage: 1.2 },
+  // Island (12) — wrap-around play; diagonal germs go around easily
+  12: { mold: 1.3, yeast: 1.3, coccus: 1.1 },
+  // AsymSplit (13) — asymmetric halves; multi-germ is interesting
+  13: { spirillum: 1.2, retrovirus: 1.2 },
+  // L-Wall (5) — L-shape creates interesting corner play
+  5:  { bacillus: 1.2, influenza: 1.1 },
+  // Chamber (7) — rooms with doorways; all germs play well
+  7:  { phage: 1.2, spore: 1.2 },
+};
+
+// Compute affinity weight for a template + germ combo
+function getAffinityWeight(tplIdx: number, germTypes: PathogenType[]): number {
+  const affinities = TEMPLATE_GERM_AFFINITY[tplIdx];
+  if (!affinities) return 1.0;
+  let total = 0;
+  let count = 0;
+  for (const germ of germTypes) {
+    total += affinities[germ] ?? 1.0;
+    count++;
+  }
+  // Cross (3) gets a bonus per additional germ type
+  if (tplIdx === 3 && germTypes.length > 1) {
+    total += 0.3 * (germTypes.length - 1);
+    count++;
+  }
+  return count > 0 ? total / count : 1.0;
+}
+
 /**
  * Generate all 50 levels for a world. Each level is
  * simulation-validated: doing nothing MUST result in
  * losing (infection exceeds threshold).
+ *
+ * Phase 1B: Template weight tracking prevents runs of same template.
+ * Phase 4B: Anti-regression guard ensures margins increase monotonically.
  */
 // Module-level caches for deterministic generation and cross-world dedup.
 const _worldGenCache = new Map<number, LevelSpec[]>();
@@ -805,12 +1020,18 @@ export function generateWorld(worldNum: number): LevelSpec[] {
   const baseSeed = worldNum * 100_000;
   const levels: LevelSpec[] = [];
 
+  // Phase 1B: Track template usage weights — recently used templates get lower weight
+  const templateWeights = new Map<number, number>();
+  // Initialize all template weights to 1.0
+  for (let t = 0; t < TEMPLATES.length; t++) templateWeights.set(t, 1.0);
+
   for (let i = 1; i <= LEVELS_PER_WORLD; i++) {
     // Try with increasing salt offsets to avoid duplicates within AND across worlds
     let level: LevelSpec | null = null;
     for (let salt = 0; salt < 10; salt++) {
       const candidate = generateValidLevel(
         worldNum, i, baseSeed + i * 7919 + salt * 131_071,
+        templateWeights,
       );
       const fp = candidate.walls.map(([x, y]) => `${x},${y}`).sort().join("|");
       const fpKey = `${candidate.grid.w}x${candidate.grid.h}:${fp}`;
@@ -822,29 +1043,95 @@ export function generateWorld(worldNum: number): LevelSpec[] {
     }
     // If all 10 salts produced duplicates, accept the last one anyway
     if (!level) {
-      level = generateValidLevel(worldNum, i, baseSeed + i * 7919 + 999);
+      level = generateValidLevel(worldNum, i, baseSeed + i * 7919 + 999, templateWeights);
     }
     levels.push(level);
+
+    // Phase 1B: Update template weights — detect which template was used
+    // and halve its weight; gradually restore all weights over 3 levels
+    const usedWallCount = level.walls.length;
+    const gridArea = level.grid.w * level.grid.h;
+    // Restore all weights toward 1.0
+    for (const [t, w] of templateWeights) {
+      templateWeights.set(t, Math.min(1.0, w + 0.33));
+    }
+    // We can't easily detect which template was used from the output,
+    // so we track it via a side-channel in generateValidLevel (see _lastUsedTemplate)
+    if (_lastUsedTemplate >= 0) {
+      templateWeights.set(_lastUsedTemplate, Math.max(0.2, (templateWeights.get(_lastUsedTemplate) ?? 1) * 0.5));
+    }
+  }
+
+  // ── Phase 4B: Anti-regression guard ──
+  // Ensure margins increase roughly monotonically (±3 jitter allowed).
+  // If L(N+1) margin < L(N) margin - 3, tighten L(N+1)'s threshold.
+  let prevMargin = 0;
+  for (let i = 0; i < levels.length; i++) {
+    const spec = levels[i];
+    const sim = simulateNoAction(spec);
+    const margin = sim.peakPct - (spec.objective as { maxPct: number }).maxPct;
+
+    if (i > 0 && margin < prevMargin - 3) {
+      // Tighten threshold to enforce at least (prevMargin - 3) margin
+      const targetMargin = prevMargin - 3;
+      const newMaxPct = Math.max(10, Math.round(sim.peakPct - targetMargin));
+      (spec.objective as { maxPct: number; maxTurns: number; type: string }).maxPct = newMaxPct;
+      // Verify it still loses
+      const verify = simulateNoAction(spec);
+      if (verify.result !== "lose") {
+        // Revert if it doesn't lose
+        (spec.objective as { maxPct: number; maxTurns: number; type: string }).maxPct =
+          Math.max(10, Math.round(sim.peakPct - margin));
+      }
+    }
+    const finalMargin = sim.peakPct - (spec.objective as { maxPct: number }).maxPct;
+    prevMargin = finalMargin;
   }
 
   _worldGenCache.set(worldNum, levels);
   return levels;
 }
 
+// Side-channel for template tracking (Phase 1B)
+let _lastUsedTemplate = -1;
+
 function generateValidLevel(
   worldNum: number,
   levelNum: number,
   baseSeed: number,
+  templateWeights?: Map<number, number>,
 ): LevelSpec {
+  const worldDiffScale = WORLD_DIFF_SCALE[worldNum] ?? 1.0;
+
   // Try multiple attempts with different sub-seeds
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const rng = mulberry32(baseSeed + attempt * 1301);
     const params = tierParams(levelNum, rng, worldNum);
     const { gridW, gridH } = params;
 
-    // Pick template
-    const tplIdx =
-      params.templates[Math.floor(rng() * params.templates.length)];
+    // ── Phase 1B + 5: Weighted template selection with affinity ──
+    let tplIdx: number;
+    if (params.templates.length === 1) {
+      tplIdx = params.templates[0];
+    } else {
+      // Build combined weights: recency × affinity
+      const pool = params.templates;
+      const weights: number[] = pool.map(t => {
+        const recencyW = templateWeights?.get(t) ?? 1.0;
+        const affinityW = getAffinityWeight(t, params.germTypes);
+        return recencyW * affinityW;
+      });
+      // Weighted random selection
+      const totalW = weights.reduce((a, b) => a + b, 0);
+      let roll = rng() * totalW;
+      let chosen = pool.length - 1;
+      for (let p = 0; p < pool.length; p++) {
+        roll -= weights[p];
+        if (roll <= 0) { chosen = p; break; }
+      }
+      tplIdx = pool[chosen];
+    }
+    _lastUsedTemplate = tplIdx;
     const templateFn = TEMPLATES[tplIdx % TEMPLATES.length];
 
     // Generate and deduplicate walls
@@ -941,16 +1228,16 @@ function generateValidLevel(
     if (sim.peakPct < minPeak) continue; // pathogen barely grows — bad level
 
     // Set threshold relative to simulated peak:
-    // threshold = peak * (1 - targetDifficulty * 0.6)
-    // This means harder levels have lower thresholds relative to peak.
-    // Clamped to [15, 60].
+    // Phase 3A: Apply world difficulty scale to normalize cross-world balance.
+    // Phase 6A: Cap threshold at 45 (was 60) to avoid confusion with INFECTION_LOSE_PCT=50.
     const rawThreshold =
-      sim.peakPct * (1 - params.targetDifficulty * 0.6);
-    let maxPct = Math.max(15, Math.min(60, Math.round(rawThreshold)));
+      sim.peakPct * (1 - params.targetDifficulty * 0.6 * worldDiffScale);
+    let maxPct = Math.max(15, Math.min(45, Math.round(rawThreshold)));
 
-    // Enforce minimum margin — player must block real growth, not just 1-2 cells
-    if (sim.peakPct - maxPct < MIN_MARGIN) {
-      maxPct = Math.max(10, Math.round(sim.peakPct - MIN_MARGIN));
+    // Phase 6B: Level-dependent minimum margin
+    const margin = minMarginForLevel(levelNum);
+    if (sim.peakPct - maxPct < margin) {
+      maxPct = Math.max(10, Math.round(sim.peakPct - margin));
     }
 
     // Re-simulate with real threshold to verify it actually loses
@@ -972,10 +1259,69 @@ function generateValidLevel(
       if (verify2.result !== "lose") continue; // give up on this attempt
     }
 
+    // ── Single-place win guard (skip for tutorial L1-3) ──
+    // Reject layouts where placing ONE medicine and doing nothing else
+    // lets the player win. Check cells adjacent to seeds first (most
+    // likely to be exploitable), then widen if needed.
+    if (levelNum > 3) {
+      let singlePlaceWins = false;
+
+      // Collect unique pathogen types and their counter-medicines
+      const placedTypes = [...new Set(seeds.map(s => s.type))] as PathogenType[];
+
+      // Build candidate cells: all empty cells within distance 3 of any seed
+      const nearbyCells: { x: number; y: number }[] = [];
+      const nearbySet = new Set<string>();
+      for (const seed of seeds) {
+        for (let dy = -3; dy <= 3; dy++) {
+          for (let dx = -3; dx <= 3; dx++) {
+            const cx = seed.x + dx, cy = seed.y + dy;
+            if (cx < 0 || cx >= gridW || cy < 0 || cy >= gridH) continue;
+            const ck = key(cx, cy);
+            if (nearbySet.has(ck) || ws.has(ck)) continue;
+            // Skip cells occupied by seeds
+            if (seeds.some(s => s.x === cx && s.y === cy)) continue;
+            nearbySet.add(ck);
+            nearbyCells.push({ x: cx, y: cy });
+          }
+        }
+      }
+
+      for (const ptype of placedTypes) {
+        if (singlePlaceWins) break;
+        const med = COUNTERED_BY[ptype];
+        if (!finalSpec.tools[med] || finalSpec.tools[med] <= 0) continue;
+
+        for (const cell of nearbyCells) {
+          const testState = createGameState(finalSpec);
+          const tile = getTile(testState.board, cell.x, cell.y);
+          if (tile.kind !== "empty") continue;
+
+          const ok = applyAction(testState, {
+            type: "place_tool", tool: med, x: cell.x, y: cell.y,
+          });
+          if (!ok) continue;
+
+          // Simulate remaining turns with no actions
+          for (let t = 0; t < params.turnLimit && !testState.isOver; t++) {
+            advanceTurn(testState, finalSpec);
+          }
+
+          if (testState.result === "win") {
+            singlePlaceWins = true;
+            break;
+          }
+        }
+      }
+
+      if (singlePlaceWins) continue; // reject — try another attempt
+    }
+
     return finalSpec;
   }
 
   // ── Fallback: guaranteed-valid open arena ──
+  _lastUsedTemplate = 0; // Open template for fallback
   return generateFallback(worldNum, levelNum, baseSeed);
 }
 
@@ -1108,11 +1454,12 @@ function generateFallback(
   };
 
   const sim = simulateNoAction(prelimSpec);
-  let maxPct = Math.max(15, Math.min(50, Math.round(sim.peakPct * 0.5)));
+  let maxPct = Math.max(15, Math.min(45, Math.round(sim.peakPct * 0.5)));
 
-  // Enforce minimum margin in fallback too
-  if (sim.peakPct - maxPct < MIN_MARGIN) {
-    maxPct = Math.max(10, Math.round(sim.peakPct - MIN_MARGIN));
+  // Enforce level-dependent minimum margin in fallback too
+  const fbMargin = minMarginForLevel(levelNum);
+  if (sim.peakPct - maxPct < fbMargin) {
+    maxPct = Math.max(10, Math.round(sim.peakPct - fbMargin));
   }
 
   const finalSpec: LevelSpec = {
@@ -1132,4 +1479,110 @@ function generateFallback(
   }
 
   return finalSpec;
+}
+
+// ═══════════════════════════════════════════════════
+// Phase 7: Greedy Winnability Solver
+// ═══════════════════════════════════════════════════
+
+interface SolverResult {
+  won: boolean;
+  finalPct: number;
+  peakPct: number;
+  turnsUsed: number;
+}
+
+/**
+ * Run a greedy solver on a level spec. Each turn:
+ * 1. Identify all pathogen cells.
+ * 2. For each pathogen, score adjacent empty cells by how many
+ *    pathogen growth directions they block.
+ * 3. Place the matching counter-medicine on the highest-scoring cells.
+ * 4. Advance the turn.
+ */
+export function greedySolve(spec: LevelSpec): SolverResult {
+  const state = createGameState(spec);
+  let peak = 0;
+
+  for (let t = 0; t < spec.turnLimit && !state.isOver; t++) {
+    // Refresh tools from grant (advanceTurn handles this, but we need
+    // to place BEFORE advancing, so tools are already in state)
+
+    // Score all empty cells by pathogen threat they can block
+    const { board } = state;
+    const candidates: { x: number; y: number; tool: string; score: number }[] = [];
+
+    for (let y = 0; y < board.h; y++) {
+      for (let x = 0; x < board.w; x++) {
+        const tile = getTile(board, x, y);
+        if (tile.kind !== "empty") continue;
+
+        // Check each medicine type we have
+        for (const germ of Object.keys(PATHOGEN_GROWTH) as PathogenType[]) {
+          const med = COUNTERED_BY[germ];
+          if ((state.tools[med] ?? 0) <= 0) continue;
+          if (!canPlaceTool(state, med, x, y)) continue;
+
+          // Score: how many pathogen cells of this germ type are in growth range
+          const dirs = PATHOGEN_GROWTH[germ];
+          let score = 0;
+          for (const [dx, dy] of dirs) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || nx >= board.w || ny < 0 || ny >= board.h) continue;
+            const neighbor = getTile(board, nx, ny);
+            if (neighbor.kind === "pathogen" && neighbor.pathogenType === germ) {
+              score += 2; // Directly blocking growth
+            }
+          }
+          // Also check if this cell is IN a pathogen's growth path
+          for (const [dx, dy] of dirs) {
+            const nx = x - dx, ny = y - dy; // reverse: pathogen at nx,ny grows TO x,y
+            if (nx < 0 || nx >= board.w || ny < 0 || ny >= board.h) continue;
+            const neighbor = getTile(board, nx, ny);
+            if (neighbor.kind === "pathogen" && neighbor.pathogenType === germ) {
+              score += 3; // Blocking this cell from being born as pathogen
+            }
+          }
+
+          if (score > 0) {
+            candidates.push({ x, y, tool: med, score });
+          }
+        }
+      }
+    }
+
+    // Sort by score descending and place up to toolsPerTurn
+    candidates.sort((a, b) => b.score - a.score);
+    let placed = 0;
+    const usedCells = new Set<string>();
+    for (const cand of candidates) {
+      if (placed >= state.toolsPerTurn) break;
+      const ck = `${cand.x},${cand.y}`;
+      if (usedCells.has(ck)) continue;
+      if ((state.tools[cand.tool as keyof typeof state.tools] ?? 0) <= 0) continue;
+
+      const success = applyAction(state, {
+        type: "place_tool",
+        tool: cand.tool as any,
+        x: cand.x,
+        y: cand.y,
+      });
+      if (success) {
+        placed++;
+        usedCells.add(ck);
+      }
+    }
+
+    // Advance the turn (runs growth simulation)
+    advanceTurn(state, spec);
+    const pct = infectionPct(state.board);
+    if (pct > peak) peak = pct;
+  }
+
+  return {
+    won: state.result === "win" || state.result === "playing",
+    finalPct: infectionPct(state.board),
+    peakPct: peak,
+    turnsUsed: state.turn,
+  };
 }
