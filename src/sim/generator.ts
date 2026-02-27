@@ -780,30 +780,54 @@ function generateHint(types: PathogenType[], levelNum: number): string {
 // ── Main generator ───────────────────────────────
 
 const LEVELS_PER_WORLD = 50;
-const MAX_ATTEMPTS = 30;
+const MAX_ATTEMPTS = 50;
 
 // Minimum gap between peak infection and threshold.
-// Ensures the player must block meaningful growth, not just 1-2 cells.
 const MIN_MARGIN = 8;
 
-// Maximum wall density — levels with more walls than this are rejected.
-// Prevents templates from creating claustrophobic boards with no growth room.
-const MAX_WALL_PCT = 0.40;
+// Maximum INTERIOR wall density (excluding border).
+// Only counts walls that aren't on the outer edge of the grid.
+const MAX_INTERIOR_WALL_PCT = 0.30;
 
 /**
  * Generate all 50 levels for a world. Each level is
  * simulation-validated: doing nothing MUST result in
  * losing (infection exceeds threshold).
  */
+// Module-level caches for deterministic generation and cross-world dedup.
+const _worldGenCache = new Map<number, LevelSpec[]>();
+const _globalLayoutFPs = new Set<string>();
+
 export function generateWorld(worldNum: number): LevelSpec[] {
+  // Return cached result for deterministic repeated calls
+  if (_worldGenCache.has(worldNum)) return _worldGenCache.get(worldNum)!;
+
   const baseSeed = worldNum * 100_000;
   const levels: LevelSpec[] = [];
 
   for (let i = 1; i <= LEVELS_PER_WORLD; i++) {
-    const level = generateValidLevel(worldNum, i, baseSeed + i * 7919);
+    // Try with increasing salt offsets to avoid duplicates within AND across worlds
+    let level: LevelSpec | null = null;
+    for (let salt = 0; salt < 10; salt++) {
+      const candidate = generateValidLevel(
+        worldNum, i, baseSeed + i * 7919 + salt * 131_071,
+      );
+      const fp = candidate.walls.map(([x, y]) => `${x},${y}`).sort().join("|");
+      const fpKey = `${candidate.grid.w}x${candidate.grid.h}:${fp}`;
+      if (!_globalLayoutFPs.has(fpKey)) {
+        _globalLayoutFPs.add(fpKey);
+        level = candidate;
+        break;
+      }
+    }
+    // If all 10 salts produced duplicates, accept the last one anyway
+    if (!level) {
+      level = generateValidLevel(worldNum, i, baseSeed + i * 7919 + 999);
+    }
     levels.push(level);
   }
 
+  _worldGenCache.set(worldNum, levels);
   return levels;
 }
 
@@ -835,9 +859,29 @@ function generateValidLevel(
       }
     }
 
-    // Reject boards that are too wall-heavy — pathogens need room to spread
-    const wallPct = walls.length / (gridW * gridH);
-    if (wallPct > MAX_WALL_PCT) continue;
+    // Reject boards that are too wall-heavy — pathogens need room to spread.
+    // Only count interior walls (exclude the mandatory border).
+    const borderCount = 2 * gridW + 2 * (gridH - 2);
+
+    // If the template produced only border walls, add random pillars for variety.
+    // This prevents multiple levels with the same grid size from looking identical
+    // when the Open template is selected.
+    if (walls.length <= borderCount) {
+      const numExtra = 2 + Math.floor(rng() * 4); // 2-5 pillars
+      for (let ep = 0; ep < numExtra; ep++) {
+        const px = 2 + Math.floor(rng() * Math.max(1, gridW - 4));
+        const py = 2 + Math.floor(rng() * Math.max(1, gridH - 4));
+        const k = key(px, py);
+        if (!ws.has(k)) {
+          ws.add(k);
+          walls.push([px, py]);
+        }
+      }
+    }
+
+    const interiorWalls = walls.length - borderCount;
+    const interiorCells = (gridW - 2) * (gridH - 2);
+    if (interiorCells > 0 && interiorWalls / interiorCells > MAX_INTERIOR_WALL_PCT) continue;
 
     // Place seed pairs in open areas
     const seeds = placeSeedPairs(
@@ -885,11 +929,15 @@ function generateValidLevel(
     const sim = simulateNoAction(prelimSpec);
 
     // If peak infection is too low, this map can't challenge the player.
-    // Long-range movers (diagonal/knight) need higher minimum to ensure
-    // the seeds actually have room to spread meaningfully.
-    const minPeak = params.germTypes.some(g =>
+    // Long-range movers need higher minimum. Scale down for small grids
+    // since there are fewer cells to infect.
+    const isLongRange = params.germTypes.some(g =>
       ["yeast", "spore", "spirillum", "phage", "retrovirus", "bacillus"].includes(g)
-    ) ? 35 : 25;
+    );
+    const baseMinPeak = isLongRange ? 35 : 25;
+    // Scale: full minPeak at 12x12+, half at 8x8
+    const gridScale = Math.min(1, Math.max(0.5, (Math.min(gridW, gridH) - 6) / 6));
+    const minPeak = baseMinPeak * gridScale;
     if (sim.peakPct < minPeak) continue; // pathogen barely grows — bad level
 
     // Set threshold relative to simulated peak:
@@ -932,8 +980,9 @@ function generateValidLevel(
 }
 
 /**
- * Fallback level: completely open board with seeds in the center.
- * This ALWAYS produces a valid level because nothing blocks growth.
+ * Fallback level: open board with scattered pillars for variety.
+ * Uses the seed to place random interior obstacles so fallback levels
+ * with the same grid size don't look identical.
  */
 function generateFallback(
   worldNum: number,
@@ -944,7 +993,38 @@ function generateFallback(
   const params = tierParams(levelNum, rng, worldNum);
   const { gridW, gridH } = params;
 
-  // Open box walls only
+  // ── Step 1: Compute seed positions FIRST so we can avoid them with pillars ──
+  const cx = Math.floor(gridW / 2);
+  const cy = Math.floor(gridH / 2);
+
+  const seeds: Array<{ type: PathogenType; x: number; y: number }> = [];
+  const seedKeys = new Set<string>();
+
+  for (let i = 0; i < params.pairCount; i++) {
+    const gtype = params.germTypes[i % params.germTypes.length];
+    const dirs = PATHOGEN_GROWTH[gtype];
+    const ox = (i % 3) * 3 - 3;
+    const oy = Math.floor(i / 3) * 3 - 1;
+    const sx = Math.max(1, Math.min(gridW - 2, cx + ox));
+    const sy = Math.max(1, Math.min(gridH - 2, cy + oy));
+    const k1 = key(sx, sy);
+
+    if (seedKeys.has(k1)) continue;
+    seedKeys.add(k1);
+    seeds.push({ type: gtype, x: sx, y: sy });
+
+    for (const [dx, dy] of dirs) {
+      const nx = sx + dx, ny = sy + dy;
+      if (nx <= 0 || nx >= gridW - 1 || ny <= 0 || ny >= gridH - 1) continue;
+      const k2 = key(nx, ny);
+      if (seedKeys.has(k2)) continue;
+      seedKeys.add(k2);
+      seeds.push({ type: gtype, x: nx, y: ny });
+      break;
+    }
+  }
+
+  // ── Step 2: Border walls ──
   const walls: [number, number][] = [];
   const ws = new Set<string>();
   for (let x = 0; x < gridW; x++) {
@@ -958,36 +1038,43 @@ function generateFallback(
     ws.add(key(gridW - 1, y));
   }
 
-  // Place seeds near center
-  const cx = Math.floor(gridW / 2);
-  const cy = Math.floor(gridH / 2);
-  const seeds: Array<{ type: PathogenType; x: number; y: number }> = [];
-  const placed = new Set<string>();
-
-  for (let i = 0; i < params.pairCount; i++) {
-    const gtype = params.germTypes[i % params.germTypes.length];
-    const dirs = PATHOGEN_GROWTH[gtype];
-    // Offset from center
-    const ox = (i % 3) * 3 - 3;
-    const oy = Math.floor(i / 3) * 3 - 1;
-    const sx = Math.max(1, Math.min(gridW - 2, cx + ox));
-    const sy = Math.max(1, Math.min(gridH - 2, cy + oy));
-    const k1 = key(sx, sy);
-
-    if (placed.has(k1)) continue;
-    placed.add(k1);
-    seeds.push({ type: gtype, x: sx, y: sy });
-
-    // Partner in growth direction
-    for (const [dx, dy] of dirs) {
-      const nx = sx + dx, ny = sy + dy;
-      if (nx <= 0 || nx >= gridW - 1 || ny <= 0 || ny >= gridH - 1) continue;
-      const k2 = key(nx, ny);
-      if (placed.has(k2)) continue;
-      placed.add(k2);
-      seeds.push({ type: gtype, x: nx, y: ny });
-      break;
+  // ── Step 3: Random interior pillars for visual variety ──
+  // Build list of ALL valid interior cells (not border, not seed, not adjacent to seed)
+  const blocked = new Set<string>();
+  for (const sk of seedKeys) {
+    blocked.add(sk);
+    // Also block cells adjacent to each seed so growth isn't immediately walled
+    const [sx, sy] = sk.split(",").map(Number);
+    for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      blocked.add(key(sx + dx, sy + dy));
     }
+  }
+
+  const candidates: [number, number][] = [];
+  for (let y = 1; y < gridH - 1; y++) {
+    for (let x = 1; x < gridW - 1; x++) {
+      const k = key(x, y);
+      if (!blocked.has(k)) candidates.push([x, y]);
+    }
+  }
+
+  // Fisher-Yates shuffle candidates using rng
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  // Place 3-8 pillar cells (scaled by grid area)
+  const interiorArea = (gridW - 2) * (gridH - 2);
+  const minPillars = 3;
+  const maxPillars = Math.min(candidates.length, Math.max(4, Math.floor(interiorArea * 0.08)));
+  const numPillars = Math.min(candidates.length, minPillars + Math.floor(rng() * (maxPillars - minPillars + 1)));
+
+  for (let p = 0; p < numPillars; p++) {
+    const [px, py] = candidates[p];
+    const k = key(px, py);
+    ws.add(k);
+    walls.push([px, py]);
   }
 
   // Build tools from ACTUALLY placed seed types
