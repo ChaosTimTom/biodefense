@@ -27,11 +27,14 @@ export function computeStars(state: GameState): number {
  * Speed multiplier — rewards finishing with turns to spare.
  *
  * turnsUsedRatio = turnsUsed / turnLimit   (0→1)
- *   ratio ≤ 0.25  →  ×3.0  "Lightning"
- *   ratio ≤ 0.50  →  ×2.0  "Swift"
- *   ratio ≤ 0.75  →  ×1.5  "Quick"
- *   ratio <  1.00  →  ×1.2  "Steady"
+ *   ratio ≤ 0.25  →  ×2.0  "Lightning"
+ *   ratio ≤ 0.50  →  ×1.6  "Swift"
+ *   ratio ≤ 0.75  →  ×1.3  "Quick"
+ *   ratio <  1.00  →  ×1.1  "Steady"
  *   ratio =  1.00  →  ×1.0  (used all turns)
+ *
+ * Compressed from the original ×3 max to ×2 max so hard-fought
+ * wins on tight levels don't feel punishing compared to easy ones.
  *
  * Returns { mult, label } for display on the win screen.
  */
@@ -41,10 +44,10 @@ export function speedMultiplier(
 ): { mult: number; label: string } {
   if (turnLimit <= 0) return { mult: 1.0, label: "" }; // no limit → no bonus
   const ratio = turnsUsed / turnLimit;
-  if (ratio <= 0.25) return { mult: 3.0, label: "⚡ Lightning ×3" };
-  if (ratio <= 0.50) return { mult: 2.0, label: "🏃 Swift ×2" };
-  if (ratio <= 0.75) return { mult: 1.5, label: "💨 Quick ×1.5" };
-  if (ratio < 1.00)  return { mult: 1.2, label: "🎯 Steady ×1.2" };
+  if (ratio <= 0.25) return { mult: 2.0, label: "⚡ Lightning ×2" };
+  if (ratio <= 0.50) return { mult: 1.6, label: "🏃 Swift ×1.6" };
+  if (ratio <= 0.75) return { mult: 1.3, label: "💨 Quick ×1.3" };
+  if (ratio < 1.00)  return { mult: 1.1, label: "🎯 Steady ×1.1" };
   return { mult: 1.0, label: "" };
 }
 

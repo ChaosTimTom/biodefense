@@ -705,58 +705,74 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
   // Continuous difficulty for every level (Phase 4A)
   const baseDiff = continuousDifficulty(level);
 
-  // ── Tutorial (1-3): small boards, 1 pair, easiest germ ──
+  // ── Smooth grid size: 8→8→8→9→9→10→10→10→10→10→... ──
+  // Uses a continuous curve instead of abrupt jumps
+  function gridSize(lvl: number): number {
+    // lvl 1-5: gridMin (8), 6-7: gridMin+1 (9), 8+: gradual climb
+    if (lvl <= 5) return gridMin;
+    if (lvl <= 7) return gridMin + 1;
+    const t = (lvl - 8) / 42; // 0..1 over remaining levels
+    return Math.min(gridMax, Math.round(gridMin + 1 + t * (gridMax - gridMin - 1)));
+  }
+
+  // ── Tutorial (1-3): small boards, 1 pair, tight turns ──
   if (level <= 3) {
+    // L1=4 turns, L2-3=3 turns — forces quick engagement
+    const tl = level === 1 ? 4 : 3;
     return {
       gridW: gridMin, gridH: gridMin,
       pairCount: 1,
       germTypes: [germs[0]],
-      toolsPerTurn: 3, turnLimit: 6, parTurns: 4,
+      toolsPerTurn: 3, turnLimit: tl, parTurns: Math.max(2, tl - 1),
       templates: [templates[0]],
-      initialTools: 4, grantPerTurn: 1,
+      initialTools: 3, grantPerTurn: 1,
       targetDifficulty: baseDiff,
     };
   }
-  // ── Early (4-10): medium boards, 1-2 pairs ──
+  // ── Early (4-10): gradual grid growth, tighter limits ──
   if (level <= 10) {
-    const t = (level - 4) / 6;
-    const gs = Math.round(gridMin + t * 2);
+    const gs = gridSize(level);
+    // Turn limits scale with grid: 8×8→5, 9×9→6, 10×10→7
+    const tl = 4 + Math.floor((gs - gridMin) * 1.5);
     return {
       gridW: gs, gridH: gs,
-      pairCount: 1 + Math.floor(rng() * 2),
+      pairCount: level <= 5 ? 1 : 1 + Math.floor(rng() * 2),
       germTypes: germs.slice(0, 1),
-      toolsPerTurn: 3, turnLimit: 8, parTurns: 5,
+      toolsPerTurn: 3, turnLimit: tl, parTurns: Math.max(3, tl - 2),
       templates,
-      initialTools: 4, grantPerTurn: 1,
+      initialTools: 3, grantPerTurn: 1,
       targetDifficulty: baseDiff,
     };
   }
-  // ── Mid (11-20): add second germ if available ──
+  // ── Mid (11-20): add second germ, tighter limits ──
   if (level <= 20) {
-    const t = (level - 11) / 9;
-    const gs = Math.round(gridMin + 1 + t * 2);
+    const gs = gridSize(level);
+    // Turn limits: 7-8 (was 10)
+    const tl = 7 + Math.floor((level - 11) / 6);
     return {
       gridW: gs, gridH: gs,
       pairCount: 2,
       germTypes: germs.slice(0, Math.min(2, germs.length)),
-      toolsPerTurn: 3, turnLimit: 10, parTurns: 6,
+      toolsPerTurn: 3, turnLimit: tl, parTurns: Math.max(4, tl - 2),
       templates,
-      initialTools: 4, grantPerTurn: 1,
+      initialTools: 3, grantPerTurn: 1,
       targetDifficulty: baseDiff,
     };
   }
   // ── Advanced (21-35): full tier germs, bigger boards ──
   if (level <= 35) {
     const t = (level - 21) / 14;
-    const gs = Math.round(gridMin + 2 + t * (gridMax - gridMin - 2));
+    const gs = Math.min(gridMax, Math.round(gridMin + 2 + t * (gridMax - gridMin - 2)));
+    // Turn limits: 9-11 (scaling with board size)
+    const tl = 9 + Math.floor(t * 2);
     return {
       gridW: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       gridH: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       pairCount: 2 + Math.floor(rng() * 2),
       germTypes: germs,
-      toolsPerTurn: 3, turnLimit: 12, parTurns: 8,
+      toolsPerTurn: 3, turnLimit: tl, parTurns: Math.max(5, tl - 3),
       templates,
-      initialTools: 4, grantPerTurn: 1,
+      initialTools: 3, grantPerTurn: 1,
       targetDifficulty: baseDiff,
     };
   }
@@ -764,13 +780,15 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
   if (level <= 49) {
     const t = (level - 36) / 13;
     const gs = Math.round(gridMax - 2 + t * 2);
+    // Turn limits: 11-13 (was 14)
+    const tl = 11 + Math.floor(t * 2);
     return {
       gridW: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       gridH: Math.min(gridMax, gs + Math.floor(rng() * 2)),
       pairCount: 3 + Math.floor(rng() * 2),
       germTypes: germs,
       toolsPerTurn: germs.length >= 4 ? 4 : 3,
-      turnLimit: 14, parTurns: 10,
+      turnLimit: tl, parTurns: Math.max(7, tl - 3),
       templates,
       initialTools: 4, grantPerTurn: 1,
       targetDifficulty: baseDiff,
@@ -784,9 +802,9 @@ function tierParams(level: number, rng: () => number, worldNum: number = 1): Tie
     pairCount: Math.max(5, 4 + Math.floor(rng() * 2)),
     germTypes: germs,
     toolsPerTurn: germs.length >= 4 ? 4 : 3,
-    turnLimit: 16, parTurns: 12,
+    turnLimit: 14, parTurns: 10,
     templates: [templates[0], templates[Math.min(1, templates.length - 1)]],
-    initialTools: 6, grantPerTurn: 2,
+    initialTools: 5, grantPerTurn: 2,
     targetDifficulty: bossDiff,
   };
 }
@@ -1066,6 +1084,9 @@ export function generateWorld(worldNum: number): LevelSpec[] {
   let prevMargin = 0;
   for (let i = 0; i < levels.length; i++) {
     const spec = levels[i];
+    // Skip clear_all levels — they don't have maxPct
+    if (spec.objective.type !== "contain") continue;
+
     const sim = simulateNoAction(spec);
     const margin = sim.peakPct - (spec.objective as { maxPct: number }).maxPct;
 
@@ -1185,10 +1206,17 @@ function generateValidLevel(
       tools[med] = perType;
       toolGrant[med] = perGrant;
     }
-    tools.wall = 2 + Math.floor(rng() * 2);
+    tools.wall = levelNum <= 10 ? 2 : 2 + Math.floor(rng() * 2);
 
     const title = generateTitle(levelNum, rng);
     const hint = generateHint(placedTypes, levelNum);
+
+    // ── Objective type selection ──
+    // L1-10: always "contain" (learn core mechanic)
+    // L11+: mix in "clear_all" for ~30% of levels (milestone/boss levels get it)
+    // Boss (L25, L50) always get "clear_all"
+    const useClearAll = levelNum === 25 || levelNum === 50 ||
+      (levelNum >= 11 && rng() < 0.30);
 
     // Build a preliminary spec with a generous threshold to simulate
     const prelimSpec: LevelSpec = {
@@ -1203,7 +1231,9 @@ function generateValidLevel(
       toolGrant,
       toolsPerTurn: params.toolsPerTurn,
       turnLimit: params.turnLimit,
-      objective: { type: "contain", maxPct: 95, maxTurns: params.turnLimit },
+      objective: useClearAll
+        ? { type: "clear_all" as const }
+        : { type: "contain", maxPct: 95, maxTurns: params.turnLimit },
       parTurns: params.parTurns,
     };
 
@@ -1222,36 +1252,49 @@ function generateValidLevel(
     const minPeak = baseMinPeak * gridScale;
     if (sim.peakPct < minPeak) continue; // pathogen barely grows — bad level
 
-    // Set threshold relative to simulated peak:
-    // Phase 3A: Apply world difficulty scale to normalize cross-world balance.
-    // Phase 6A: Cap threshold at 45 (was 60) to avoid confusion with INFECTION_LOSE_PCT=50.
-    const rawThreshold =
-      sim.peakPct * (1 - params.targetDifficulty * 0.6 * worldDiffScale);
-    let maxPct = Math.max(15, Math.min(45, Math.round(rawThreshold)));
+    // ── Set objective and validate ──
+    let finalSpec: LevelSpec;
 
-    // Phase 6B: Level-dependent minimum margin
-    const margin = minMarginForLevel(levelNum);
-    if (sim.peakPct - maxPct < margin) {
-      maxPct = Math.max(10, Math.round(sim.peakPct - margin));
-    }
+    if (useClearAll) {
+      // clear_all: the sim without actions will never clear pathogens,
+      // so we just need peakPct to be meaningful enough.
+      finalSpec = { ...prelimSpec };
+      // Verify: with no action, pathogens persist (they win if all cleared)
+      const verify = simulateNoAction(finalSpec);
+      // If pathogen count is 0 at end with no actions, layout is bugged
+      if (verify.finalPct <= 0) continue;
+    } else {
+      // Set threshold relative to simulated peak:
+      // Phase 3A: Apply world difficulty scale to normalize cross-world balance.
+      // Phase 6A: Cap threshold at 45 to avoid confusion with INFECTION_LOSE_PCT=50.
+      const rawThreshold =
+        sim.peakPct * (1 - params.targetDifficulty * 0.6 * worldDiffScale);
+      let maxPct = Math.max(15, Math.min(45, Math.round(rawThreshold)));
 
-    // Re-simulate with real threshold to verify it actually loses
-    const finalSpec: LevelSpec = {
-      ...prelimSpec,
-      objective: { type: "contain", maxPct, maxTurns: params.turnLimit },
-    };
+      // Phase 6B: Level-dependent minimum margin
+      const margin = minMarginForLevel(levelNum);
+      if (sim.peakPct - maxPct < margin) {
+        maxPct = Math.max(10, Math.round(sim.peakPct - margin));
+      }
 
-    const verify = simulateNoAction(finalSpec);
-    if (verify.result !== "lose") {
-      // Still doesn't lose — try lowering threshold more
-      const lowerPct = Math.max(10, Math.round(sim.peakPct * 0.4));
-      finalSpec.objective = {
-        type: "contain",
-        maxPct: lowerPct,
-        maxTurns: params.turnLimit,
+      // Re-simulate with real threshold to verify it actually loses
+      finalSpec = {
+        ...prelimSpec,
+        objective: { type: "contain", maxPct, maxTurns: params.turnLimit },
       };
-      const verify2 = simulateNoAction(finalSpec);
-      if (verify2.result !== "lose") continue; // give up on this attempt
+
+      const verify = simulateNoAction(finalSpec);
+      if (verify.result !== "lose") {
+        // Still doesn't lose — try lowering threshold more
+        const lowerPct = Math.max(10, Math.round(sim.peakPct * 0.4));
+        finalSpec.objective = {
+          type: "contain",
+          maxPct: lowerPct,
+          maxTurns: params.turnLimit,
+        };
+        const verify2 = simulateNoAction(finalSpec);
+        if (verify2.result !== "lose") continue; // give up on this attempt
+      }
     }
 
     // ── Single-place win guard (skip for tutorial L1-3) ──

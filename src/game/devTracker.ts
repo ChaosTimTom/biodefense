@@ -218,6 +218,7 @@ class DevTracker {
 
     this.allSessions.push(session);
     this._persistToStorage();
+    this._syncToServer();
 
     const icon = result === "win" ? "✅" : result === "lose" ? "❌" : "🚪";
     console.log(
@@ -245,6 +246,21 @@ class DevTracker {
       if (raw) return JSON.parse(raw) as SessionLog[];
     } catch { /* corrupt data */ }
     return [];
+  }
+
+  // ── Server sync (auto-saves to Vite dev server file) ──
+
+  private async _syncToServer(): Promise<void> {
+    try {
+      const sessions = this._loadFromStorage();
+      if (sessions.length === 0) return;
+      await fetch("/__devlog-save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessions, null, 2),
+      });
+      console.log(`%c[DevTracker] Synced ${sessions.length} sessions to server.`, "color: #76ff03");
+    } catch { /* server not available */ }
   }
 
   // ── Export / Analysis ──
@@ -344,4 +360,6 @@ if (DEV_MODE && typeof window !== "undefined") {
     "  devTracker.clearLogs()     — wipe stored logs",
     "color: #00e5ff; font-size: 12px",
   );
+  // Sync any existing localStorage data to server on load
+  (devTracker as any)._syncToServer();
 }

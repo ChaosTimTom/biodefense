@@ -147,11 +147,12 @@ interface LevelDiag {
   levelNum: number;
   id: number;
   title: string;
+  objType: string;  // contain | clear_all | survive
   result: string;
   peakPct: number;
   finalPct: number;
   maxPct: number;
-  margin: number; // peak - threshold  (how barely it loses)
+  margin: number; // peak - threshold  (how barely it loses; N/A for clear_all)
   gridW: number;
   gridH: number;
   totalCells: number;
@@ -176,29 +177,49 @@ for (let w = 1; w <= 4; w++) {
     const openCells = totalCells - spec.walls.length;
     const seedTypes = [...new Set(spec.seeds.map(s => s.type))];
 
-    // Simulate with a generous threshold (95%) to measure TRUE peak,
-    // just like the generator does. Then compare to the actual threshold.
-    const unlimitedSpec = {
-      ...spec,
-      objective: { type: "contain" as const, maxPct: 95, maxTurns: spec.turnLimit },
-    };
-    const simUnlimited = simulateNoAction(unlimitedSpec);
+    const objType = spec.objective.type;
 
-    // Also verify the level actually loses with its real threshold
+    // For "contain" levels: simulate with generous threshold (95%) to
+    // measure TRUE peak, then compare to the actual threshold.
+    // For "clear_all" levels: margin concept doesn't apply — just verify
+    // that doing nothing loses (pathogens remain when turns expire).
+    let truePeak = 0;
+    let finalPctUnlimited = 0;
+    let specMaxPct = getMaxPct(spec);
+    let margin = 0;
+
+    if (objType === "contain") {
+      const unlimitedSpec = {
+        ...spec,
+        objective: { type: "contain" as const, maxPct: 95, maxTurns: spec.turnLimit },
+      };
+      const simUnlimited = simulateNoAction(unlimitedSpec);
+      truePeak = simUnlimited.peakPct;
+      finalPctUnlimited = simUnlimited.finalPct;
+      margin = truePeak - specMaxPct;
+    } else {
+      // clear_all / survive — just run real sim
+      const simPeak = simulateNoAction({
+        ...spec,
+        objective: { type: "contain" as const, maxPct: 95, maxTurns: spec.turnLimit },
+      });
+      truePeak = simPeak.peakPct;
+      finalPctUnlimited = simPeak.finalPct;
+      margin = -1; // N/A sentinel
+    }
+
+    // Verify the level actually loses with its real objective
     const simReal = simulateNoAction(spec);
-
-    const truePeak = simUnlimited.peakPct;
-    const specMaxPct = getMaxPct(spec);
-    const margin = truePeak - specMaxPct;
 
     const diag: LevelDiag = {
       world: w,
       levelNum,
       id: spec.id,
       title: spec.title,
+      objType,
       result: simReal.result,
       peakPct: truePeak,
-      finalPct: simUnlimited.finalPct,
+      finalPct: finalPctUnlimited,
       maxPct: specMaxPct,
       margin,
       gridW: spec.grid.w,
@@ -233,12 +254,15 @@ console.log("EASIEST LEVELS (smallest margin between peak and threshold):");
 console.log("(margin = peakPct - maxPct; lower = easier to win)\n");
 
 for (const d of sorted.slice(0, 30)) {
-  const flag = d.result !== "lose" ? "❌ INSTANT-WIN" : d.margin < 5 ? "⚠️  TRIVIAL" : "  ";
+  const flag = d.result !== "lose" ? "❌ INSTANT-WIN" : d.margin >= 0 && d.margin < 5 ? "⚠️  TRIVIAL" : "  ";
+  const marginStr = d.margin < 0 ? "  N/A" : d.margin.toFixed(1).padStart(5);
+  const threshStr = d.objType === "contain" ? `thresh=${String(d.maxPct).padStart(2)}%` : `obj=${d.objType}`;
   console.log(
     `${flag} W${d.world} L${String(d.levelNum).padStart(2)} ` +
+    `[${d.objType.padEnd(9)}] ` +
     `"${d.title.padEnd(22)}" ` +
-    `peak=${d.peakPct.toFixed(1).padStart(5)}% thresh=${String(d.maxPct).padStart(2)}% ` +
-    `margin=${d.margin.toFixed(1).padStart(5)} ` +
+    `peak=${d.peakPct.toFixed(1).padStart(5)}% ${threshStr} ` +
+    `margin=${marginStr} ` +
     `grid=${d.gridW}x${d.gridH} open=${d.openCells} ` +
     `seeds=${d.seedCount} turns=${d.turnLimit} ` +
     `types=[${d.seedTypes.join(",")}]`
@@ -247,9 +271,14 @@ for (const d of sorted.slice(0, 30)) {
 
 console.log(`\n${"=".repeat(60)}`);
 console.log(`Total instant-win levels: ${totalBad} / 200`);
-console.log(`Levels with margin < 5: ${allDiags.filter(d => d.margin < 5).length}`);
-console.log(`Levels with margin < 10: ${allDiags.filter(d => d.margin < 10).length}`);
-console.log(`Levels with margin < 15: ${allDiags.filter(d => d.margin < 15).length}`);
+const containLevels = allDiags.filter(d => d.objType === "contain");
+const clearAllLevels = allDiags.filter(d => d.objType === "clear_all");
+console.log(`Contain levels with margin < 5: ${containLevels.filter(d => d.margin < 5).length}`);
+console.log(`Contain levels with margin < 10: ${containLevels.filter(d => d.margin < 10).length}`);
+console.log(`Contain levels with margin < 15: ${containLevels.filter(d => d.margin < 15).length}`);
+if (clearAllLevels.length > 0) {
+  console.log(`Clear-all levels: ${clearAllLevels.length}`);
+}
 
 // ── Template distribution ──
 console.log(`\n${"=".repeat(60)}`);
@@ -342,9 +371,10 @@ for (const [bucket, count] of sortedBuckets) {
 
 // ── Threshold distribution ──
 console.log(`\n${"=".repeat(60)}`);
-console.log("THRESHOLD DISTRIBUTION:\n");
+console.log("THRESHOLD DISTRIBUTION (contain levels only):\n");
 const threshBuckets = { "≤20%": 0, "21-30%": 0, "31-40%": 0, "41-45%": 0, ">45%": 0 };
 for (const d of allDiags) {
+  if (d.objType !== "contain") continue;
   if (d.maxPct <= 20) threshBuckets["≤20%"]++;
   else if (d.maxPct <= 30) threshBuckets["21-30%"]++;
   else if (d.maxPct <= 40) threshBuckets["31-40%"]++;
@@ -353,6 +383,17 @@ for (const d of allDiags) {
 }
 for (const [range, count] of Object.entries(threshBuckets)) {
   console.log(`  ${range.padStart(7)}: ${count}`);
+}
+
+// ── Objective type distribution ──
+console.log(`\n${"=".repeat(60)}`);
+console.log("OBJECTIVE TYPE DISTRIBUTION:\n");
+const objBuckets: Record<string, number> = {};
+for (const d of allDiags) {
+  objBuckets[d.objType] = (objBuckets[d.objType] || 0) + 1;
+}
+for (const [objType, count] of Object.entries(objBuckets)) {
+  console.log(`  ${objType.padStart(10)}: ${count}`);
 }
 
 // ── Single-place instant win check ──
