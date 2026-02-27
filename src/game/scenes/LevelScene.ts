@@ -41,6 +41,7 @@ import { StarDisplay } from "../ui/StarDisplay";
 import { RulesOverlay } from "../ui/RulesOverlay";
 import { tweenWinBurst, tweenLoseShake } from "../animation/tweens";
 import { addWorldBackground, fadeIn } from "../ui/UIFactory";
+import { devTracker, DEV_MODE } from "../devTracker";
 
 export class LevelScene extends Phaser.Scene {
   // State
@@ -103,6 +104,9 @@ export class LevelScene extends Phaser.Scene {
     this.initialState = cloneState(this.gameState);
     this.history = createHistory();
 
+    // Dev tracking
+    devTracker.startSession(spec);
+
     // ── Background ──
     addWorldBackground(this, spec.world ?? 1);
     fadeIn(this, 250);
@@ -117,7 +121,10 @@ export class LevelScene extends Phaser.Scene {
 
     this.add.rectangle(24, 22, 48, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
-      .on("pointerdown", () => this.scene.start("Menu"));
+      .on("pointerdown", () => {
+        devTracker.endSession("abandon", this.gameState, 0, 0);
+        this.scene.start("Menu");
+      });
 
     this.titleText = this.add
       .text(w / 2, 10, spec.title || `Level ${spec.id}`, {
@@ -250,6 +257,27 @@ export class LevelScene extends Phaser.Scene {
       this.rulesOverlay.show();
     }
     this.input.keyboard?.on("keydown-H", () => this.rulesOverlay.toggle());
+
+    // ── Dev mode indicator ──
+    if (DEV_MODE) {
+      this.add
+        .text(w - 4, h - 4, "DEV", {
+          fontSize: "8px",
+          color: "#ff4444",
+          fontFamily: "'Orbitron', sans-serif",
+          fontStyle: "bold",
+          backgroundColor: "#00000066",
+          padding: { x: 3, y: 1 },
+        })
+        .setOrigin(1, 1)
+        .setDepth(999)
+        .setAlpha(0.6);
+
+      // Ctrl+E = export dev logs
+      this.input.keyboard?.on("keydown-E", (e: KeyboardEvent) => {
+        if (e.ctrlKey) devTracker.exportJSON();
+      });
+    }
   }
 
   // ── State Mutation & Actions ───────────────────
@@ -326,6 +354,7 @@ export class LevelScene extends Phaser.Scene {
           toX: x, toY: y,
         };
         applyAction(this.gameState, action);
+        devTracker.recordAction(action);
         this.exitSwitchMode();
         this.turnControls.setUndoEnabled(canUndo(this.history));
         this.renderAll();
@@ -351,6 +380,7 @@ export class LevelScene extends Phaser.Scene {
 
     const action: Action = { type: "place_tool", tool: this.selectedTool, x, y };
     applyAction(this.gameState, action);
+    devTracker.recordAction(action);
 
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
@@ -447,6 +477,9 @@ export class LevelScene extends Phaser.Scene {
 
       phaseEvaluate(this.gameState);
 
+      // Record turn-end snapshot for dev tracking
+      devTracker.recordTurnEnd(this.gameState);
+
       this.animating = false;
       this.turnControls.setEnabled(true);
       this.toolPalette.updateCounts(this.gameState.tools);
@@ -531,6 +564,7 @@ export class LevelScene extends Phaser.Scene {
     const prev = popHistory(this.history);
     if (!prev) return;
 
+    devTracker.recordUndo();
     this.gameState = prev;
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
@@ -677,6 +711,8 @@ export class LevelScene extends Phaser.Scene {
         const score = computeScore(this.gameState);
         this.gameState = { ...this.gameState, stars };
 
+        devTracker.endSession("win", this.gameState, stars, score);
+
         tweenWinBurst(this, w / 2, h / 2, () => {
           this.starDisplay.animateStars(stars);
           this.time.delayedCall(1800, () => {
@@ -689,6 +725,7 @@ export class LevelScene extends Phaser.Scene {
           });
         });
       } else {
+        devTracker.endSession("lose", this.gameState, 0, 0);
         tweenLoseShake(this, this.cameras.main, () => {
           this.showGameOverOverlay();
         });

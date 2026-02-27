@@ -8,6 +8,7 @@ import type { LevelSpec } from "../../sim/types";
 import { StarDisplay } from "../ui/StarDisplay";
 import { tweenWinBurst } from "../animation/tweens";
 import { updateLevelResult } from "../save";
+import { speedMultiplier } from "../../sim/metrics";
 import {
   UI_FONT, addBackground, addButton,
   genPanelTex, fadeIn, fadeToScene,
@@ -108,15 +109,17 @@ export class WinScene extends Phaser.Scene {
     });
 
     // ── Stats Panel ──
-    genPanelTex(this, "win_stats", w - 60, 54, 10);
-    this.add.image(w / 2, h * 0.435, "win_stats").setDepth(3);
+    genPanelTex(this, "win_stats", w - 60, 72, 10);
+    this.add.image(w / 2, h * 0.445, "win_stats").setDepth(3);
 
     const limit = levelSpec.turnLimit > 0 ? levelSpec.turnLimit : turns;
     const turnsSaved = limit - turns;
+    const { mult: speedMult, label: speedLabel } = speedMultiplier(turns, levelSpec.turnLimit);
 
     const stats = [
       { label: "Turns", value: `${turns} / Par: ${levelSpec.parTurns}` },
       { label: "Par Bonus", value: turnsSaved > 0 ? `+${turnsSaved * 100}` : "—" },
+      { label: "Speed", value: speedLabel || "—", highlight: speedMult > 1 },
     ];
 
     stats.forEach((stat, i) => {
@@ -129,7 +132,9 @@ export class WinScene extends Phaser.Scene {
         .setDepth(4);
       this.add
         .text(w * 0.8, sy, stat.value, {
-          fontSize: "10px", color: "#ccddee", fontFamily: UI_FONT,
+          fontSize: "10px",
+          color: (stat as { highlight?: boolean }).highlight ? "#ffd740" : "#ccddee",
+          fontFamily: UI_FONT,
           fontStyle: "bold",
         })
         .setOrigin(1, 0.5)
@@ -143,7 +148,7 @@ export class WinScene extends Phaser.Scene {
           : "1 star — try for par time!";
 
     this.add
-      .text(w / 2, h * 0.52, starText, {
+      .text(w / 2, h * 0.54, starText, {
         fontSize: "11px",
         color: stars === 3 ? "#ffd740" : "#8899bb",
         fontFamily: UI_FONT,
@@ -152,7 +157,7 @@ export class WinScene extends Phaser.Scene {
       .setDepth(4);
 
     // ── Buttons ──
-    addButton(this, w / 2, h * 0.61, "Next Level  →", () => {
+    addButton(this, w / 2, h * 0.63, "Next Level  →", () => {
       const nextId = levelSpec.id + 1;
       this.scene.start("Menu", {
         updatedStars: { levelId: levelSpec.id, stars },
@@ -161,15 +166,15 @@ export class WinScene extends Phaser.Scene {
       });
     }, { style: "primary", fontSize: "15px", w: 200 });
 
-    addButton(this, w / 2, h * 0.70, "Replay", () => {
+    addButton(this, w / 2, h * 0.72, "Replay", () => {
       this.scene.start("Level", { levelSpec });
     }, { style: "secondary", fontSize: "13px", w: 160 });
 
-    addButton(this, w / 2, h * 0.78, "High Scores", () => {
+    addButton(this, w / 2, h * 0.80, "High Scores", () => {
       this.scene.start("Scores");
     }, { style: "gold", fontSize: "12px", w: 160 });
 
-    addButton(this, w / 2, h * 0.86, "Menu", () => {
+    addButton(this, w / 2, h * 0.88, "Menu", () => {
       this.scene.start("Menu", {
         updatedStars: { levelId: levelSpec.id, stars },
         updatedScore: { levelId: levelSpec.id, score },
