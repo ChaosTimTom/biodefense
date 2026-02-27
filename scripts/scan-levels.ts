@@ -123,26 +123,22 @@ if (dupeCount === 0) {
 // ── Check how many levels use fallback ──
 console.log("\n=== FALLBACK DETECTION ===\n");
 
-// Fallback levels have only border walls (open box)
+// Fallback levels have very few walls (< 3 non-trivial walls)
 let fallbackCount = 0;
 for (let w = 1; w <= 4; w++) {
   const levels = generateWorld(w);
   for (const spec of levels) {
     const levelNum = spec.id - (w - 1) * 50;
     const { w: gw, h: gh } = spec.grid;
-    // Count how many walls are on the border
-    const borderWalls = spec.walls.filter(([x, y]) => 
-      x === 0 || x === gw - 1 || y === 0 || y === gh - 1
-    ).length;
-    const interiorWalls = spec.walls.length - borderWalls;
     
-    if (interiorWalls === 0) {
+    // A fallback-like level has very few walls (practically empty)
+    if (spec.walls.length <= 2) {
       fallbackCount++;
-      console.log(`  FALLBACK W${w} L${String(levelNum).padStart(2)} id=${spec.id} "${spec.title}" grid=${gw}x${gh}`);
+      console.log(`  FALLBACK W${w} L${String(levelNum).padStart(2)} id=${spec.id} "${spec.title}" grid=${gw}x${gh} walls=${spec.walls.length}`);
     }
   }
 }
-console.log(`\n  ${fallbackCount} fallback (open-box) levels total.`);
+console.log(`\n  ${fallbackCount} near-empty levels total.`);
 
 console.log("\n" + "=".repeat(60));
 

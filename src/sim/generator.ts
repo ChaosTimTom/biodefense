@@ -117,12 +117,9 @@ type TemplateFn = (
 // Principle: create CHOKE POINTS and CORRIDORS, never
 // full enclosures. Every interior region must have gaps.
 
-/** Border only — completely open interior */
-const tplOpen: TemplateFn = (w, h) => {
-  const walls: [number, number][] = [];
-  for (let x = 0; x < w; x++) walls.push([x, 0], [x, h - 1]);
-  for (let y = 1; y < h - 1; y++) walls.push([0, y], [w - 1, y]);
-  return walls;
+/** No walls — completely open board */
+const tplOpen: TemplateFn = () => {
+  return [];
 };
 
 /** Scattered pillars — 1×1 or 2×2 wall blocks, never blocking a full lane */
@@ -130,12 +127,14 @@ const tplPillars: TemplateFn = (w, h, rng) => {
   const walls = tplOpen(w, h, rng);
   const count = 3 + Math.floor(rng() * 4); // 3-6 pillars
   for (let i = 0; i < count; i++) {
-    const px = 2 + Math.floor(rng() * (w - 4));
-    const py = 2 + Math.floor(rng() * (h - 4));
+    const px = 1 + Math.floor(rng() * (w - 2));
+    const py = 1 + Math.floor(rng() * (h - 2));
     const big = rng() < 0.4;
     walls.push([px, py]);
     if (big) {
-      walls.push([px + 1, py], [px, py + 1], [px + 1, py + 1]);
+      if (px + 1 < w) walls.push([px + 1, py]);
+      if (py + 1 < h) walls.push([px, py + 1]);
+      if (px + 1 < w && py + 1 < h) walls.push([px + 1, py + 1]);
     }
   }
   return walls;
@@ -150,19 +149,19 @@ const tplDivider: TemplateFn = (w, h, rng) => {
   const vertical = rng() < 0.5;
 
   if (vertical) {
-    const x = 3 + Math.floor(rng() * (w - 6));
+    const x = 2 + Math.floor(rng() * (w - 4));
     // Create 2 gaps
-    const gap1 = 2 + Math.floor(rng() * Math.floor((h - 4) / 2));
-    const gap2 = gap1 + 3 + Math.floor(rng() * Math.max(1, h - gap1 - 5));
-    for (let y = 1; y < h - 1; y++) {
+    const gap1 = 1 + Math.floor(rng() * Math.floor((h - 2) / 2));
+    const gap2 = gap1 + 3 + Math.floor(rng() * Math.max(1, h - gap1 - 4));
+    for (let y = 0; y < h; y++) {
       if (Math.abs(y - gap1) <= 1 || Math.abs(y - gap2) <= 1) continue;
       walls.push([x, y]);
     }
   } else {
-    const y = 3 + Math.floor(rng() * (h - 6));
-    const gap1 = 2 + Math.floor(rng() * Math.floor((w - 4) / 2));
-    const gap2 = gap1 + 3 + Math.floor(rng() * Math.max(1, w - gap1 - 5));
-    for (let x = 1; x < w - 1; x++) {
+    const y = 2 + Math.floor(rng() * (h - 4));
+    const gap1 = 1 + Math.floor(rng() * Math.floor((w - 2) / 2));
+    const gap2 = gap1 + 3 + Math.floor(rng() * Math.max(1, w - gap1 - 4));
+    for (let x = 0; x < w; x++) {
       if (Math.abs(x - gap1) <= 1 || Math.abs(x - gap2) <= 1) continue;
       walls.push([x, y]);
     }
@@ -181,7 +180,7 @@ const tplCross: TemplateFn = (w, h, rng) => {
 
   // Vertical arm with gap
   const vGap = cy + (rng() < 0.5 ? -2 : 2);
-  for (let y = 1; y < h - 1; y++) {
+  for (let y = 0; y < h; y++) {
     if (Math.abs(y - vGap) <= 1) continue;
     if (y === cy) continue; // leave center open
     walls.push([cx, y]);
@@ -189,7 +188,7 @@ const tplCross: TemplateFn = (w, h, rng) => {
 
   // Horizontal arm with gap
   const hGap = cx + (rng() < 0.5 ? -2 : 2);
-  for (let x = 1; x < w - 1; x++) {
+  for (let x = 0; x < w; x++) {
     if (Math.abs(x - hGap) <= 1) continue;
     if (x === cx) continue;
     walls.push([x, cy]);
@@ -209,26 +208,26 @@ const tplCorridors: TemplateFn = (w, h, rng) => {
     if (vertical) {
       // Evenly spaced
       const x = Math.floor((w * (s + 1)) / (numStrips + 1));
-      if (x <= 1 || x >= w - 2) continue;
+      if (x <= 0 || x >= w - 1) continue;
       // 2-3 gaps of width 2
       const numGaps = 2 + Math.floor(rng() * 2);
       const gapYs: number[] = [];
       for (let g = 0; g < numGaps; g++) {
         gapYs.push(Math.floor((h * (g + 1)) / (numGaps + 1)));
       }
-      for (let y = 1; y < h - 1; y++) {
+      for (let y = 0; y < h; y++) {
         if (gapYs.some((gy) => Math.abs(y - gy) <= 1)) continue;
         walls.push([x, y]);
       }
     } else {
       const y = Math.floor((h * (s + 1)) / (numStrips + 1));
-      if (y <= 1 || y >= h - 2) continue;
+      if (y <= 0 || y >= h - 1) continue;
       const numGaps = 2 + Math.floor(rng() * 2);
       const gapXs: number[] = [];
       for (let g = 0; g < numGaps; g++) {
         gapXs.push(Math.floor((w * (g + 1)) / (numGaps + 1)));
       }
-      for (let x = 1; x < w - 1; x++) {
+      for (let x = 0; x < w; x++) {
         if (gapXs.some((gx) => Math.abs(x - gx) <= 1)) continue;
         walls.push([x, y]);
       }
@@ -277,13 +276,13 @@ const tplLWall: TemplateFn = (w, h, rng) => {
  */
 const tplGateway: TemplateFn = (w, h, rng) => {
   const walls = tplOpen(w, h, rng);
-  const upperY = Math.max(2, Math.floor(h / 3));
-  const lowerY = Math.min(h - 3, Math.floor(2 * h / 3));
+  const upperY = Math.max(1, Math.floor(h / 3));
+  const lowerY = Math.min(h - 2, Math.floor(2 * h / 3));
 
   // Upper wall with 2 doorways
-  const door1 = 2 + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 2));
-  const door2 = Math.floor(2 * w / 3) + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 2));
-  for (let x = 1; x < w - 1; x++) {
+  const door1 = 1 + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 1));
+  const door2 = Math.floor(2 * w / 3) + Math.floor(rng() * Math.max(1, Math.floor(w / 3) - 1));
+  for (let x = 0; x < w; x++) {
     if (Math.abs(x - door1) <= 1 || Math.abs(x - door2) <= 1) continue;
     walls.push([x, upperY]);
   }
@@ -291,7 +290,7 @@ const tplGateway: TemplateFn = (w, h, rng) => {
   // Lower wall with 2 offset doorways
   const door3 = Math.floor(w / 4) + Math.floor(rng() * Math.max(1, Math.floor(w / 4)));
   const door4 = Math.floor(w / 2) + Math.floor(rng() * Math.max(1, Math.floor(w / 4)));
-  for (let x = 1; x < w - 1; x++) {
+  for (let x = 0; x < w; x++) {
     if (Math.abs(x - door3) <= 1 || Math.abs(x - door4) <= 1) continue;
     walls.push([x, lowerY]);
   }
@@ -307,13 +306,13 @@ const tplIsland: TemplateFn = (w, h, rng) => {
   const cx = Math.floor(w / 2);
   const cy = Math.floor(h / 2);
   // Island radius scales with grid size: 1-3
-  const rw = 1 + Math.floor(rng() * Math.min(3, Math.floor((w - 4) / 3)));
-  const rh = 1 + Math.floor(rng() * Math.min(3, Math.floor((h - 4) / 3)));
+  const rw = 1 + Math.floor(rng() * Math.min(3, Math.floor((w - 2) / 3)));
+  const rh = 1 + Math.floor(rng() * Math.min(3, Math.floor((h - 2) / 3)));
 
   for (let dy = -rh; dy <= rh; dy++) {
     for (let dx = -rw; dx <= rw; dx++) {
       const x = cx + dx, y = cy + dy;
-      if (x > 0 && x < w - 1 && y > 0 && y < h - 1) {
+      if (x >= 0 && x < w && y >= 0 && y < h) {
         walls.push([x, y]);
       }
     }
@@ -326,7 +325,7 @@ const tplIsland: TemplateFn = (w, h, rng) => {
     const dist = Math.max(rw, rh) + 2;
     const sx = cx + Math.round(Math.cos(angle) * dist);
     const sy = cy + Math.round(Math.sin(angle) * dist);
-    if (sx > 1 && sx < w - 2 && sy > 1 && sy < h - 2) {
+    if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
       walls.push([sx, sy]);
     }
   }
@@ -343,20 +342,20 @@ const tplAsymSplit: TemplateFn = (w, h, rng) => {
   const gapCount = 2 + Math.floor(rng() * 2); // 2-3 gaps
   const gapYs: number[] = [];
   for (let g = 0; g < gapCount; g++) {
-    gapYs.push(Math.floor(((h - 2) * (g + 1)) / (gapCount + 1)) + 1);
+    gapYs.push(Math.floor((h * (g + 1)) / (gapCount + 1)));
   }
 
-  for (let y = 1; y < h - 1; y++) {
+  for (let y = 0; y < h; y++) {
     if (gapYs.some(gy => Math.abs(y - gy) <= 1)) continue;
     // Diagonal: x progresses from ~1/4 width to ~3/4 width as y increases
-    const t = (y - 1) / Math.max(1, h - 3);
-    const rawX = Math.floor(1 + t * (w - 3));
+    const t = y / Math.max(1, h - 1);
+    const rawX = Math.floor(t * (w - 1));
     const x = flip ? w - 1 - rawX : rawX;
-    if (x > 0 && x < w - 1) {
+    if (x >= 0 && x < w) {
       walls.push([x, y]);
       // Make the wall 2-thick for better visual read
       const x2 = flip ? x + 1 : x - 1;
-      if (x2 > 0 && x2 < w - 1 && rng() < 0.5) {
+      if (x2 >= 0 && x2 < w && rng() < 0.5) {
         walls.push([x2, y]);
       }
     }
@@ -391,18 +390,18 @@ const TEMPLATES: TemplateFn[] = [
 function tplVein(w: number, h: number, rng: () => number): [number, number][] {
   const walls = tplOpen(w, h, rng);
   const ws = new Set<string>();
-  // Start with interior filled, then carve veins
-  for (let y = 1; y < h - 1; y++)
-    for (let x = 1; x < w - 1; x++)
+  // Start with entire grid filled, then carve veins
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
       ws.add(key(x, y));
 
-  const interiorTotal = (w - 2) * (h - 2);
+  const totalCells = w * h;
   // Scale veins and width by grid size to ensure enough carving
   const numVeins = 3 + Math.floor(rng() * 3); // 3-5 veins
   for (let v = 0; v < numVeins; v++) {
     // Alternate starting from left/top edges
-    let cx = v % 2 === 0 ? 1 : 1 + Math.floor(rng() * (w - 2));
-    let cy = v % 2 === 0 ? 1 + Math.floor(rng() * (h - 2)) : 1;
+    let cx = v % 2 === 0 ? 0 : Math.floor(rng() * w);
+    let cy = v % 2 === 0 ? Math.floor(rng() * h) : 0;
     // Wider veins for larger grids
     const veinWidth = Math.max(3, Math.floor(Math.min(w, h) / 3));
     const steps = w + h + 8;
@@ -411,26 +410,26 @@ function tplVein(w: number, h: number, rng: () => number): [number, number][] {
       for (let dy = -r; dy <= r; dy++) {
         for (let dx = -r; dx <= r; dx++) {
           const nx = cx + dx, ny = cy + dy;
-          if (nx > 0 && nx < w - 1 && ny > 0 && ny < h - 1)
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h)
             ws.delete(key(nx, ny));
         }
       }
       const dir = rng();
       if (v % 2 === 0) {
         cx += 1;
-        if (dir < 0.3) cy = Math.max(1, cy - 1);
-        else if (dir < 0.6) cy = Math.min(h - 2, cy + 1);
+        if (dir < 0.3) cy = Math.max(0, cy - 1);
+        else if (dir < 0.6) cy = Math.min(h - 1, cy + 1);
       } else {
         cy += 1;
-        if (dir < 0.3) cx = Math.max(1, cx - 1);
-        else if (dir < 0.6) cx = Math.min(w - 2, cx + 1);
+        if (dir < 0.3) cx = Math.max(0, cx - 1);
+        else if (dir < 0.6) cx = Math.min(w - 1, cx + 1);
       }
-      if (cx >= w - 1 || cy >= h - 1) break;
+      if (cx >= w || cy >= h) break;
     }
   }
 
-  // Safety: ensure we stay under 25% interior wall density by random carving
-  const maxWalls = Math.floor(interiorTotal * 0.25);
+  // Safety: ensure we stay under 25% wall density by random carving
+  const maxWalls = Math.floor(totalCells * 0.25);
   if (ws.size > maxWalls) {
     const wallArr = [...ws];
     shuffle(wallArr, rng);
@@ -460,25 +459,25 @@ function tplChamber(w: number, h: number, rng: () => number): [number, number][]
       const roomIdx = ry * roomCols + rx;
       if (roomIdx >= numRooms) break;
       // Room boundaries
-      const x1 = 1 + Math.floor(((w - 2) * rx) / roomCols);
-      const x2 = Math.floor(((w - 2) * (rx + 1)) / roomCols);
-      const y1 = 1 + Math.floor(((h - 2) * ry) / roomRows);
-      const y2 = Math.floor(((h - 2) * (ry + 1)) / roomRows);
+      const x1 = Math.floor((w * rx) / roomCols);
+      const x2 = Math.floor((w * (rx + 1)) / roomCols) - 1;
+      const y1 = Math.floor((h * ry) / roomRows);
+      const y2 = Math.floor((h * (ry + 1)) / roomRows) - 1;
 
       // Right wall (with doorway)
       if (rx < roomCols - 1) {
-        const doorY = y1 + 1 + Math.floor(rng() * Math.max(1, y2 - y1 - 3));
+        const doorY = y1 + 1 + Math.floor(rng() * Math.max(1, y2 - y1 - 2));
         for (let y = y1; y <= y2; y++) {
           if (Math.abs(y - doorY) <= 1) continue;
-          if (x2 > 0 && x2 < w - 1) walls.push([x2, y]);
+          if (x2 >= 0 && x2 < w) walls.push([x2, y]);
         }
       }
       // Bottom wall (with doorway)
       if (ry < roomRows - 1) {
-        const doorX = x1 + 1 + Math.floor(rng() * Math.max(1, x2 - x1 - 3));
+        const doorX = x1 + 1 + Math.floor(rng() * Math.max(1, x2 - x1 - 2));
         for (let x = x1; x <= x2; x++) {
           if (Math.abs(x - doorX) <= 1) continue;
-          if (y2 > 0 && y2 < h - 1) walls.push([x, y2]);
+          if (y2 >= 0 && y2 < h) walls.push([x, y2]);
         }
       }
     }
@@ -494,16 +493,16 @@ function tplMaze(w: number, h: number, rng: () => number): [number, number][] {
   const walls = tplOpen(w, h, rng);
   // Wider spacing (every 3 cells) and lower chance → sparser maze
   const cellW = 3, cellH = 3;
-  for (let cy = 2; cy < h - 2; cy += cellH) {
-    for (let cx = 2; cx < w - 2; cx += cellW) {
+  for (let cy = 1; cy < h - 1; cy += cellH) {
+    for (let cx = 1; cx < w - 1; cx += cellW) {
       // Place wall in one of the two possible positions (lower probability)
       if (rng() < 0.35) {
         const wy = cy + 1;
-        if (wy < h - 1) walls.push([cx, wy]);
+        if (wy < h) walls.push([cx, wy]);
       }
       if (rng() < 0.35) {
         const wx = cx + 1;
-        if (wx < w - 1) walls.push([wx, cy]);
+        if (wx < w) walls.push([wx, cy]);
       }
     }
   }
@@ -517,13 +516,13 @@ function tplHoneycomb(w: number, h: number, rng: () => number): [number, number]
   const walls = tplOpen(w, h, rng);
   const cellSize = 3 + Math.floor(rng() * 2); // 3-4
 
-  for (let cy = cellSize; cy < h - 1; cy += cellSize) {
+  for (let cy = cellSize; cy < h; cy += cellSize) {
     const offset = (Math.floor(cy / cellSize) % 2) * Math.floor(cellSize / 2);
-    for (let cx = cellSize + offset; cx < w - 1; cx += cellSize) {
+    for (let cx = cellSize + offset; cx < w; cx += cellSize) {
       // Place a small wall cluster
       walls.push([cx, cy]);
-      if (cx + 1 < w - 1 && rng() < 0.6) walls.push([cx + 1, cy]);
-      if (cy + 1 < h - 1 && rng() < 0.6) walls.push([cx, cy + 1]);
+      if (cx + 1 < w && rng() < 0.6) walls.push([cx + 1, cy]);
+      if (cy + 1 < h && rng() < 0.6) walls.push([cx, cy + 1]);
     }
   }
   return walls;
@@ -540,7 +539,7 @@ function tplCompound(w: number, h: number, rng: () => number): [number, number][
     // Vertical split — single wall with wider bridge
     const splitX = Math.floor(w / 2);
     const bridgeY = Math.floor(h / 2) + Math.floor(rng() * 4) - 2;
-    for (let y = 1; y < h - 1; y++) {
+    for (let y = 0; y < h; y++) {
       if (Math.abs(y - bridgeY) <= 1) continue;
       walls.push([splitX, y]);
     }
@@ -551,11 +550,11 @@ function tplCompound(w: number, h: number, rng: () => number): [number, number][
     const bridgeH = splitY + Math.floor(rng() * 3) - 1;
     const bridgeV = splitX + Math.floor(rng() * 3) - 1;
 
-    for (let y = 1; y < h - 1; y++) {
+    for (let y = 0; y < h; y++) {
       if (Math.abs(y - bridgeH) <= 1) continue;
       walls.push([splitX, y]);
     }
-    for (let x = 1; x < w - 1; x++) {
+    for (let x = 0; x < w; x++) {
       if (Math.abs(x - bridgeV) <= 1) continue;
       walls.push([x, splitY]);
     }
@@ -823,8 +822,8 @@ function placeSeedPairs(
 
     // Collect candidate cells (not wall, not already placed, interior)
     const candidates: { x: number; y: number; reach: number }[] = [];
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
         const k = key(x, y);
         if (ws.has(k) || placed.has(k)) continue;
 
@@ -863,7 +862,7 @@ function placeSeedPairs(
     let partner: { x: number; y: number } | null = null;
     for (const [dx, dy] of shuffledDirs) {
       const nx = pick.x + dx, ny = pick.y + dy;
-      if (nx <= 0 || nx >= w - 1 || ny <= 0 || ny >= h - 1) continue;
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
       const nk = key(nx, ny);
       if (ws.has(nk) || placed.has(nk)) continue;
       partner = { x: nx, y: ny };
@@ -952,9 +951,8 @@ function minMarginForLevel(level: number): number {
   return level <= 10 ? 10 : 8;
 }
 
-// Maximum INTERIOR wall density (excluding border).
-// Only counts walls that aren't on the outer edge of the grid.
-const MAX_INTERIOR_WALL_PCT = 0.30;
+// Maximum wall density (fraction of total grid cells).
+const MAX_WALL_PCT = 0.30;
 
 // ── Phase 5: Template-Germ Affinity ──────────────
 // Scores > 1.0 = great combo (boost selection probability)
@@ -1147,17 +1145,15 @@ function generateValidLevel(
     }
 
     // Reject boards that are too wall-heavy — pathogens need room to spread.
-    // Only count interior walls (exclude the mandatory border).
-    const borderCount = 2 * gridW + 2 * (gridH - 2);
 
-    // If the template produced only border walls, add random pillars for variety.
+    // If the template produced zero walls, add random pillars for variety.
     // This prevents multiple levels with the same grid size from looking identical
     // when the Open template is selected.
-    if (walls.length <= borderCount) {
+    if (walls.length === 0) {
       const numExtra = 2 + Math.floor(rng() * 4); // 2-5 pillars
       for (let ep = 0; ep < numExtra; ep++) {
-        const px = 2 + Math.floor(rng() * Math.max(1, gridW - 4));
-        const py = 2 + Math.floor(rng() * Math.max(1, gridH - 4));
+        const px = 1 + Math.floor(rng() * Math.max(1, gridW - 2));
+        const py = 1 + Math.floor(rng() * Math.max(1, gridH - 2));
         const k = key(px, py);
         if (!ws.has(k)) {
           ws.add(k);
@@ -1166,9 +1162,8 @@ function generateValidLevel(
       }
     }
 
-    const interiorWalls = walls.length - borderCount;
-    const interiorCells = (gridW - 2) * (gridH - 2);
-    if (interiorCells > 0 && interiorWalls / interiorCells > MAX_INTERIOR_WALL_PCT) continue;
+    const totalCells = gridW * gridH;
+    if (totalCells > 0 && walls.length / totalCells > MAX_WALL_PCT) continue;
 
     // Place seed pairs in open areas
     const seeds = placeSeedPairs(
@@ -1351,8 +1346,8 @@ function generateFallback(
     const dirs = PATHOGEN_GROWTH[gtype];
     const ox = (i % 3) * 3 - 3;
     const oy = Math.floor(i / 3) * 3 - 1;
-    const sx = Math.max(1, Math.min(gridW - 2, cx + ox));
-    const sy = Math.max(1, Math.min(gridH - 2, cy + oy));
+    const sx = Math.max(0, Math.min(gridW - 1, cx + ox));
+    const sy = Math.max(0, Math.min(gridH - 1, cy + oy));
     const k1 = key(sx, sy);
 
     if (seedKeys.has(k1)) continue;
@@ -1361,7 +1356,7 @@ function generateFallback(
 
     for (const [dx, dy] of dirs) {
       const nx = sx + dx, ny = sy + dy;
-      if (nx <= 0 || nx >= gridW - 1 || ny <= 0 || ny >= gridH - 1) continue;
+      if (nx < 0 || nx >= gridW || ny < 0 || ny >= gridH) continue;
       const k2 = key(nx, ny);
       if (seedKeys.has(k2)) continue;
       seedKeys.add(k2);
@@ -1370,22 +1365,11 @@ function generateFallback(
     }
   }
 
-  // ── Step 2: Border walls ──
+  // ── Step 2: Random pillars for visual variety ──
+  // Build list of ALL valid cells (not seed, not adjacent to seed)
   const walls: [number, number][] = [];
   const ws = new Set<string>();
-  for (let x = 0; x < gridW; x++) {
-    walls.push([x, 0], [x, gridH - 1]);
-    ws.add(key(x, 0));
-    ws.add(key(x, gridH - 1));
-  }
-  for (let y = 1; y < gridH - 1; y++) {
-    walls.push([0, y], [gridW - 1, y]);
-    ws.add(key(0, y));
-    ws.add(key(gridW - 1, y));
-  }
 
-  // ── Step 3: Random interior pillars for visual variety ──
-  // Build list of ALL valid interior cells (not border, not seed, not adjacent to seed)
   const blocked = new Set<string>();
   for (const sk of seedKeys) {
     blocked.add(sk);
@@ -1397,8 +1381,8 @@ function generateFallback(
   }
 
   const candidates: [number, number][] = [];
-  for (let y = 1; y < gridH - 1; y++) {
-    for (let x = 1; x < gridW - 1; x++) {
+  for (let y = 0; y < gridH; y++) {
+    for (let x = 0; x < gridW; x++) {
       const k = key(x, y);
       if (!blocked.has(k)) candidates.push([x, y]);
     }
@@ -1411,9 +1395,9 @@ function generateFallback(
   }
 
   // Place 3-8 pillar cells (scaled by grid area)
-  const interiorArea = (gridW - 2) * (gridH - 2);
+  const totalArea = gridW * gridH;
   const minPillars = 3;
-  const maxPillars = Math.min(candidates.length, Math.max(4, Math.floor(interiorArea * 0.08)));
+  const maxPillars = Math.min(candidates.length, Math.max(4, Math.floor(totalArea * 0.08)));
   const numPillars = Math.min(candidates.length, minPillars + Math.floor(rng() * (maxPillars - minPillars + 1)));
 
   for (let p = 0; p < numPillars; p++) {
