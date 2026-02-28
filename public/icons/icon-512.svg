@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#141430"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="92.16" fill="url(#bg)"/>
+
+  <!-- Subtle glow -->
+  <circle cx="256" cy="256" r="153.6" fill="url(#glow)"/>
+
+  <!-- Shield shape -->
+  <path d="M 256 62.464
+           L 406.52799999999996 126.976
+           Q 419.43039999999996 277.504 256 449.53599999999994
+           Q 92.5696 277.504 105.47200000000001 126.976
+           Z"
+        fill="none" stroke="#00ff88" stroke-width="10.24"
+        stroke-linejoin="round" opacity="0.9"/>
+
+  <!-- Inner shield fill -->
+  <path d="M 256 83.968
+           L 393.62559999999996 139.8784
+           Q 402.2271999999999 268.9024 256 428.032
+           Q 109.77279999999999 268.9024 118.37440000000001 139.8784
+           Z"
+        fill="#00ff8815"/>
+
+  <!-- Cross / plus in center -->
+  <rect x="235.52" y="179.2" width="40.96" height="153.6"
+        rx="7.68" fill="#00ff88" opacity="0.95"/>
+  <rect x="179.2" y="235.52" width="153.6" height="40.96"
+        rx="7.68" fill="#00ff88" opacity="0.95"/>
+
+  <!-- Small pathogen circles -->
+  <circle cx="143.36" cy="163.84" r="17.92"
+          fill="#ff4466" opacity="0.8"/>
+  <circle cx="378.88" cy="194.56" r="12.8"
+          fill="#ff6644" opacity="0.7"/>
+  <circle cx="348.15999999999997" cy="368.64" r="15.36"
+          fill="#ff4466" opacity="0.75"/>
+  <circle cx="153.6" cy="358.4" r="10.24"
+          fill="#ff6644" opacity="0.65"/>
+
+  <!-- "BD" text -->
+  <text x="256" y="419.84000000000003" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif" font-weight="900"
+        font-size="51.2" fill="#00ff88" opacity="0.6"
+        letter-spacing="7.68">BIO DEF</text>
+</svg>

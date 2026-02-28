@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#141430"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="192" height="192" rx="34.56" fill="url(#bg)"/>
+
+  <!-- Subtle glow -->
+  <circle cx="96" cy="96" r="57.599999999999994" fill="url(#glow)"/>
+
+  <!-- Shield shape -->
+  <path d="M 96 23.424
+           L 152.44799999999998 47.616
+           Q 157.28640000000001 104.06400000000001 96 168.57599999999996
+           Q 34.7136 104.06400000000001 39.552 47.616
+           Z"
+        fill="none" stroke="#00ff88" stroke-width="3.84"
+        stroke-linejoin="round" opacity="0.9"/>
+
+  <!-- Inner shield fill -->
+  <path d="M 96 31.488
+           L 147.6096 52.4544
+           Q 150.8352 100.83840000000001 96 160.512
+           Q 41.1648 100.83840000000001 44.3904 52.4544
+           Z"
+        fill="#00ff8815"/>
+
+  <!-- Cross / plus in center -->
+  <rect x="88.32" y="67.2" width="15.36" height="57.599999999999994"
+        rx="2.88" fill="#00ff88" opacity="0.95"/>
+  <rect x="67.2" y="88.32" width="57.599999999999994" height="15.36"
+        rx="2.88" fill="#00ff88" opacity="0.95"/>
+
+  <!-- Small pathogen circles -->
+  <circle cx="53.76" cy="61.44" r="6.720000000000001"
+          fill="#ff4466" opacity="0.8"/>
+  <circle cx="142.07999999999998" cy="72.96000000000001" r="4.800000000000001"
+          fill="#ff6644" opacity="0.7"/>
+  <circle cx="130.56" cy="138.24" r="5.76"
+          fill="#ff4466" opacity="0.75"/>
+  <circle cx="57.599999999999994" cy="134.4" r="3.84"
+          fill="#ff6644" opacity="0.65"/>
+
+  <!-- "BD" text -->
+  <text x="96" y="157.44" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif" font-weight="900"
+        font-size="19.200000000000003" fill="#00ff88" opacity="0.6"
+        letter-spacing="2.88">BIO DEF</text>
+</svg>
