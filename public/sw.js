@@ -1,9 +1,10 @@
 // ═══════════════════════════════════════════════════
 // public/sw.js — Service Worker for Bio Defence PWA
 // Cache-first for assets, network-first for app shell
+// __BUILD_HASH__ is replaced at build time by Vite
 // ═══════════════════════════════════════════════════
 
-const CACHE_VERSION = "bio-defence-v1";
+const CACHE_VERSION = "bio-defence-__BUILD_HASH__";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 

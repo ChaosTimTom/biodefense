@@ -1,6 +1,24 @@
 import { defineConfig, type Plugin } from "vite";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
+
+/** Vite plugin: stamp sw.js with a unique build hash so every deploy
+ *  triggers a service worker update and full cache refresh. */
+function swVersionPlugin(): Plugin {
+  return {
+    name: "sw-version-stamp",
+    apply: "build",
+    closeBundle() {
+      const swPath = path.resolve(__dirname, "dist/sw.js");
+      if (!fs.existsSync(swPath)) return;
+      const hash = crypto.randomBytes(8).toString("hex");          // 16-char hex
+      const src = fs.readFileSync(swPath, "utf-8");
+      fs.writeFileSync(swPath, src.replace(/__BUILD_HASH__/g, hash), "utf-8");
+      console.log(`\n  ✅ sw.js stamped with build hash: ${hash}`);
+    },
+  };
+}
 
 /** Vite plugin: dev-mode play-session extraction endpoints */
 function devlogPlugin(): Plugin {
@@ -54,7 +72,7 @@ function devlogPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [devlogPlugin()],
+  plugins: [swVersionPlugin(), devlogPlugin()],
   resolve: {
     alias: {
       "@sim": path.resolve(__dirname, "src/sim"),
