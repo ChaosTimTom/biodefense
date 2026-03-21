@@ -6,8 +6,8 @@
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
-import type { GameState, LevelSpec, ToolId, Action } from "../../sim/types";
-import { createGameState, getTile, infectionPct, cloneState } from "../../sim/board";
+import type { GameState, LevelSpec, ToolId, Action, BossNode, BossPhaseSpec } from "../../sim/types";
+import { createGameState, getTile, infectionPct, cloneState, emptyTile, pathogenTile, setTile } from "../../sim/board";
 import { applyAction, advanceTurn, runGeneration, phaseEvaluate } from "../../sim/step";
 import { canPlaceTool, getPlacementFailReason } from "../../sim/tools";
 import { computeStars, computeScore } from "../../sim/metrics";
@@ -27,6 +27,8 @@ import {
   tileY,
   TILE_SIZE,
   TILE_GAP,
+  gridPixelWidth,
+  gridPixelHeight,
   PATHOGEN_NAMES,
   MEDICINE_NAMES,
   TOOL_NAMES,
@@ -39,8 +41,13 @@ import { StatusBar } from "../ui/StatusBar";
 import { PreviewOverlay } from "../ui/PreviewOverlay";
 import { StarDisplay } from "../ui/StarDisplay";
 import { RulesOverlay } from "../ui/RulesOverlay";
+import { SettingsOverlay } from "../ui/SettingsOverlay";
+import { OnboardingOverlay } from "../ui/OnboardingOverlay";
 import { tweenWinBurst, tweenLoseShake } from "../animation/tweens";
-import { addWorldBackground, fadeIn } from "../ui/UIFactory";
+import { playCue, triggerHaptic } from "../feedback";
+import { syncSceneMusic } from "../music";
+import { APP_THEME, getWorldTheme } from "../theme";
+import { addButton, addWorldBackground, fadeIn, genPanelTex, getBossSplashKey } from "../ui/UIFactory";
 import { devTracker, DEV_MODE } from "../devTracker";
 
 export class LevelScene extends Phaser.Scene {
@@ -65,11 +72,14 @@ export class LevelScene extends Phaser.Scene {
   private previewOverlay!: PreviewOverlay;
   private starDisplay!: StarDisplay;
   private rulesOverlay!: RulesOverlay;
+  private settingsOverlay!: SettingsOverlay;
+  private onboardingOverlay?: OnboardingOverlay;
 
   // Header
   private titleText!: Phaser.GameObjects.Text;
   private backBtn!: Phaser.GameObjects.Text;
   private rulesBtn!: Phaser.GameObjects.Text;
+  private settingsBtn!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
 
   // Flags
@@ -77,6 +87,7 @@ export class LevelScene extends Phaser.Scene {
   private floatingHint?: Phaser.GameObjects.Text;
   private tooltipText?: Phaser.GameObjects.Text;
   private genBadge?: Phaser.GameObjects.Text;
+  private bossRelayGraphics?: Phaser.GameObjects.Graphics;
   private layout!: LayoutZones;
 
   constructor() {
@@ -107,64 +118,120 @@ export class LevelScene extends Phaser.Scene {
     // Dev tracking
     devTracker.startSession(spec);
 
+    const worldTheme = getWorldTheme(spec.world ?? 1);
+
     // ── Background ──
     addWorldBackground(this, spec.world ?? 1);
+    syncSceneMusic(this);
     fadeIn(this, 250);
 
     // ── Header ──
+    genPanelTex(this, "level_header_shell", w - 16, 62, 22, "rgba(8,18,31,0.84)", "rgba(255,255,255,0.08)");
+    this.add.image(w / 2, 32, "level_header_shell").setDepth(2);
+
     this.backBtn = this.add
-      .text(12, 10, "←", {
+      .text(12, 8, "←", {
         fontSize: "18px",
-        color: "#aaaacc",
-        fontFamily: "'Orbitron', sans-serif",
-      });
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
+        fontStyle: "bold",
+      })
+      .setDepth(3);
 
     this.add.rectangle(24, 22, 48, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
       .on("pointerdown", () => {
+        playCue("ui_tap");
         devTracker.endSession("abandon", this.gameState, 0, 0);
         this.scene.start("Menu");
-      });
+      })
+      .on("pointerover", () => this.backBtn.setColor(worldTheme.accent))
+      .on("pointerout", () => this.backBtn.setColor(APP_THEME.colors.textSecondary));
 
     this.titleText = this.add
-      .text(w / 2, 10, spec.title || `Level ${spec.id}`, {
+      .text(w / 2, 8, spec.title || `Level ${spec.id}`, {
         fontSize: "15px",
-        color: "#ffffff",
-        fontFamily: "'Orbitron', sans-serif",
+        color: APP_THEME.colors.textPrimary,
+        fontFamily: APP_THEME.fonts.display,
         fontStyle: "bold",
       })
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0)
+      .setDepth(3);
+
+    this.add
+      .text(w / 2, 26, `${worldTheme.titleGlyph} ${worldTheme.name}  •  Level ${spec.id}`, {
+        fontSize: "9px",
+        color: worldTheme.accent,
+        fontFamily: APP_THEME.fonts.body,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(3);
 
     // ── Star Display ──
-    this.starDisplay = new StarDisplay(this, w - 80, 10);
+    this.starDisplay = new StarDisplay(this, w - 108, 12);
 
     // ── Rules "?" Button ──
     this.rulesBtn = this.add
-      .text(w - 14, 10, "?", {
-        fontSize: "14px",
-        color: "#00e5ff",
-        fontFamily: "'Orbitron', sans-serif",
+      .text(w - 20, 8, "?", {
+        fontSize: "13px",
+        color: worldTheme.accent,
+        fontFamily: APP_THEME.fonts.body,
         fontStyle: "bold",
-        backgroundColor: "#16162b",
+        backgroundColor: "#102131",
         padding: { x: 6, y: 3 },
       })
       .setOrigin(1, 0);
+    this.rulesBtn.setDepth(3);
 
-    this.add.rectangle(w - 22, 22, 48, 44)
+    this.add.rectangle(w - 24, 22, 44, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
       .on("pointerdown", () => this.rulesOverlay.toggle());
+
+    this.settingsBtn = this.add
+      .text(w - 52, 8, "⚙", {
+        fontSize: "15px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
+      })
+      .setOrigin(1, 0)
+      .setDepth(3);
+
+    this.add.rectangle(w - 56, 22, 44, 44)
+      .setInteractive({ useHandCursor: true }).setAlpha(0.001)
+      .on("pointerdown", () => this.settingsOverlay.toggle())
+      .on("pointerover", () => this.settingsBtn.setColor(worldTheme.accent))
+      .on("pointerout", () => this.settingsBtn.setColor(APP_THEME.colors.textSecondary));
 
     // ── Level Hint ──
     const hintMsg = spec.hint || "";
     this.hintText = this.add
-      .text(w / 2, 34, hintMsg, {
-        fontSize: "9px",
-        color: "#6688aa",
-        fontFamily: "'Orbitron', sans-serif",
+      .text(w / 2, 46, hintMsg, {
+        fontSize: "8px",
+        color: APP_THEME.colors.textMuted,
+        fontFamily: APP_THEME.fonts.body,
         wordWrap: { width: w - 60 },
         lineSpacing: 2,
       })
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0)
+      .setDepth(3);
+
+    const boardWidth = gridPixelWidth(spec.grid.w, layout.tileSize, layout.tileGap);
+    const boardHeight = gridPixelHeight(spec.grid.h, layout.tileSize, layout.tileGap);
+    const boardShellKey = `level_board_shell_${boardWidth}x${boardHeight}`;
+    genPanelTex(
+      this,
+      boardShellKey,
+      boardWidth + 14,
+      boardHeight + 14,
+      Math.max(18, layout.tileSize * 0.26),
+      "rgba(6,14,24,0.44)",
+      "rgba(255,255,255,0.05)",
+    );
+    this.add
+      .image(w / 2, layout.gridOffsetY + boardHeight / 2, boardShellKey)
+      .setDepth(1.5)
+      .setAlpha(0.92);
 
     // ── Grid ──
     this.grid = new Grid(
@@ -207,18 +274,18 @@ export class LevelScene extends Phaser.Scene {
 
     // ── Switch Button (move medicine/wall to empty) ──
     this.switchBtn = this.add
-      .text(w - 50, layout.toolPaletteY + 14, "⇄", {
-        fontSize: "18px",
-        color: "#aaaacc",
-        fontFamily: "'Orbitron', sans-serif",
-        backgroundColor: "#16162b",
+      .text(w - 34, layout.toolPaletteY + 22, "⇄", {
+        fontSize: "16px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
+        backgroundColor: "#102131",
         padding: { x: 8, y: 4 },
       })
       .setOrigin(0.5)
       .setDepth(50);
 
     this.switchBtnZone = this.add
-      .rectangle(w - 50, layout.toolPaletteY + 14, 48, 44)
+      .rectangle(w - 34, layout.toolPaletteY + 22, 42, 40)
       .setInteractive({ useHandCursor: true })
       .setAlpha(0.001)
       .setDepth(51);
@@ -253,10 +320,18 @@ export class LevelScene extends Phaser.Scene {
 
     // ── Rules Overlay (must be last for z-order) ──
     this.rulesOverlay = new RulesOverlay(this);
-    if (RulesOverlay.shouldAutoShow()) {
+    this.settingsOverlay = new SettingsOverlay(this);
+    this.onboardingOverlay = new OnboardingOverlay(this, spec.id);
+    if (this.onboardingOverlay.shouldShow()) {
+      this.time.delayedCall(180, () => this.onboardingOverlay?.show());
+    } else if (RulesOverlay.shouldAutoShow()) {
       this.rulesOverlay.show();
     }
     this.input.keyboard?.on("keydown-H", () => this.rulesOverlay.toggle());
+
+    if (this.levelSpec.boss) {
+      this.time.delayedCall(240, () => this.showBossIntro());
+    }
 
     // ── Dev mode indicator ──
     if (DEV_MODE) {
@@ -297,6 +372,8 @@ export class LevelScene extends Phaser.Scene {
     }
     this.switchMode = true;
     this.switchFrom = null;
+    playCue("ui_toggle");
+    triggerHaptic("soft");
     // Deselect any tool
     this.toolPalette.selectTool(null);
     this.selectedTool = null;
@@ -313,14 +390,14 @@ export class LevelScene extends Phaser.Scene {
   private updateSwitchBtnVisual(): void {
     const canSwitch = this.gameState.switchesUsedThisTurn < this.gameState.switchesPerTurn;
     if (this.switchMode) {
-      this.switchBtn.setColor("#00e5ff");
-      this.switchBtn.setBackgroundColor("#1a3040");
+      this.switchBtn.setColor(APP_THEME.colors.accent);
+      this.switchBtn.setBackgroundColor("#153145");
     } else if (!canSwitch) {
-      this.switchBtn.setColor("#444466");
-      this.switchBtn.setBackgroundColor("#16162b");
+      this.switchBtn.setColor(APP_THEME.colors.textMuted);
+      this.switchBtn.setBackgroundColor("#0d1826");
     } else {
-      this.switchBtn.setColor("#aaaacc");
-      this.switchBtn.setBackgroundColor("#16162b");
+      this.switchBtn.setColor(APP_THEME.colors.textSecondary);
+      this.switchBtn.setBackgroundColor("#102131");
     }
   }
 
@@ -338,6 +415,7 @@ export class LevelScene extends Phaser.Scene {
         }
         this.switchFrom = { x, y };
         this.grid.render(this.gameState.board);
+        this.renderBossMarkers();
         this.grid.highlightTile(x, y, 0x00e5ff);
         return;
       } else {
@@ -355,6 +433,8 @@ export class LevelScene extends Phaser.Scene {
         };
         applyAction(this.gameState, action);
         devTracker.recordAction(action);
+        playCue("ui_toggle");
+        triggerHaptic("medium");
         this.exitSwitchMode();
         this.turnControls.setUndoEnabled(canUndo(this.history));
         this.renderAll();
@@ -381,6 +461,8 @@ export class LevelScene extends Phaser.Scene {
     const action: Action = { type: "place_tool", tool: this.selectedTool, x, y };
     applyAction(this.gameState, action);
     devTracker.recordAction(action);
+    playCue("tool_place");
+    triggerHaptic("soft");
 
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
@@ -426,6 +508,15 @@ export class LevelScene extends Phaser.Scene {
       const valid = canPlaceTool(this.gameState, this.selectedTool, x, y);
       this.grid.render(this.gameState.board);
       this.grid.showPlacementHint(x, y, valid);
+      if (valid && this.gameState.toolsUsedThisTurn < this.gameState.toolsPerTurn) {
+        this.previewOverlay.showPreview(this.gameState, {
+          tool: this.selectedTool,
+          x,
+          y,
+        });
+      } else {
+        this.refreshPreview();
+      }
     }
   }
 
@@ -440,6 +531,8 @@ export class LevelScene extends Phaser.Scene {
     if (this.animating || this.gameState.isOver) return;
 
     pushHistory(this.history, this.gameState);
+    playCue("turn_step");
+    triggerHaptic("medium");
 
     // Animate each generation individually so the player
     // can watch the germs grow, fight, and convert.
@@ -477,6 +570,17 @@ export class LevelScene extends Phaser.Scene {
 
       phaseEvaluate(this.gameState);
 
+      if (this.levelSpec.boss) {
+        if (this.gameState.result === "win" && !this.gameState.bossDefeated) {
+          this.gameState.isOver = false;
+          this.gameState.result = "playing";
+          this.gameState.stars = 0;
+        }
+        if (this.gameState.result !== "lose") {
+          this.resolveBossPhase();
+        }
+      }
+
       // Record turn-end snapshot for dev tracking
       devTracker.recordTurnEnd(this.gameState);
 
@@ -498,6 +602,7 @@ export class LevelScene extends Phaser.Scene {
     // Re-render the grid to show changes
     this.grid.render(this.gameState.board);
     this.updateStatusBar();
+    playCue("spread");
 
     // Flash the grid briefly to highlight the change
     this.flashGrid();
@@ -516,10 +621,10 @@ export class LevelScene extends Phaser.Scene {
       this.genBadge = this.add
         .text(w / 2, 60, "", {
           fontSize: "13px",
-          color: "#ffcc44",
-          fontFamily: "'Orbitron', sans-serif",
+          color: APP_THEME.colors.gold,
+          fontFamily: APP_THEME.fonts.body,
           fontStyle: "bold",
-          backgroundColor: "#1a1a2ecc",
+          backgroundColor: "#102131dd",
           padding: { x: 10, y: 4 },
         })
         .setOrigin(0.5)
@@ -565,6 +670,7 @@ export class LevelScene extends Phaser.Scene {
     if (!prev) return;
 
     devTracker.recordUndo();
+    playCue("ui_tap");
     this.gameState = prev;
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
@@ -573,6 +679,7 @@ export class LevelScene extends Phaser.Scene {
 
   private doReset(): void {
     if (this.animating) return;
+    playCue("ui_tap");
     clearHistory(this.history);
     this.gameState = cloneState(this.initialState);
 
@@ -589,17 +696,20 @@ export class LevelScene extends Phaser.Scene {
 
   private renderAll(): void {
     this.grid.render(this.gameState.board);
+    this.renderBossMarkers();
     this.updateStatusBar();
     this.updateActionsIndicator();
     this.refreshPreview();
     this.updateSwitchBtnVisual();
+    this.updateBossHint();
   }
 
   private updateActionsIndicator(): void {
     const used = this.gameState.toolsUsedThisTurn;
     const max = this.gameState.toolsPerTurn;
     const remaining = max - used;
-    this.statusBar.setActions(remaining, max);
+    const switchesRemaining = Math.max(0, this.gameState.switchesPerTurn - this.gameState.switchesUsedThisTurn);
+    this.statusBar.setActions(remaining, max, switchesRemaining);
   }
 
   private updateStatusBar(): void {
@@ -627,6 +737,15 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private getObjectiveHint(): string {
+    if (this.levelSpec.boss && !this.gameState.bossDefeated) {
+      const phase = this.getCurrentBossPhase();
+      if (phase) {
+        const locked = phase.relays.filter((node) => this.isRelayOccupied(node)).length;
+        return `${phase.label}: ${locked}/${phase.relays.length} relays sealed`;
+      }
+      return "Finish the boss encounter";
+    }
+
     const obj = this.gameState.objective;
     switch (obj.type) {
       case "clear_all":
@@ -652,9 +771,9 @@ export class LevelScene extends Phaser.Scene {
     this.floatingHint = this.add
       .text(px, py, msg, {
         fontSize: "11px",
-        color: "#ff8888",
-        fontFamily: "'Orbitron', sans-serif",
-        backgroundColor: "#1a1a2ecc",
+        color: APP_THEME.colors.danger,
+        fontFamily: APP_THEME.fonts.body,
+        backgroundColor: "#152131",
         padding: { x: 6, y: 3 },
       })
       .setOrigin(0.5, 1)
@@ -679,9 +798,9 @@ export class LevelScene extends Phaser.Scene {
       this.tooltipText = this.add
         .text(0, 0, "", {
           fontSize: "11px",
-          color: "#ffffff",
-          fontFamily: "'Orbitron', sans-serif",
-          backgroundColor: "#22224488",
+          color: APP_THEME.colors.textPrimary,
+          fontFamily: APP_THEME.fonts.body,
+          backgroundColor: "#102131ee",
           padding: { x: 6, y: 4 },
         })
         .setDepth(300)
@@ -726,6 +845,8 @@ export class LevelScene extends Phaser.Scene {
         });
       } else {
         devTracker.endSession("lose", this.gameState, 0, 0);
+        playCue("lose");
+        triggerHaptic("warning");
         tweenLoseShake(this, this.cameras.main, () => {
           this.showGameOverOverlay();
         });
@@ -736,47 +857,39 @@ export class LevelScene extends Phaser.Scene {
   private showGameOverOverlay(): void {
     const { width: w, height: h } = this.cameras.main;
 
-    const overlay = this.add.graphics();
-    overlay.fillStyle(0x000000, 0.7);
+    const overlay = this.add.graphics().setDepth(400);
+    overlay.fillStyle(0x01050d, 0.82);
     overlay.fillRect(0, 0, w, h);
 
+    genPanelTex(this, "lose_panel", w - 34, 240, 26, "rgba(20,10,15,0.92)", "rgba(255,82,82,0.18)");
+    this.add.image(w / 2, h / 2, "lose_panel").setDepth(401);
+
     this.add
-      .text(w / 2, h / 2 - 40, "💀 Infection Won", {
-        fontSize: "28px",
-        color: "#ff4444",
-        fontFamily: "'Orbitron', sans-serif",
+      .text(w / 2, h / 2 - 74, "OUTBREAK", {
+        fontSize: "30px",
+        color: APP_THEME.colors.danger,
+        fontFamily: APP_THEME.fonts.display,
         fontStyle: "bold",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(402);
 
-    const retryBtn = this.add
-      .text(w / 2, h / 2 + 30, "[ Retry ]", {
-        fontSize: "18px",
-        color: "#00e5ff",
-        fontFamily: "'Orbitron', sans-serif",
-        fontStyle: "bold",
+    this.add
+      .text(w / 2, h / 2 - 36, "Infection breached the containment threshold.", {
+        fontSize: "13px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(402);
 
-    const retryZone = this.add.rectangle(w / 2, h / 2 + 30, 160, 48)
-      .setInteractive({ useHandCursor: true }).setAlpha(0.001);
-    retryZone.on("pointerdown", () => {
+    addButton(this, w / 2, h / 2 + 28, "Retry Level", () => {
       this.scene.restart({ levelSpec: this.levelSpec });
-    });
+    }, { style: "primary", w: 186, h: 48, fontSize: "14px", depth: 402 });
 
-    const menuBtn = this.add
-      .text(w / 2, h / 2 + 70, "[ Menu ]", {
-        fontSize: "14px",
-        color: "#aaaacc",
-        fontFamily: "'Orbitron', sans-serif",
-      })
-      .setOrigin(0.5);
-
-    const menuZone = this.add.rectangle(w / 2, h / 2 + 70, 140, 48)
-      .setInteractive({ useHandCursor: true }).setAlpha(0.001);
-    menuZone.on("pointerdown", () => {
+    addButton(this, w / 2, h / 2 + 90, "Back To Map", () => {
       this.scene.start("Menu");
-    });
+    }, { style: "secondary", w: 186, h: 44, fontSize: "13px", depth: 402 });
   }
 
   // ── Cleanup ────────────────────────────────────
@@ -792,6 +905,255 @@ export class LevelScene extends Phaser.Scene {
     this.previewOverlay?.destroy();
     this.starDisplay?.destroy();
     this.rulesOverlay?.destroy();
+    this.settingsOverlay?.destroy();
+    this.onboardingOverlay?.destroy();
     this.genBadge?.destroy();
+    this.bossRelayGraphics?.destroy();
+  }
+
+  private getCurrentBossPhase(): BossPhaseSpec | null {
+    const boss = this.levelSpec.boss;
+    if (!boss || this.gameState.bossDefeated) return null;
+    return boss.phases[this.gameState.bossPhase] ?? null;
+  }
+
+  private updateBossHint(): void {
+    if (!this.levelSpec.boss) {
+      this.hintText.setText(this.levelSpec.hint || "");
+      return;
+    }
+
+    if (this.gameState.bossDefeated) {
+      this.hintText.setText(this.levelSpec.boss.victoryLine);
+      return;
+    }
+
+    const phase = this.getCurrentBossPhase();
+    if (!phase) {
+      this.hintText.setText(this.levelSpec.boss.subtitle);
+      return;
+    }
+
+    const locked = phase.relays.filter((node) => this.isRelayOccupied(node)).length;
+    this.hintText.setText(`BOSS PHASE ${this.gameState.bossPhase + 1}/${this.levelSpec.boss.phases.length} • ${phase.instruction} (${locked}/${phase.relays.length})`);
+  }
+
+  private isRelayOccupied(node: BossNode): boolean {
+    const tile = getTile(this.gameState.board, node.x, node.y);
+    return tile.kind === "medicine" || tile.kind === "wall";
+  }
+
+  private renderBossMarkers(): void {
+    if (!this.levelSpec.boss) {
+      this.bossRelayGraphics?.clear();
+      return;
+    }
+
+    if (!this.bossRelayGraphics) {
+      this.bossRelayGraphics = this.add.graphics().setDepth(96);
+    }
+
+    const phase = this.getCurrentBossPhase();
+    this.bossRelayGraphics.clear();
+    if (!phase) return;
+
+    const theme = getWorldTheme(this.levelSpec.world ?? 1);
+    for (const node of phase.relays) {
+      const cx = tileX(node.x, this.layout.gridOffsetX, this.layout.tileSize, this.layout.tileGap) + this.layout.tileSize / 2;
+      const cy = tileY(node.y, this.layout.gridOffsetY, this.layout.tileSize, this.layout.tileGap) + this.layout.tileSize / 2;
+      const occupied = this.isRelayOccupied(node);
+      const radius = Math.max(8, this.layout.tileSize * 0.34);
+
+      this.bossRelayGraphics.lineStyle(occupied ? 3 : 2, occupied ? 0x00e676 : theme.accentNumber, occupied ? 0.95 : 0.8);
+      this.bossRelayGraphics.fillStyle(occupied ? 0x00e676 : theme.accentNumber, occupied ? 0.18 : 0.1);
+      this.bossRelayGraphics.fillCircle(cx, cy, radius);
+      this.bossRelayGraphics.strokeCircle(cx, cy, radius);
+      this.bossRelayGraphics.lineStyle(2, occupied ? 0x00e676 : 0xffffff, occupied ? 0.8 : 0.55);
+      this.bossRelayGraphics.beginPath();
+      this.bossRelayGraphics.moveTo(cx - radius * 0.55, cy);
+      this.bossRelayGraphics.lineTo(cx + radius * 0.55, cy);
+      this.bossRelayGraphics.moveTo(cx, cy - radius * 0.55);
+      this.bossRelayGraphics.lineTo(cx, cy + radius * 0.55);
+      this.bossRelayGraphics.strokePath();
+    }
+  }
+
+  private resolveBossPhase(): void {
+    const boss = this.levelSpec.boss;
+    const phase = this.getCurrentBossPhase();
+    if (!boss || !phase) return;
+
+    const locked = phase.relays.every((node) => this.isRelayOccupied(node));
+    if (!locked) return;
+
+    this.consumeRelayNodes(phase.relays);
+    this.purgeBossCells(phase.purgeCells);
+
+    if (phase.reinforcements.length > 0) {
+      this.spawnBossWave(phase.reinforcements);
+    }
+
+    this.gameState.bossPhase += 1;
+
+    if (this.gameState.bossPhase >= boss.phases.length) {
+      this.gameState.bossDefeated = true;
+      this.clearRemainingPathogens();
+      this.gameState.isOver = true;
+      this.gameState.result = "win";
+      playCue("win");
+      triggerHaptic("success");
+      this.showBossBanner("CORE SHUTDOWN", boss.victoryLine);
+      return;
+    }
+
+    const nextPhase = this.getCurrentBossPhase();
+    playCue("kill");
+    triggerHaptic("success");
+    this.showBossBanner(`PHASE CLEARED • ${phase.label.toUpperCase()}`, nextPhase?.instruction ?? boss.subtitle);
+  }
+
+  private consumeRelayNodes(nodes: BossNode[]): void {
+    for (const node of nodes) {
+      setTile(this.gameState.board, node.x, node.y, emptyTile());
+    }
+  }
+
+  private purgeBossCells(nodes: BossNode[]): void {
+    for (const node of nodes) {
+      const tile = getTile(this.gameState.board, node.x, node.y);
+      if (tile.kind !== "wall") {
+        setTile(this.gameState.board, node.x, node.y, emptyTile());
+      }
+    }
+  }
+
+  private spawnBossWave(seeds: BossPhaseSpec["reinforcements"]): void {
+    for (const seed of seeds) {
+      const tile = getTile(this.gameState.board, seed.x, seed.y);
+      if (tile.kind === "wall") continue;
+      setTile(this.gameState.board, seed.x, seed.y, pathogenTile(seed.type));
+    }
+  }
+
+  private clearRemainingPathogens(): void {
+    const { w, h } = this.gameState.board;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const tile = getTile(this.gameState.board, x, y);
+        if (tile.kind === "pathogen") {
+          setTile(this.gameState.board, x, y, emptyTile());
+        }
+      }
+    }
+  }
+
+  private showBossBanner(title: string, subtitle: string): void {
+    const { width: w } = this.cameras.main;
+    const wrap = this.add.container(w / 2, 118).setDepth(320);
+
+    genPanelTex(this, "boss_phase_banner", 260, 62, 18, "rgba(14,16,28,0.92)", "rgba(0,229,255,0.18)");
+    wrap.add(this.add.image(0, 0, "boss_phase_banner"));
+    wrap.add(this.add.text(0, -12, title, {
+      fontSize: "14px",
+      color: APP_THEME.colors.gold,
+      fontFamily: APP_THEME.fonts.display,
+      fontStyle: "bold",
+      align: "center",
+    }).setOrigin(0.5));
+    wrap.add(this.add.text(0, 12, subtitle, {
+      fontSize: "10px",
+      color: APP_THEME.colors.textSecondary,
+      fontFamily: APP_THEME.fonts.body,
+      align: "center",
+      wordWrap: { width: 220 },
+    }).setOrigin(0.5));
+
+    this.tweens.add({
+      targets: wrap,
+      y: 106,
+      alpha: { from: 0, to: 1 },
+      duration: 220,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        this.time.delayedCall(1400, () => {
+          this.tweens.add({
+            targets: wrap,
+            y: 90,
+            alpha: 0,
+            duration: 220,
+            ease: "Quad.easeIn",
+            onComplete: () => wrap.destroy(),
+          });
+        });
+      },
+    });
+  }
+
+  private showBossIntro(): void {
+    const boss = this.levelSpec.boss;
+    if (!boss) return;
+
+    this.animating = true;
+    this.turnControls.setEnabled(false);
+
+    const { width: w, height: h } = this.cameras.main;
+    const overlay = this.add.container(0, 0).setDepth(500);
+    const blocker = this.add.rectangle(0, 0, w, h, 0x01050d, 0.82).setOrigin(0).setInteractive();
+    overlay.add(blocker);
+
+    genPanelTex(this, "boss_intro_panel", w - 34, 330, 28, "rgba(10,14,24,0.94)", "rgba(255,82,82,0.22)");
+    overlay.add(this.add.image(w / 2, h / 2, "boss_intro_panel"));
+
+    const splashKey = getBossSplashKey(this, boss.id);
+    if (splashKey) {
+      overlay.add(this.add.image(w / 2, h / 2 - 78, splashKey).setDisplaySize(220, 110).setAlpha(0.92));
+    } else {
+      overlay.add(this.add.circle(w / 2, h / 2 - 78, 54, getWorldTheme(this.levelSpec.world).accentNumber, 0.22));
+    }
+
+    overlay.add(this.add.text(w / 2, h / 2 - 148, "BOSS ENCOUNTER", {
+      fontSize: "14px",
+      color: APP_THEME.colors.danger,
+      fontFamily: APP_THEME.fonts.body,
+      fontStyle: "bold",
+      letterSpacing: 1.2,
+    }).setOrigin(0.5));
+
+    overlay.add(this.add.text(w / 2, h / 2 - 24, boss.name, {
+      fontSize: "28px",
+      color: APP_THEME.colors.textPrimary,
+      fontFamily: APP_THEME.fonts.display,
+      fontStyle: "bold",
+      align: "center",
+    }).setOrigin(0.5));
+
+    overlay.add(this.add.text(w / 2, h / 2 + 12, boss.intro, {
+      fontSize: "12px",
+      color: APP_THEME.colors.textSecondary,
+      fontFamily: APP_THEME.fonts.body,
+      align: "center",
+      wordWrap: { width: w - 92 },
+      lineSpacing: 4,
+    }).setOrigin(0.5, 0));
+
+    const phase = this.getCurrentBossPhase();
+    if (phase) {
+      overlay.add(this.add.text(w / 2, h / 2 + 88, `Phase 1: ${phase.label}\n${phase.instruction}`, {
+        fontSize: "11px",
+        color: APP_THEME.colors.gold,
+        fontFamily: APP_THEME.fonts.body,
+        align: "center",
+        lineSpacing: 4,
+        wordWrap: { width: w - 100 },
+      }).setOrigin(0.5));
+    }
+
+    const startBtn = addButton(this, w / 2, h / 2 + 138, "Begin Containment", () => {
+      overlay.destroy();
+      this.animating = false;
+      this.turnControls.setEnabled(true);
+      this.showBossBanner(boss.name.toUpperCase(), boss.subtitle);
+    }, { style: "danger", w: 210, h: 48, fontSize: "14px", depth: 501 });
+    overlay.add(startBtn);
   }
 }

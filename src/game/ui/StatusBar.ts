@@ -1,117 +1,107 @@
 // ═══════════════════════════════════════════════════
-// src/game/ui/StatusBar.ts — Turn counter + infection % bar
-// 3-row layout: Row1 Turn/Actions | Row2 InfBar | Row3 Objective
+// src/game/ui/StatusBar.ts — Premium turn / infection HUD
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
-import { UI } from "../config";
+import { APP_THEME } from "../theme";
 
-const BAR_H = 10;
-const BAR_RADIUS = 5;
-const ROW_GAP = 4;
+const BAR_H = 12;
+const BAR_RADIUS = 6;
+const PANEL_H = 60;
 
 export class StatusBar {
-  private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
-
+  private panel: Phaser.GameObjects.Graphics;
   private turnText: Phaser.GameObjects.Text;
   private actionsText: Phaser.GameObjects.Text;
   private pctText: Phaser.GameObjects.Text;
   private barBg: Phaser.GameObjects.Graphics;
   private barFill: Phaser.GameObjects.Graphics;
   private objectiveText: Phaser.GameObjects.Text;
-
   private barX: number;
   private barY: number;
   private barW: number;
-  private totalW: number;
 
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    width: number,
-  ) {
-    this.scene = scene;
-    this.totalW = width;
-    this.container = scene.add.container(0, 0);
+  constructor(scene: Phaser.Scene, x: number, y: number, width: number) {
+    this.container = scene.add.container(0, 0).setDepth(20);
 
-    // ── Row 1: Turn (left) + Actions (right) ──
-    const row1Y = y + 2;
+    this.panel = scene.add.graphics();
+    this.panel.fillStyle(0x08131f, 0.84);
+    this.panel.fillRoundedRect(x, y, width, PANEL_H, 18);
+    this.panel.lineStyle(1, 0xffffff, 0.08);
+    this.panel.strokeRoundedRect(x, y, width, PANEL_H, 18);
 
-    this.turnText = scene.add
-      .text(x + 4, row1Y, "Turn 0", {
-        fontSize: "11px",
-        color: "#ffffff",
-        fontFamily: "'Orbitron', sans-serif",
-        fontStyle: "bold",
-      })
-      .setOrigin(0, 0);
+    this.turnText = scene.add.text(x + 12, y + 8, "Turn 0", {
+      fontSize: "11px",
+      color: APP_THEME.colors.textPrimary,
+      fontFamily: APP_THEME.fonts.body,
+      fontStyle: "bold",
+    });
 
-    this.actionsText = scene.add
-      .text(x + width - 4, row1Y, "", {
-        fontSize: "10px",
-        color: "#88aadd",
-        fontFamily: "'Orbitron', sans-serif",
-      })
-      .setOrigin(1, 0);
+    this.actionsText = scene.add.text(x + width - 12, y + 8, "", {
+      fontSize: "10px",
+      color: APP_THEME.colors.textSecondary,
+      fontFamily: APP_THEME.fonts.body,
+      fontStyle: "bold",
+    }).setOrigin(1, 0);
 
-    // ── Row 2: Infection bar + pct ──
-    const row2Y = row1Y + 16 + ROW_GAP;
-    this.barX = x + 4;
-    this.barW = Math.max(40, width - 56);
-    this.barY = row2Y;
+    this.barX = x + 12;
+    this.barY = y + 28;
+    this.barW = Math.max(40, width - 84);
 
     this.barBg = scene.add.graphics();
-    this.barBg.fillStyle(0x333355, 0.8);
+    this.barBg.fillStyle(0x203040, 0.9);
     this.barBg.fillRoundedRect(this.barX, this.barY, this.barW, BAR_H, BAR_RADIUS);
 
     this.barFill = scene.add.graphics();
 
-    this.pctText = scene.add
-      .text(this.barX + this.barW + 6, row2Y - 1, "0%", {
-        fontSize: "11px",
-        color: "#ff4444",
-        fontFamily: "'Orbitron', sans-serif",
-        fontStyle: "bold",
-      })
-      .setOrigin(0, 0);
+    this.pctText = scene.add.text(x + width - 12, y + 25, "0%", {
+      fontSize: "11px",
+      color: APP_THEME.colors.danger,
+      fontFamily: APP_THEME.fonts.body,
+      fontStyle: "bold",
+    }).setOrigin(1, 0);
 
-    // ── Row 3: Objective hint ──
-    const row3Y = row2Y + BAR_H + ROW_GAP + 2;
-    this.objectiveText = scene.add
-      .text(x + width / 2, row3Y, "", {
-        fontSize: "9px",
-        color: "#8899bb",
-        fontFamily: "'Orbitron', sans-serif",
-      })
-      .setOrigin(0.5, 0);
+    this.objectiveText = scene.add.text(x + 12, y + 43, "", {
+      fontSize: "10px",
+      color: APP_THEME.colors.textMuted,
+      fontFamily: APP_THEME.fonts.body,
+      wordWrap: { width: width - 24 },
+    });
 
-    this.container.add([this.turnText, this.actionsText, this.barBg, this.barFill, this.pctText, this.objectiveText]);
+    this.container.add([
+      this.panel,
+      this.turnText,
+      this.actionsText,
+      this.barBg,
+      this.barFill,
+      this.pctText,
+      this.objectiveText,
+    ]);
   }
 
   update(turn: number, infectionPct: number, maxTurns?: number): void {
-    const turnLabel = maxTurns != null ? `Turn ${turn}/${maxTurns}` : `Turn ${turn}`;
-    this.turnText.setText(turnLabel);
+    this.turnText.setText(maxTurns != null ? `Turn ${turn}/${maxTurns}` : `Turn ${turn}`);
 
-    // Update bar fill
     const fillW = Math.max(0, Math.min(1, infectionPct / 100)) * this.barW;
     this.barFill.clear();
 
-    // Color gradient: green → yellow → red based on infection %
-    let barColor: number;
-    if (infectionPct < 25) barColor = UI.successGreen;
-    else if (infectionPct < 60) barColor = UI.accentGold;
-    else barColor = UI.dangerRed;
+    let barColor = 0x00e676;
+    if (infectionPct >= 25) barColor = 0xffd740;
+    if (infectionPct >= 60) barColor = 0xff5252;
 
-    this.barFill.fillStyle(barColor, 0.9);
+    this.barFill.fillStyle(barColor, 0.95);
     if (fillW > 0) {
       this.barFill.fillRoundedRect(this.barX, this.barY, fillW, BAR_H, BAR_RADIUS);
     }
 
     this.pctText.setText(`${Math.round(infectionPct)}%`);
     this.pctText.setColor(
-      infectionPct >= 60 ? "#ff4444" : infectionPct >= 25 ? "#ffd740" : "#4caf50",
+      infectionPct >= 60
+        ? APP_THEME.colors.danger
+        : infectionPct >= 25
+          ? APP_THEME.colors.gold
+          : APP_THEME.colors.success,
     );
   }
 
@@ -119,13 +109,15 @@ export class StatusBar {
     this.objectiveText.setText(text);
   }
 
-  setActions(remaining: number, max: number): void {
+  setActions(remaining: number, max: number, switchesRemaining = 0): void {
+    const switchText = switchesRemaining > 0 ? ` • ${switchesRemaining} switch` : "";
+    const plural = switchesRemaining === 1 ? "" : "es";
     if (remaining > 0) {
-      this.actionsText.setText(`${remaining}/${max} actions`);
-      this.actionsText.setColor("#88aadd");
+      this.actionsText.setText(`${remaining}/${max} actions${switchText}${switchesRemaining > 0 ? plural : ""}`);
+      this.actionsText.setColor(APP_THEME.colors.textSecondary);
     } else {
-      this.actionsText.setText("▶ Step");
-      this.actionsText.setColor("#ffcc44");
+      this.actionsText.setText(`Ready to resolve${switchesRemaining > 0 ? ` • ${switchesRemaining} switch${plural}` : ""}`);
+      this.actionsText.setColor(APP_THEME.colors.gold);
     }
   }
 

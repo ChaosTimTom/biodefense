@@ -11,7 +11,7 @@ import type { PathogenType, MedicineType, ToolId, TileKind } from "../sim/types"
 export const TILE_SIZE = 56;      // desired max — computeLayout may shrink
 export const TILE_GAP = 0;
 export const TILE_RADIUS = 0;
-export const GRID_PADDING = 16;
+export const GRID_PADDING = 10;
 
 export function tileX(x: number, gridOffsetX: number, tileSize = TILE_SIZE, tileGap = TILE_GAP): number {
   return gridOffsetX + x * (tileSize + tileGap);
@@ -254,12 +254,24 @@ export function computeLayout(
   gridCols: number,
   gridRows: number,
 ): LayoutZones {
-  const headerH = 80;
-  const statusH = 52;
-  const paletteH = 56;
+  const headerH = 74;
+  const gridTopGap = 8;
+  const statusH = 60;
+  const paletteH = 84;
   const controlsH = 48;
-  const bottomPad = 8;
-  const bottomTotal = statusH + paletteH + controlsH + bottomPad + 8;
+  const statusGap = 10;
+  const paletteGap = 10;
+  const controlsGap = 10;
+  const bottomPad = 12;
+  const bottomTotal =
+    gridTopGap +
+    statusGap +
+    statusH +
+    paletteGap +
+    paletteH +
+    controlsGap +
+    controlsH +
+    bottomPad;
 
   const availH = canvasH - headerH - bottomTotal - GRID_PADDING * 2;
   const availW = canvasW - GRID_PADDING * 2;
@@ -275,11 +287,11 @@ export function computeLayout(
   const gh = gridPixelHeight(gridRows, tileSize, tileGap);
 
   const gridOffsetX = Math.round((canvasW - gw) / 2);
-  const gridOffsetY = Math.round(headerH + (availH - gh) / 2 + GRID_PADDING);
+  const gridOffsetY = Math.round(headerH + gridTopGap);
 
-  const statusBarY = gridOffsetY + gh + 8;
-  const toolPaletteY = statusBarY + statusH + 6;
-  const controlsY = toolPaletteY + paletteH + 6;
+  const statusBarY = gridOffsetY + gh + statusGap;
+  const toolPaletteY = statusBarY + statusH + paletteGap;
+  const controlsY = toolPaletteY + paletteH + controlsGap;
 
   return {
     canvasW,

@@ -292,31 +292,31 @@ function hasMedicineParent(
 function resolveBirth(
   tiles: Tile[], w: number, h: number, x: number, y: number,
 ): Tile {
-  // Check which pathogen types want to grow here
-  let pathWants: PathogenType | null = null;
+  const pathWants: PathogenType[] = [];
   for (const ptype of ALL_PATHOGEN_TYPES) {
     if (hasPathogenParent(tiles, w, h, x, y, ptype)) {
-      pathWants = ptype;
-      break; // first match wins (multi-type conflicts → first found)
+      pathWants.push(ptype);
     }
   }
 
-  // Check which medicine types want to grow here
-  let medWants: MedicineType | null = null;
+  const medWants: MedicineType[] = [];
   for (const mtype of ALL_MEDICINE_TYPES) {
     if (hasMedicineParent(tiles, w, h, x, y, mtype)) {
-      medWants = mtype;
-      break;
+      medWants.push(mtype);
     }
   }
 
-  // Dead zone: both pathogen and medicine want this cell → stays empty
-  if (pathWants !== null && medWants !== null) {
+  // Any contested birth stays empty so the player can reason locally.
+  if (pathWants.length > 1 || medWants.length > 1) {
     return emptyTile();
   }
 
-  if (pathWants !== null) return pathogenTile(pathWants);
-  if (medWants !== null) return medicineTile(medWants);
+  if (pathWants.length === 1 && medWants.length === 1) {
+    return emptyTile();
+  }
+
+  if (pathWants.length === 1) return pathogenTile(pathWants[0]);
+  if (medWants.length === 1) return medicineTile(medWants[0]);
   return emptyTile();
 }
 

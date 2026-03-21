@@ -45,6 +45,7 @@ export function createGameState(spec: LevelSpec): GameState {
     board: createBoard(spec),
     tools: { ...spec.tools },
     objective: spec.objective,
+    parTurns: spec.parTurns,
     toolsUsedThisTurn: 0,
     toolsPerTurn: spec.toolsPerTurn,
     switchesPerTurn: 1,
@@ -54,6 +55,8 @@ export function createGameState(spec: LevelSpec): GameState {
     isOver: false,
     result: "playing",
     stars: 0,
+    bossPhase: 0,
+    bossDefeated: false,
   };
 }
 

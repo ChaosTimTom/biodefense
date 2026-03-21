@@ -4,9 +4,9 @@
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
-import type { GameState } from "../../sim/types";
+import type { GameState, ToolId } from "../../sim/types";
 import { previewSpreadTargets } from "../../sim/preview";
-import { TILE_SIZE, UI, tileX, tileY } from "../config";
+import { PATHOGEN_COLORS, TILE_SIZE, UI, tileX, tileY } from "../config";
 
 export class PreviewOverlay {
   private scene: Phaser.Scene;
@@ -36,22 +36,43 @@ export class PreviewOverlay {
   }
 
   /** Show preview of where pathogens will spread next turn */
-  showPreview(state: GameState): void {
+  showPreview(
+    state: GameState,
+    placement?: { tool: ToolId; x: number; y: number },
+  ): void {
     if (!this.visible) return;
     this.graphics.clear();
 
-    const threats = previewSpreadTargets(state);
-    for (const [x, y] of threats) {
+    const current = previewSpreadTargets(state);
+    const currentKeys = new Set(current.map(({ x, y }) => `${x},${y}`));
+    const blockedKeys = new Set<string>();
+    const shown = placement ? previewSpreadTargets(state, placement) : current;
+
+    if (placement) {
+      const nextKeys = new Set(shown.map(({ x, y }) => `${x},${y}`));
+      for (const key of currentKeys) {
+        if (!nextKeys.has(key)) blockedKeys.add(key);
+      }
+    }
+
+    for (const { x, y, type } of shown) {
       const px = tileX(x, this.offsetX, this.ts, this.tg);
       const py = tileY(y, this.offsetY, this.ts, this.tg);
 
-      // Ghost infection overlay — red-tinted
-      this.graphics.fillStyle(UI.dangerRed, UI.previewAlpha);
+      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.3);
       this.graphics.fillRoundedRect(px + 2, py + 2, this.ts - 4, this.ts - 4, 4);
 
-      // Small "!" warning dot
-      this.graphics.fillStyle(UI.dangerRed, 0.5);
+      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.5);
       this.graphics.fillCircle(px + this.ts - 8, py + 8, 4);
+    }
+
+    for (const key of blockedKeys) {
+      const [x, y] = key.split(",").map(Number);
+      const px = tileX(x, this.offsetX, this.ts, this.tg);
+      const py = tileY(y, this.offsetY, this.ts, this.tg);
+
+      this.graphics.lineStyle(2, UI.accentCyan, 0.9);
+      this.graphics.strokeRoundedRect(px + 3, py + 3, this.ts - 6, this.ts - 6, 5);
     }
   }
 

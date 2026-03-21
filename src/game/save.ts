@@ -3,7 +3,19 @@
 // Bio Defence v7.0: Stars, scores, player profile, persistence
 // ═══════════════════════════════════════════════════
 
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 3;
+
+export type MusicMode = "shuffle" | "selected";
+
+export interface SavePreferences {
+  audioEnabled: boolean;
+  hapticsEnabled: boolean;
+  musicMode: MusicMode;
+  selectedTrackId: string | null;
+  onboardingSeen: number[];
+  lastSelectedWorld: number;
+  lastPlayedLevel: number | null;
+}
 
 export interface SaveData {
   version: number;
@@ -11,6 +23,7 @@ export interface SaveData {
   scores: Record<number, number>;  // levelId → best score
   playerName: string;              // display name (empty until set)
   playerId: string;                // stable UUID for this device
+  preferences: SavePreferences;
 }
 
 const SAVE_KEY = "bio_defence_save";
@@ -30,6 +43,15 @@ function freshSave(): SaveData {
     scores: {},
     playerName: "",
     playerId: generateId(),
+    preferences: {
+      audioEnabled: true,
+      hapticsEnabled: true,
+      musicMode: "shuffle",
+      selectedTrackId: "glitch_in_the_petri_dish",
+      onboardingSeen: [],
+      lastSelectedWorld: 1,
+      lastPlayedLevel: null,
+    },
   };
 }
 
@@ -46,6 +68,18 @@ function migrate(raw: Record<string, unknown>): SaveData {
   // v1 fields
   if (typeof raw.playerName === "string") save.playerName = raw.playerName;
   if (typeof raw.playerId === "string") save.playerId = raw.playerId;
+  if (raw.preferences && typeof raw.preferences === "object") {
+    const prefs = raw.preferences as Record<string, unknown>;
+    save.preferences = {
+      audioEnabled: typeof prefs.audioEnabled === "boolean" ? prefs.audioEnabled : true,
+      hapticsEnabled: typeof prefs.hapticsEnabled === "boolean" ? prefs.hapticsEnabled : true,
+      musicMode: prefs.musicMode === "selected" ? "selected" : "shuffle",
+      selectedTrackId: typeof prefs.selectedTrackId === "string" ? prefs.selectedTrackId : "glitch_in_the_petri_dish",
+      onboardingSeen: Array.isArray(prefs.onboardingSeen) ? prefs.onboardingSeen.map(Number).filter(Number.isFinite) : [],
+      lastSelectedWorld: typeof prefs.lastSelectedWorld === "number" ? prefs.lastSelectedWorld : 1,
+      lastPlayedLevel: typeof prefs.lastPlayedLevel === "number" ? prefs.lastPlayedLevel : null,
+    };
+  }
   save.version = SAVE_VERSION;
   return save;
 }
@@ -62,6 +96,29 @@ export function loadSave(): SaveData {
           scores: (parsed.scores ?? {}) as Record<number, number>,
           playerName: (parsed.playerName as string) ?? "",
           playerId: (parsed.playerId as string) || generateId(),
+          preferences: {
+            audioEnabled: typeof (parsed.preferences as Record<string, unknown> | undefined)?.audioEnabled === "boolean"
+              ? Boolean((parsed.preferences as Record<string, unknown>).audioEnabled)
+              : true,
+            hapticsEnabled: typeof (parsed.preferences as Record<string, unknown> | undefined)?.hapticsEnabled === "boolean"
+              ? Boolean((parsed.preferences as Record<string, unknown>).hapticsEnabled)
+              : true,
+            musicMode: (parsed.preferences as Record<string, unknown> | undefined)?.musicMode === "selected"
+              ? "selected"
+              : "shuffle",
+            selectedTrackId: typeof (parsed.preferences as Record<string, unknown> | undefined)?.selectedTrackId === "string"
+              ? String((parsed.preferences as Record<string, unknown>).selectedTrackId)
+              : "glitch_in_the_petri_dish",
+            onboardingSeen: Array.isArray((parsed.preferences as Record<string, unknown> | undefined)?.onboardingSeen)
+              ? ((parsed.preferences as Record<string, unknown>).onboardingSeen as unknown[]).map(Number).filter(Number.isFinite)
+              : [],
+            lastSelectedWorld: typeof (parsed.preferences as Record<string, unknown> | undefined)?.lastSelectedWorld === "number"
+              ? Number((parsed.preferences as Record<string, unknown>).lastSelectedWorld)
+              : 1,
+            lastPlayedLevel: typeof (parsed.preferences as Record<string, unknown> | undefined)?.lastPlayedLevel === "number"
+              ? Number((parsed.preferences as Record<string, unknown>).lastPlayedLevel)
+              : null,
+          },
         };
       }
       // Old format → migrate
@@ -86,6 +143,7 @@ export function updateLevelResult(
   const prevScore = save.scores[levelId] ?? 0;
   if (stars > prevStars) save.stars[levelId] = stars;
   if (score > prevScore) save.scores[levelId] = score;
+  save.preferences.lastPlayedLevel = levelId;
   saveSave(save);
   return save;
 }
@@ -94,6 +152,13 @@ export function updateLevelResult(
 export function setPlayerName(name: string): SaveData {
   const save = loadSave();
   save.playerName = name.trim().substring(0, 20);
+  saveSave(save);
+  return save;
+}
+
+export function updatePreferences(patch: Partial<SavePreferences>): SaveData {
+  const save = loadSave();
+  save.preferences = { ...save.preferences, ...patch };
   saveSave(save);
   return save;
 }

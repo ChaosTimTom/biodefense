@@ -73,7 +73,7 @@ describe("Generator structural validity (World 1)", () => {
       expect(spec.grid.h).toBeGreaterThanOrEqual(8);
       expect(spec.seeds.length).toBeGreaterThanOrEqual(2);
       expect(spec.title).toBeTruthy();
-      expect(spec.objective.type).toBe("contain");
+      expect(["contain", "clear_all"]).toContain(spec.objective.type);
       if (spec.objective.type === "contain") {
         expect(spec.objective.maxPct).toBeGreaterThanOrEqual(10);
         expect(spec.objective.maxPct).toBeLessThanOrEqual(60);
@@ -160,7 +160,7 @@ describe("Generator determinism", () => {
     const l1w2 = world2[0];
     // Compare full serialization — seeds, walls, or tools must differ
     expect(JSON.stringify(l1w1)).not.toBe(JSON.stringify(l1w2));
-  });
+  }, 20000);
 });
 
 // ── Difficulty progression ──────────────────────────

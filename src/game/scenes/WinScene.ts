@@ -1,17 +1,23 @@
 // ═══════════════════════════════════════════════════
-// src/game/scenes/WinScene.ts — Level complete + stars + score
-// Gradient bg, styled buttons, animated score counter
+// src/game/scenes/WinScene.ts — Premium victory / reward screen
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
 import type { LevelSpec } from "../../sim/types";
-import { StarDisplay } from "../ui/StarDisplay";
-import { tweenWinBurst } from "../animation/tweens";
-import { updateLevelResult } from "../save";
 import { speedMultiplier } from "../../sim/metrics";
+import { tweenWinBurst } from "../animation/tweens";
+import { playCue, triggerHaptic } from "../feedback";
+import { APP_THEME, getWorldTheme } from "../theme";
+import { updateLevelResult } from "../save";
+import { syncSceneMusic } from "../music";
+import { StarDisplay } from "../ui/StarDisplay";
 import {
-  UI_FONT, addBackground, addButton,
-  genPanelTex, fadeIn, fadeToScene,
+  UI_FONT,
+  UI_DISPLAY_FONT,
+  addBackground,
+  addButton,
+  fadeIn,
+  genPanelTex,
 } from "../ui/UIFactory";
 
 interface WinSceneData {
@@ -34,154 +40,154 @@ export class WinScene extends Phaser.Scene {
 
   create(): void {
     const { width: w, height: h } = this.cameras.main;
-    fadeIn(this, 400);
-
     const { levelSpec, stars, turns, score } = this.winData;
+    const theme = getWorldTheme(levelSpec.world ?? 1);
+    const nextId = levelSpec.id + 1;
+    const hasNextLevel = nextId <= 200;
 
-    // Save progress
     updateLevelResult(levelSpec.id, stars, score);
-
-    // ── Background ──
+    fadeIn(this, 420);
+    syncSceneMusic(this);
     addBackground(this, "win");
+    playCue("win");
+    triggerHaptic("success");
 
-    // ── Victory Banner ──
-    genPanelTex(this, "win_banner", w - 40, 44, 12, "rgba(0,40,60,0.9)", "rgba(0,229,255,0.25)");
-    this.add.image(w / 2, h * 0.10, "win_banner").setDepth(3);
+    const glow = this.add.graphics().setDepth(1);
+    glow.fillStyle(theme.accentNumber, 0.12);
+    glow.fillCircle(w / 2, 168, 140);
+
+    genPanelTex(this, "win_hero_panel", w - 30, 306, 28, "rgba(8,19,31,0.9)", theme.border);
+    this.add.image(w / 2, 208, "win_hero_panel").setDepth(2);
+
     this.add
-      .text(w / 2, h * 0.10, "LEVEL COMPLETE!", {
-        fontSize: "18px",
-        color: "#00e5ff",
+      .text(w / 2, 62, `${theme.titleGlyph} LEVEL COMPLETE`, {
+        fontSize: "25px",
+        color: APP_THEME.colors.textPrimary,
+        fontFamily: UI_DISPLAY_FONT,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setDepth(3);
+
+    this.add
+      .text(w / 2, 96, levelSpec.title || `Level ${levelSpec.id}`, {
+        fontSize: "15px",
+        color: theme.accent,
         fontFamily: UI_FONT,
         fontStyle: "bold",
-        shadow: { offsetX: 0, offsetY: 2, color: "#001122", blur: 4, fill: true },
       })
       .setOrigin(0.5)
-      .setDepth(4);
+      .setDepth(3);
 
-    // ── Level name ──
     this.add
-      .text(w / 2, h * 0.17, levelSpec.title || `Level ${levelSpec.id}`, {
-        fontSize: "12px",
-        color: "#6688aa",
+      .text(w / 2, 116, `${theme.name} world clear`, {
+        fontSize: "11px",
+        color: APP_THEME.colors.textSecondary,
         fontFamily: UI_FONT,
       })
       .setOrigin(0.5)
-      .setDepth(4);
+      .setDepth(3);
 
-    // ── Stars ──
-    const starDisplay = new StarDisplay(this, w / 2 - 36, h * 0.23);
-    this.time.delayedCall(400, () => {
-      starDisplay.animateStars(stars);
-    });
+    const starDisplay = new StarDisplay(this, w / 2 - 36, 138);
+    this.time.delayedCall(260, () => starDisplay.animateStars(stars));
 
-    // ── Score ──
     const scoreText = this.add
-      .text(w / 2, h * 0.32, "0", {
-        fontSize: "32px",
-        color: "#ffd740",
-        fontFamily: UI_FONT,
+      .text(w / 2, 222, "0", {
+        fontSize: "40px",
+        color: APP_THEME.colors.gold,
+        fontFamily: UI_DISPLAY_FONT,
         fontStyle: "bold",
-        shadow: { offsetX: 0, offsetY: 2, color: "#332200", blur: 6, fill: true },
       })
       .setOrigin(0.5)
-      .setDepth(4);
+      .setDepth(3);
 
     this.add
-      .text(w / 2, h * 0.37, "POINTS", {
-        fontSize: "9px",
-        color: "#667799",
+      .text(w / 2, 252, "SCORE", {
+        fontSize: "10px",
+        color: APP_THEME.colors.textMuted,
         fontFamily: UI_FONT,
-        letterSpacing: 4,
+        letterSpacing: 3,
       })
       .setOrigin(0.5)
-      .setDepth(4);
+      .setDepth(3);
 
-    // Animated score counter
     this.tweens.addCounter({
       from: 0,
       to: score,
-      duration: 1200,
-      delay: 600,
+      duration: 1100,
+      delay: 360,
       ease: "Cubic.easeOut",
       onUpdate: (tween) => {
         scoreText.setText(Math.round(tween.getValue() ?? 0).toLocaleString());
       },
     });
 
-    // ── Stats Panel ──
-    genPanelTex(this, "win_stats", w - 60, 72, 10);
-    this.add.image(w / 2, h * 0.445, "win_stats").setDepth(3);
-
-    const limit = levelSpec.turnLimit > 0 ? levelSpec.turnLimit : turns;
-    const turnsSaved = limit - turns;
-    const { mult: speedMult, label: speedLabel } = speedMultiplier(turns, levelSpec.turnLimit);
+    const parTarget = levelSpec.parTurns > 0 ? levelSpec.parTurns : turns;
+    const turnsSaved = Math.max(0, parTarget - turns);
+    const { label: speedLabel } = speedMultiplier(turns, parTarget);
+    const efficiencyLabel = stars === 3 ? "Unused tools banked" : "Tactical clear";
 
     const stats = [
-      { label: "Turns", value: `${turns} / Par: ${levelSpec.parTurns}` },
-      { label: "Par Bonus", value: turnsSaved > 0 ? `+${turnsSaved * 100}` : "—" },
-      { label: "Speed", value: speedLabel || "—", highlight: speedMult > 1 },
+      { label: "Turns", value: `${turns} / ${parTarget}` },
+      { label: "Par Bonus", value: turnsSaved > 0 ? `+${turnsSaved * 100}` : "On par" },
+      { label: "Speed", value: speedLabel || "Steady" },
+      { label: "Efficiency", value: efficiencyLabel },
     ];
 
-    stats.forEach((stat, i) => {
-      const sy = h * 0.42 + i * 18;
+    stats.forEach((stat, index) => {
+      const y = 292 + index * 22;
       this.add
-        .text(w * 0.2, sy, stat.label, {
-          fontSize: "10px", color: "#667799", fontFamily: UI_FONT,
+        .text(44, y, stat.label, {
+          fontSize: "11px",
+          color: APP_THEME.colors.textMuted,
+          fontFamily: UI_FONT,
         })
-        .setOrigin(0, 0.5)
-        .setDepth(4);
+        .setDepth(3);
+
       this.add
-        .text(w * 0.8, sy, stat.value, {
-          fontSize: "10px",
-          color: (stat as { highlight?: boolean }).highlight ? "#ffd740" : "#ccddee",
+        .text(w - 44, y, stat.value, {
+          fontSize: "11px",
+          color: stat.label === "Par Bonus" && turnsSaved > 0 ? APP_THEME.colors.gold : APP_THEME.colors.textPrimary,
           fontFamily: UI_FONT,
           fontStyle: "bold",
         })
-        .setOrigin(1, 0.5)
-        .setDepth(4);
+        .setOrigin(1, 0)
+        .setDepth(3);
     });
 
-    // ── Star message ──
-    const starText =
-      stars === 3 ? "⭐ Perfect! All 3 stars!"
-        : stars === 2 ? "Great! 2 stars earned"
-          : "1 star — try for par time!";
-
     this.add
-      .text(w / 2, h * 0.54, starText, {
-        fontSize: "11px",
-        color: stars === 3 ? "#ffd740" : "#8899bb",
+      .text(w / 2, 394, stars === 3
+        ? "Perfect containment. You beat par and kept resources in reserve."
+        : stars === 2
+          ? "Strong clear. One more optimization run gets the perfect finish."
+          : "Objective secured. Replay for a cleaner, faster containment.",
+      {
+        fontSize: "12px",
+        color: stars === 3 ? APP_THEME.colors.gold : APP_THEME.colors.textSecondary,
         fontFamily: UI_FONT,
+        align: "center",
+        wordWrap: { width: w - 60 },
+        lineSpacing: 6,
       })
-      .setOrigin(0.5)
-      .setDepth(4);
+      .setOrigin(0.5, 0)
+      .setDepth(3);
 
-    // ── Buttons ──
-    addButton(this, w / 2, h * 0.63, "Next Level  →", () => {
-      const nextId = levelSpec.id + 1;
+    addButton(this, w / 2, 508, hasNextLevel ? "Next Level" : "Campaign Map", () => {
       this.scene.start("Menu", {
         updatedStars: { levelId: levelSpec.id, stars },
         updatedScore: { levelId: levelSpec.id, score },
-        autoStartLevel: nextId,
+        autoStartLevel: hasNextLevel ? nextId : undefined,
       });
-    }, { style: "primary", fontSize: "15px", w: 200 });
+    }, { style: "primary", icon: hasNextLevel ? "▶" : "🧫", fontSize: "15px", w: 220, h: 54 });
 
-    addButton(this, w / 2, h * 0.72, "Replay", () => {
+    addButton(this, w / 2, 576, "Replay Level", () => {
       this.scene.start("Level", { levelSpec });
-    }, { style: "secondary", fontSize: "13px", w: 160 });
+    }, { style: "secondary", fontSize: "13px", w: 190, h: 46 });
 
-    addButton(this, w / 2, h * 0.80, "High Scores", () => {
+    addButton(this, w / 2, 638, "Scores & Profile", () => {
       this.scene.start("Scores");
-    }, { style: "gold", fontSize: "12px", w: 160 });
+    }, { style: "gold", fontSize: "13px", w: 190, h: 46 });
 
-    addButton(this, w / 2, h * 0.88, "Menu", () => {
-      this.scene.start("Menu", {
-        updatedStars: { levelId: levelSpec.id, stars },
-        updatedScore: { levelId: levelSpec.id, score },
-      });
-    }, { style: "secondary", fontSize: "12px", w: 140 });
-
-    // Win burst particles
-    tweenWinBurst(this, w / 2, h * 0.23);
+    tweenWinBurst(this, w / 2, 144);
   }
 }

@@ -22,6 +22,7 @@ import { PATHOGEN_GROWTH, COUNTERED_BY } from "./constants";
 import { createGameState, getTile, infectionPct } from "./board";
 import { advanceTurn, applyAction } from "./step";
 import { canPlaceTool } from "./tools";
+import { decorateBossLevel } from "../game/bosses";
 
 // ── Seeded PRNG (mulberry32) ─────────────────────
 
@@ -1355,7 +1356,7 @@ function generateValidLevel(
       if (singlePlaceWins) continue; // reject — try another attempt
     }
 
-    return finalSpec;
+    return levelNum === 50 ? decorateBossLevel(finalSpec) : finalSpec;
   }
 
   // ── Fallback: guaranteed-valid open arena ──
@@ -1505,7 +1506,7 @@ function generateFallback(
     };
   }
 
-  return finalSpec;
+  return levelNum === 50 ? decorateBossLevel(finalSpec) : finalSpec;
 }
 
 // ═══════════════════════════════════════════════════

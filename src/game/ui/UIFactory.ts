@@ -4,8 +4,11 @@
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
+import { playCue, triggerHaptic } from "../feedback";
+import { APP_THEME, getWorldTheme } from "../theme";
 
-export const UI_FONT = "'Orbitron', sans-serif";
+export const UI_FONT = APP_THEME.fonts.body;
+export const UI_DISPLAY_FONT = APP_THEME.fonts.display;
 
 // ── Canvas Helpers ───────────────────────────────
 
@@ -162,11 +165,11 @@ export function genVignette(scene: Phaser.Scene, w: number, h: number): void {
 export type ButtonStyle = "primary" | "gold" | "danger" | "secondary" | "success";
 
 const BTN_STYLES: Record<ButtonStyle, { top: string; bot: string; border: string; font: string }> = {
-  primary:   { top: "#1a3a5c", bot: "#0d2238", border: "rgba(0,229,255,0.35)", font: "#00e5ff" },
-  gold:      { top: "#4a3a10", bot: "#2a1e08", border: "rgba(255,215,64,0.35)", font: "#ffd740" },
-  danger:    { top: "#4a1a1a", bot: "#2a0d0d", border: "rgba(255,68,68,0.35)", font: "#ff6666" },
-  secondary: { top: "#2a2a40", bot: "#1a1a2a", border: "rgba(170,170,204,0.25)", font: "#aaaacc" },
-  success:   { top: "#1a3a20", bot: "#0d2210", border: "rgba(76,175,80,0.35)", font: "#66bb6a" },
+  primary:   { top: "#19374f", bot: "#0b1928", border: "rgba(0,229,255,0.45)", font: "#d8fbff" },
+  gold:      { top: "#5a4513", bot: "#211506", border: "rgba(255,215,64,0.42)", font: "#fff2b8" },
+  danger:    { top: "#581d20", bot: "#230a0f", border: "rgba(255,82,82,0.38)", font: "#ffd7d7" },
+  secondary: { top: "#1a2638", bot: "#0c1320", border: "rgba(180,202,216,0.24)", font: "#dceaf3" },
+  success:   { top: "#163b2c", bot: "#091911", border: "rgba(0,230,118,0.4)", font: "#dcffef" },
 };
 
 export function getButtonStyle(style: ButtonStyle) {
@@ -180,33 +183,53 @@ export function addBackground(scene: Phaser.Scene, variant: "dark" | "title" | "
   const { width: w, height: h } = scene.cameras.main;
   const bgKey = `bg_${variant}`;
   const stops: [number, string][] = variant === "title"
-    ? [[0, "#0d1b2a"], [0.5, "#142840"], [1, "#0a1628"]]
+    ? [[0, "#07131f"], [0.42, "#0d2033"], [1, "#091018"]]
     : variant === "win"
-      ? [[0, "#0d1b2a"], [0.5, "#1a2d40"], [1, "#0d1520"]]
-      : [[0, "#0a0e1a"], [0.5, "#0d1525"], [1, "#080c16"]];
+      ? [[0, "#06131f"], [0.5, "#15354a"], [1, "#08131d"]]
+      : [[0, APP_THEME.colors.bgTop], [0.45, "#0a1625"], [1, APP_THEME.colors.bgBottom]];
   genGradientTex(scene, bgKey, w, h, stops);
   scene.add.image(w / 2, h / 2, bgKey).setDepth(0);
   genVignette(scene, w, h);
-  scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.6);
+  scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.62);
+
+  const ambient = scene.add.graphics().setDepth(0);
+  ambient.fillStyle(0x00e5ff, 0.07);
+  ambient.fillCircle(w * 0.2, h * 0.18, 90);
+  ambient.fillStyle(0xffd740, 0.05);
+  ambient.fillCircle(w * 0.82, h * 0.16, 72);
+  ambient.fillStyle(0x5cf2c0, 0.04);
+  ambient.fillCircle(w * 0.52, h * 0.72, 130);
 }
 
 /** Add world-themed background image; falls back to dark gradient if not loaded */
 export function addWorldBackground(scene: Phaser.Scene, worldId: number): void {
   const { width: w, height: h } = scene.cameras.main;
   const key = `bg_world_${worldId}`;
+  const worldTheme = getWorldTheme(worldId);
   if (scene.textures.exists(key)) {
     scene.add.image(w / 2, h / 2, key).setDisplaySize(w, h).setDepth(0);
     genVignette(scene, w, h);
-    scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.5);
+    scene.add.image(w / 2, h / 2, "vignette").setDepth(0).setAlpha(0.45);
   } else {
     addBackground(scene, "dark");
   }
+  const wash = scene.add.graphics().setDepth(0);
+  wash.fillStyle(worldTheme.accentNumber, 0.08);
+  wash.fillCircle(w * 0.82, h * 0.22, 110);
+  wash.fillStyle(worldTheme.accentNumber, 0.05);
+  wash.fillCircle(w * 0.16, h * 0.78, 150);
+}
+
+export function getBossSplashKey(scene: Phaser.Scene, bossId: string): string | null {
+  void scene;
+  void bossId;
+  return null;
 }
 
 /** Floating bio-particle decorations */
-export function addBioParticles(scene: Phaser.Scene, count = 15): void {
+export function addBioParticles(scene: Phaser.Scene, count = 15, worldId?: number): void {
   const { width: w, height: h } = scene.cameras.main;
-  const colors = [0x00e5ff, 0x4caf50, 0xf44336, 0x9c27b0, 0x76ff03, 0xea80fc];
+  const colors = worldId ? getWorldTheme(worldId).particle : [0x00e5ff, 0x4caf50, 0xf44336, 0x9c27b0, 0x76ff03, 0xea80fc];
   for (let i = 0; i < count; i++) {
     const size = 3 + Math.random() * 12;
     const color = colors[Math.floor(Math.random() * colors.length)];
@@ -223,7 +246,7 @@ export function addBioParticles(scene: Phaser.Scene, count = 15): void {
       x: sx + (Math.random() - 0.5) * 100,
       y: sy + (Math.random() - 0.5) * 100,
       alpha: { from: gfx.alpha, to: gfx.alpha * 0.4 },
-      duration: 5000 + Math.random() * 5000,
+      duration: APP_THEME.motion.ambient + Math.random() * 4500,
       yoyo: true, repeat: -1, ease: "Sine.easeInOut",
     });
   }
@@ -253,13 +276,18 @@ export function addButton(
 
   const cont = scene.add.container(x, y).setDepth(depth);
   cont.add(scene.add.image(0, 0, key));
+  const glow = scene.add.graphics();
+  glow.fillStyle(parseInt(st.font.replace("#", "0x"), 16), 0.08);
+  glow.fillRoundedRect(-w / 2 + 6, -h / 2 + 6, w - 12, h - 12, Math.max(8, r - 2));
+  cont.add(glow);
 
   const displayText = opts.icon ? `${opts.icon}  ${label}` : label;
   cont.add(scene.add.text(0, 0, displayText, {
     fontSize: opts.fontSize ?? "15px",
     color: st.font,
     fontFamily: UI_FONT,
-    fontStyle: "bold",
+    fontStyle: "700",
+    letterSpacing: 0.4,
   }).setOrigin(0.5));
 
   const zone = scene.add.rectangle(0, 0, w + 12, h + 12)
@@ -267,13 +295,52 @@ export function addButton(
   cont.add(zone);
 
   zone.on("pointerdown", () => {
+    playCue("ui_tap");
+    triggerHaptic("soft");
     cont.setScale(0.95);
     scene.time.delayedCall(120, () => { cont.setScale(1); callback(); });
   });
-  zone.on("pointerover", () => cont.setScale(1.03));
-  zone.on("pointerout", () => cont.setScale(1));
+  zone.on("pointerover", () => {
+    cont.setScale(1.03);
+    glow.setAlpha(1.5);
+  });
+  zone.on("pointerout", () => {
+    cont.setScale(1);
+    glow.setAlpha(1);
+  });
 
   return cont;
+}
+
+export function addHeaderPanel(
+  scene: Phaser.Scene,
+  title: string,
+  subtitle?: string,
+  accent = APP_THEME.colors.accent,
+): Phaser.GameObjects.Container {
+  const { width: w } = scene.cameras.main;
+  const panelKey = `header_panel_${w}_${subtitle ? "lg" : "sm"}`;
+  genPanelTex(scene, panelKey, w - 18, subtitle ? 64 : 48, 16, "rgba(8,18,31,0.84)", "rgba(255,255,255,0.08)");
+
+  const container = scene.add.container(0, 0).setDepth(3);
+  container.add(scene.add.image(w / 2, subtitle ? 38 : 30, panelKey));
+  container.add(scene.add.text(w / 2, 15, title, {
+    fontSize: "16px",
+    color: accent,
+    fontFamily: UI_DISPLAY_FONT,
+    fontStyle: "700",
+    letterSpacing: 1.2,
+  }).setOrigin(0.5, 0));
+
+  if (subtitle) {
+    container.add(scene.add.text(w / 2, 38, subtitle, {
+      fontSize: "10px",
+      color: APP_THEME.colors.textMuted,
+      fontFamily: UI_FONT,
+    }).setOrigin(0.5, 0));
+  }
+
+  return container;
 }
 
 /** Draw a 5-pointed star polygon */

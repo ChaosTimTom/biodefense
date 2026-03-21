@@ -11,7 +11,9 @@ import { WinScene } from "./game/scenes/WinScene";
 import { ScoresScene } from "./game/scenes/ScoresScene";
 
 // ── HiDPI text: render at native pixel density ──
-const TEXT_DPR = Math.ceil(Math.min(window.devicePixelRatio ?? 1, 3));
+const DEVICE_DPR = window.devicePixelRatio ?? 1;
+const TEXT_DPR = Math.ceil(Math.min(DEVICE_DPR, 3));
+const GAME_RESOLUTION = Math.min(Math.max(DEVICE_DPR, 1), 2);
 if (TEXT_DPR > 1) {
   const F = Phaser.GameObjects.GameObjectFactory
     .prototype as unknown as Record<string, Function>;
@@ -23,7 +25,7 @@ if (TEXT_DPR > 1) {
   };
 }
 
-const config: Phaser.Types.Core.GameConfig = {
+const config = {
   type: Phaser.AUTO,
   parent: "game-container",
   width: 400,
@@ -32,12 +34,15 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoRound: true,
   },
+  resolution: GAME_RESOLUTION,
   scene: [BootScene, TitleScene, MenuScene, LevelScene, WinScene, ScoresScene],
   render: {
     pixelArt: false,
     antialias: true,
     antialiasGL: true,
+    mipmapFilter: "LINEAR_MIPMAP_LINEAR",
   },
   fps: {
     target: 60,
@@ -48,7 +53,7 @@ const config: Phaser.Types.Core.GameConfig = {
     mouse: true,
     touch: true,
   },
-};
+} as Phaser.Types.Core.GameConfig;
 
 // Launch the game
 new Phaser.Game(config);

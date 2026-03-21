@@ -45,6 +45,7 @@ describe("previewSpreadTargets", () => {
     // Adjacent empties with 1-2 coccus ortho neighbors should be flagged
     // (1,2), (4,2), (2,1), (2,3), (3,1), (3,3) all have 1 coccus neighbor
     expect(targets.length).toBeGreaterThan(0);
+    expect(targets.some(({ x, y, type }) => x === 1 && y === 2 && type === "coccus")).toBe(true);
   });
 
   it("does NOT flag cells with 0 pathogen neighbors", () => {
@@ -55,7 +56,7 @@ describe("previewSpreadTargets", () => {
     const targets = previewSpreadTargets(state);
     // (0,0) has ortho neighbors (1,0) and (0,1) — both get 1 coccus neighbor → flagged
     // But (4,4) far away → not flagged
-    const hasFarCell = targets.some(([x, y]) => x === 4 && y === 4);
+    const hasFarCell = targets.some(({ x, y }) => x === 4 && y === 4);
     expect(hasFarCell).toBe(false);
   });
 
@@ -67,7 +68,7 @@ describe("previewSpreadTargets", () => {
     setTile(state.board, 3, 2, wallTile());
 
     const targets = previewSpreadTargets(state);
-    const hasWallPos = targets.some(([x, y]) => x === 3 && y === 2);
+    const hasWallPos = targets.some(({ x, y }) => x === 3 && y === 2);
     expect(hasWallPos).toBe(false);
   });
 
@@ -77,7 +78,7 @@ describe("previewSpreadTargets", () => {
     setTile(state.board, 2, 2, pathogenTile("influenza"));
 
     const targets = previewSpreadTargets(state);
-    // Influenza B1-3: adjacent empties with 1 influenza neighbor → flagged
+    // Influenza still shows actual resolved births even from an isolated source.
     expect(targets.length).toBeGreaterThan(0);
   });
 
@@ -91,9 +92,29 @@ describe("previewSpreadTargets", () => {
     // v5.0: Mold grows diagonally. (1,1) is diagonal from (2,2) → flagged.
     // (2,3) is orthogonal from (2,2) and orthogonal from (3,3) → NOT flagged.
     expect(targets.length).toBeGreaterThan(0);
-    const has11 = targets.some(([x, y]) => x === 1 && y === 1);
+    const has11 = targets.some(({ x, y }) => x === 1 && y === 1);
     expect(has11).toBe(true);
-    const has23 = targets.some(([x, y]) => x === 2 && y === 3);
+    const has23 = targets.some(({ x, y }) => x === 2 && y === 3);
     expect(has23).toBe(false);
+  });
+
+  it("removes births that would become dead zones after a medicine placement", () => {
+    const state = createGameState(mkSpec({
+      tools: { ...emptyInventory(), penicillin: 1 },
+    }));
+    setTile(state.board, 1, 2, pathogenTile("coccus"));
+    setTile(state.board, 2, 2, pathogenTile("coccus"));
+
+    const targets = previewSpreadTargets(state, { tool: "penicillin", x: 4, y: 2 });
+    expect(targets.some(({ x, y }) => x === 3 && y === 2)).toBe(false);
+  });
+
+  it("treats same-side multi-type birth conflicts as empty", () => {
+    const state = createGameState(mkSpec());
+    setTile(state.board, 2, 2, pathogenTile("coccus"));
+    setTile(state.board, 1, 3, pathogenTile("influenza"));
+
+    const targets = previewSpreadTargets(state);
+    expect(targets.some(({ x, y }) => x === 2 && y === 1)).toBe(false);
   });
 });

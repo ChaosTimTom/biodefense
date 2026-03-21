@@ -2,52 +2,57 @@
 // src/sim/preview.ts — Preview helpers for UI
 // Bio Defence v5.0: Directional Growth
 //
-// Shows empty cells where pathogens WILL BIRTH next
-// generation — any empty cell that has a pathogen
-// parent in its growth-direction pattern.
+// Computes the actual next-turn pathogen births by
+// simulating one generation from a cloned state.
 // ═══════════════════════════════════════════════════
 
-import type { GameState, PathogenType } from "./types";
-import { coords, inBounds, idx } from "./board";
-import { PATHOGEN_GROWTH, ALL_PATHOGEN_TYPES } from "./constants";
+import type { GameState, PathogenType, ToolId } from "./types";
+import { cloneState, coords } from "./board";
+import { applyAction, runGeneration } from "./step";
+
+export interface PreviewBirth {
+  x: number;
+  y: number;
+  type: PathogenType;
+}
+
+export interface PreviewPlacement {
+  tool: ToolId;
+  x: number;
+  y: number;
+}
 
 /**
- * Returns coordinates of empty cells where at least one
- * pathogen type can grow into next generation.
- * Used to show threat highlights so the player can plan.
+ * Returns actual pathogen births for the next generation.
+ * Optional hypothetical placement lets the UI compare
+ * "do nothing" against "place this tool here".
  */
-export function previewSpreadTargets(state: GameState): [number, number][] {
-  const { w, h, tiles } = state.board;
-  const results: [number, number][] = [];
+export function previewSpreadTargets(
+  state: GameState,
+  placement?: PreviewPlacement,
+): PreviewBirth[] {
+  const base = cloneState(state);
+  if (placement) {
+    applyAction(base, {
+      type: "place_tool",
+      tool: placement.tool,
+      x: placement.x,
+      y: placement.y,
+    });
+  }
 
+  const before = base.board.tiles.map((tile) => tile.kind);
+  runGeneration(base.board);
+
+  const { w, tiles } = base.board;
+  const results: PreviewBirth[] = [];
   for (let i = 0; i < tiles.length; i++) {
-    if (tiles[i].kind !== "empty") continue;
-    const [x, y] = coords(w, i);
+    if (before[i] !== "empty") continue;
+    if (tiles[i].kind !== "pathogen" || !tiles[i].pathogenType) continue;
 
-    if (wouldBirthPathogen(tiles, w, h, x, y)) {
-      results.push([x, y]);
-    }
+    const [x, y] = coords(w, i);
+    results.push({ x, y, type: tiles[i].pathogenType as PathogenType });
   }
 
   return results;
-}
-
-/** Check if any pathogen type has a parent that can grow into (x, y). */
-function wouldBirthPathogen(
-  tiles: import("./types").Tile[], w: number, h: number,
-  x: number, y: number,
-): boolean {
-  const pathTypes: PathogenType[] = ALL_PATHOGEN_TYPES;
-
-  for (const ptype of pathTypes) {
-    const dirs = PATHOGEN_GROWTH[ptype];
-    for (const [dx, dy] of dirs) {
-      const nx = x + dx, ny = y + dy;
-      if (!inBounds(w, h, nx, ny)) continue;
-      const n = tiles[idx(w, nx, ny)];
-      if (n.kind === "pathogen" && n.pathogenType === ptype) return true;
-    }
-  }
-
-  return false;
 }

@@ -53,6 +53,36 @@ export type Objective =
   | { type: "survive"; maxTurns: number }
   | { type: "contain"; maxPct: number; maxTurns: number };
 
+export interface BossNode {
+  x: number;
+  y: number;
+}
+
+export interface BossWaveSeed {
+  type: PathogenType;
+  x: number;
+  y: number;
+}
+
+export interface BossPhaseSpec {
+  label: string;
+  instruction: string;
+  relays: BossNode[];
+  purgeCells: BossNode[];
+  reinforcements: BossWaveSeed[];
+}
+
+export interface BossSpec {
+  id: string;
+  name: string;
+  subtitle: string;
+  intro: string;
+  victoryLine: string;
+  arenaWalls: BossNode[];
+  initialSeeds: BossWaveSeed[];
+  phases: BossPhaseSpec[];
+}
+
 // ── Level Specification ──────────────────────────
 export interface LevelSpec {
   id: number;
@@ -69,6 +99,7 @@ export interface LevelSpec {
   turnLimit: number;
   objective: Objective;
   parTurns: number;
+  boss?: BossSpec;
 }
 
 // ── Runtime Game State ───────────────────────────
@@ -78,6 +109,7 @@ export interface GameState {
   board: Board;
   tools: ToolInventory;
   objective: Objective;
+  parTurns: number;
   toolsUsedThisTurn: number;
   toolsPerTurn: number;
   switchesPerTurn: number;
@@ -87,6 +119,8 @@ export interface GameState {
   isOver: boolean;
   result: "playing" | "win" | "lose";
   stars: number;
+  bossPhase: number;
+  bossDefeated: boolean;
 }
 
 // ── Player Actions ───────────────────────────────

@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════
 // src/game/scenes/BootScene.ts — Asset loading & init
-// Loads assets, waits for Orbitron font, generates textures
+// Loads assets, waits for premium UI fonts, generates textures
 // ═══════════════════════════════════════════════════
 
 import Phaser from "phaser";
 import { genToolIcons, genLockIcon } from "../ui/UIFactory";
 import { ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES } from "../../sim/constants";
+import { APP_THEME } from "../theme";
 
 export class BootScene extends Phaser.Scene {
   private fontReady = false;
@@ -20,9 +21,9 @@ export class BootScene extends Phaser.Scene {
 
     // ── Start font loading (parallel with assets) ──
     Promise.all([
-      document.fonts.load("400 16px 'Orbitron'"),
-      document.fonts.load("700 16px 'Orbitron'"),
-      document.fonts.load("900 16px 'Orbitron'"),
+      document.fonts.load(`400 16px ${APP_THEME.fonts.body}`),
+      document.fonts.load(`700 16px ${APP_THEME.fonts.body}`),
+      document.fonts.load(`700 18px ${APP_THEME.fonts.display}`),
     ])
       .then(() => { this.fontReady = true; })
       .catch(() => { this.fontReady = true; }); // Proceed even if font fails
@@ -45,7 +46,7 @@ export class BootScene extends Phaser.Scene {
       .text(w / 2, h * 0.38, "BIO DEFENCE", {
         fontSize: "22px",
         color: "#00e5ff",
-        fontFamily: "sans-serif",
+        fontFamily: APP_THEME.fonts.display,
         fontStyle: "bold",
         shadow: { offsetX: 0, offsetY: 2, color: "#000000", blur: 4, fill: true },
       })
@@ -56,7 +57,7 @@ export class BootScene extends Phaser.Scene {
       .text(w / 2, h * 0.50, "LOADING...", {
         fontSize: "10px",
         color: "#4a6a8a",
-        fontFamily: "sans-serif",
+        fontFamily: APP_THEME.fonts.body,
         letterSpacing: 3,
       })
       .setOrigin(0.5);
@@ -121,6 +122,7 @@ export class BootScene extends Phaser.Scene {
     for (const [wId, file] of Object.entries(bgFiles)) {
       this.load.image(`bg_world_${wId}`, `assets/bg/${file}`);
     }
+
   }
 
   create(): void {
