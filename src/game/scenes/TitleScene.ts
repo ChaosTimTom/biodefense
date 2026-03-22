@@ -9,8 +9,10 @@ import {
   totalScore as getScore,
   levelsCompleted as getCompleted,
   highestLevel,
+  updatePreferences,
 } from "../save";
 import { syncSceneMusic } from "../music";
+import { createEndlessRunState, generateEndlessLevel } from "../../sim/endless";
 import { APP_THEME, getWorldTheme } from "../theme";
 import { SettingsOverlay } from "../ui/SettingsOverlay";
 import {
@@ -39,6 +41,8 @@ export class TitleScene extends Phaser.Scene {
     const completed = getCompleted(save);
     const highest = highestLevel(save);
     const featuredWorld = getWorldTheme(save.preferences.lastSelectedWorld || 1);
+    const endlessBest = save.endlessHighScore;
+    const endlessRound = save.endlessBestRound;
 
     fadeIn(this, 420);
     syncSceneMusic(this);
@@ -128,6 +132,19 @@ export class TitleScene extends Phaser.Scene {
         .setDepth(3);
     });
 
+    this.add
+      .text(w / 2, 364, endlessBest > 0
+        ? `Endless best ${endlessBest.toLocaleString()}  •  round ${endlessRound}`
+        : "Endless mode unlocked: survive random escalating outbreaks",
+      {
+        fontSize: "10px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: UI_FONT,
+        fontStyle: endlessBest > 0 ? "bold" : "normal",
+      })
+      .setOrigin(0.5)
+      .setDepth(3);
+
     if (highest > 0) {
       genPanelTex(this, "title_continue_panel", w - 30, 56, 18, featuredWorld.card, featuredWorld.border);
       this.add.image(w / 2, 408, "title_continue_panel").setDepth(2);
@@ -166,11 +183,18 @@ export class TitleScene extends Phaser.Scene {
       fadeToScene(this, "Menu");
     }, { style: "primary", icon: "🧫", fontSize: "16px", w: 230, h: 56 });
 
-    addButton(this, w / 2, primaryY + 76, "Profile & Scores", () => {
+    addButton(this, w / 2, primaryY + 76, "Endless Run", () => {
+      const endlessRun = createEndlessRunState();
+      const levelSpec = generateEndlessLevel(endlessRun);
+      updatePreferences({ lastPlayedLevel: null });
+      fadeToScene(this, "Level", { levelSpec, endlessRun });
+    }, { style: "danger", icon: "∞", fontSize: "14px", w: 230, h: 52 });
+
+    addButton(this, w / 2, primaryY + 146, "Profile & Scores", () => {
       fadeToScene(this, "Scores");
     }, { style: "gold", icon: "★", fontSize: "14px", w: 230, h: 52 });
 
-    addButton(this, w / 2, primaryY + 146, "How To Play", () => {
+    addButton(this, w / 2, primaryY + 216, "How To Play", () => {
       localStorage.removeItem("bio_defence_rules_seen");
       fadeToScene(this, "Menu", { autoStartLevel: 1 });
     }, { style: "secondary", icon: "?", fontSize: "13px", w: 230, h: 48 });

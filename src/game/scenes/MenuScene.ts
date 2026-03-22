@@ -4,7 +4,7 @@
 
 import Phaser from "phaser";
 import type { LevelSpec } from "../../sim/types";
-import { generateWorld } from "../../sim/generator";
+import { getCampaignLevel, getCampaignWorldLevels } from "../../sim/campaign";
 import {
   loadSave,
   saveSave,
@@ -48,22 +48,8 @@ function highestUnlockedWorldId(save: SaveData): number {
   return worldId;
 }
 
-const WORLD_LEVELS: Record<number, LevelSpec[]> = {};
-
 function getWorldLevels(worldId: number): LevelSpec[] {
-  if (!WORLD_LEVELS[worldId]) {
-    WORLD_LEVELS[worldId] = generateWorld(worldId);
-  }
-  return WORLD_LEVELS[worldId];
-}
-
-function getLevelSpec(levelId: number): LevelSpec | undefined {
-  for (const world of WORLDS) {
-    const levels = getWorldLevels(world.id);
-    const found = levels.find((level) => level.id === levelId);
-    if (found) return found;
-  }
-  return undefined;
+  return getCampaignWorldLevels(worldId);
 }
 
 export class MenuScene extends Phaser.Scene {
@@ -434,7 +420,7 @@ export class MenuScene extends Phaser.Scene {
   private startLevel(levelId: number): boolean {
     if (!this.isLevelUnlocked(levelId)) return false;
 
-    const spec = getLevelSpec(levelId);
+    const spec = getCampaignLevel(levelId);
     if (!spec) return false;
 
     updatePreferences({

@@ -36,6 +36,8 @@ export class ScoresScene extends Phaser.Scene {
     const completed = levelsCompleted(save);
     const highest = highestLevel(save);
     const bestLevel = bestLevelScore(save);
+    const endlessBest = save.endlessHighScore;
+    const endlessRound = save.endlessBestRound;
 
     fadeIn(this, 360);
     syncSceneMusic(this);
@@ -125,6 +127,19 @@ export class ScoresScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(3);
     }
+
+    this.add
+      .text(w / 2, 170, endlessBest > 0
+        ? `Endless best: ${endlessBest.toLocaleString()} score • round ${endlessRound}`
+        : "Endless best: no completed runs yet",
+      {
+        fontSize: "11px",
+        color: APP_THEME.colors.accent,
+        fontFamily: UI_FONT,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setDepth(3);
 
     const worldNames = [1, 2, 3, 4];
     const gridTop = 210;

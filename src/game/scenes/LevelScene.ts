@@ -46,9 +46,11 @@ import { OnboardingOverlay } from "../ui/OnboardingOverlay";
 import { tweenWinBurst, tweenLoseShake } from "../animation/tweens";
 import { playCue, triggerHaptic } from "../feedback";
 import { syncSceneMusic } from "../music";
+import { advanceEndlessRun, generateEndlessLevel, type EndlessRunState } from "../../sim/endless";
 import { APP_THEME, getWorldTheme } from "../theme";
 import { addButton, addWorldBackground, fadeIn, genPanelTex, getBossSplashKey } from "../ui/UIFactory";
 import { devTracker, DEV_MODE } from "../devTracker";
+import { updateEndlessResult } from "../save";
 
 export class LevelScene extends Phaser.Scene {
   // State
@@ -77,6 +79,7 @@ export class LevelScene extends Phaser.Scene {
 
   // Header
   private titleText!: Phaser.GameObjects.Text;
+  private subtitleText!: Phaser.GameObjects.Text;
   private backBtn!: Phaser.GameObjects.Text;
   private rulesBtn!: Phaser.GameObjects.Text;
   private settingsBtn!: Phaser.GameObjects.Text;
@@ -89,12 +92,14 @@ export class LevelScene extends Phaser.Scene {
   private genBadge?: Phaser.GameObjects.Text;
   private bossRelayGraphics?: Phaser.GameObjects.Graphics;
   private layout!: LayoutZones;
+  private endlessRun: EndlessRunState | null = null;
 
   constructor() {
     super({ key: "Level" });
   }
 
-  init(data?: { levelSpec?: LevelSpec }): void {
+  init(data?: { levelSpec?: LevelSpec; endlessRun?: EndlessRunState }): void {
+    this.endlessRun = data?.endlessRun ?? null;
     if (!data?.levelSpec) {
       this.scene.start("Menu");
       return;
@@ -158,7 +163,7 @@ export class LevelScene extends Phaser.Scene {
       .setOrigin(0.5, 0)
       .setDepth(3);
 
-    this.add
+    this.subtitleText = this.add
       .text(w / 2, 26, `${worldTheme.titleGlyph} ${worldTheme.name}  •  Level ${spec.id}`, {
         fontSize: "9px",
         color: worldTheme.accent,
@@ -167,6 +172,11 @@ export class LevelScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0)
       .setDepth(3);
+
+    if (this.endlessRun) {
+      this.titleText.setText(`Endless Round ${this.endlessRun.round}`);
+      this.subtitleText.setText(`${worldTheme.titleGlyph} ${worldTheme.name}  •  Run ${this.endlessRun.totalScore.toLocaleString()} score`);
+    }
 
     // ── Star Display ──
     this.starDisplay = new StarDisplay(this, w - 108, 12);
@@ -833,15 +843,27 @@ export class LevelScene extends Phaser.Scene {
         devTracker.endSession("win", this.gameState, stars, score);
 
         tweenWinBurst(this, w / 2, h / 2, () => {
-          this.starDisplay.animateStars(stars);
-          this.time.delayedCall(1800, () => {
-            this.scene.start("Win", {
-              levelSpec: this.levelSpec,
-              stars,
-              turns: this.gameState.turn,
-              score,
+          if (this.endlessRun) {
+            const nextRun = advanceEndlessRun(this.endlessRun, score);
+            const nextSpec = generateEndlessLevel(nextRun);
+            this.showBossBanner(`ROUND ${this.endlessRun.round} CLEARED`, `+${score.toLocaleString()} score • total ${nextRun.totalScore.toLocaleString()}`);
+            this.time.delayedCall(1500, () => {
+              this.scene.restart({
+                levelSpec: nextSpec,
+                endlessRun: nextRun,
+              });
             });
-          });
+          } else {
+            this.starDisplay.animateStars(stars);
+            this.time.delayedCall(1800, () => {
+              this.scene.start("Win", {
+                levelSpec: this.levelSpec,
+                stars,
+                turns: this.gameState.turn,
+                score,
+              });
+            });
+          }
         });
       } else {
         devTracker.endSession("lose", this.gameState, 0, 0);
@@ -856,6 +878,9 @@ export class LevelScene extends Phaser.Scene {
 
   private showGameOverOverlay(): void {
     const { width: w, height: h } = this.cameras.main;
+    const endlessFinalScore = this.endlessRun?.totalScore ?? 0;
+    const endlessFinalRound = this.endlessRun ? Math.max(0, this.endlessRun.round - 1) : 0;
+    const endlessBest = this.endlessRun ? updateEndlessResult(endlessFinalScore, endlessFinalRound) : null;
 
     const overlay = this.add.graphics().setDepth(400);
     overlay.fillStyle(0x01050d, 0.82);
@@ -865,7 +890,7 @@ export class LevelScene extends Phaser.Scene {
     this.add.image(w / 2, h / 2, "lose_panel").setDepth(401);
 
     this.add
-      .text(w / 2, h / 2 - 74, "OUTBREAK", {
+      .text(w / 2, h / 2 - 74, this.endlessRun ? "RUN OVER" : "OUTBREAK", {
         fontSize: "30px",
         color: APP_THEME.colors.danger,
         fontFamily: APP_THEME.fonts.display,
@@ -875,20 +900,48 @@ export class LevelScene extends Phaser.Scene {
       .setDepth(402);
 
     this.add
-      .text(w / 2, h / 2 - 36, "Infection breached the containment threshold.", {
+      .text(w / 2, h / 2 - 36, this.endlessRun
+        ? `You reached round ${this.endlessRun.round}.\nThe lab fell with ${endlessFinalScore.toLocaleString()} points banked.`
+        : "Infection breached the containment threshold.", {
         fontSize: "13px",
         color: APP_THEME.colors.textSecondary,
         fontFamily: APP_THEME.fonts.body,
+        align: "center",
+        lineSpacing: 5,
       })
       .setOrigin(0.5)
       .setDepth(402);
 
+    if (this.endlessRun && endlessBest) {
+      this.add
+        .text(w / 2, h / 2 + 2, `Best endless: ${endlessBest.endlessHighScore.toLocaleString()} • round ${endlessBest.endlessBestRound}`, {
+          fontSize: "12px",
+          color: APP_THEME.colors.gold,
+          fontFamily: APP_THEME.fonts.body,
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5)
+        .setDepth(402);
+    }
+
     addButton(this, w / 2, h / 2 + 28, "Retry Level", () => {
-      this.scene.restart({ levelSpec: this.levelSpec });
+      if (this.endlessRun) {
+        const freshRun: EndlessRunState = {
+          runSeed: Math.floor(Math.random() * 0x7fffffff),
+          round: 1,
+          totalScore: 0,
+        };
+        this.scene.restart({
+          levelSpec: generateEndlessLevel(freshRun),
+          endlessRun: freshRun,
+        });
+      } else {
+        this.scene.restart({ levelSpec: this.levelSpec });
+      }
     }, { style: "primary", w: 186, h: 48, fontSize: "14px", depth: 402 });
 
     addButton(this, w / 2, h / 2 + 90, "Back To Map", () => {
-      this.scene.start("Menu");
+      this.scene.start(this.endlessRun ? "Title" : "Menu");
     }, { style: "secondary", w: 186, h: 44, fontSize: "13px", depth: 402 });
   }
 

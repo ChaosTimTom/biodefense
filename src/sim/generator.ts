@@ -1026,14 +1026,34 @@ function getAffinityWeight(tplIdx: number, germTypes: PathogenType[]): number {
  * Phase 1B: Template weight tracking prevents runs of same template.
  * Phase 4B: Anti-regression guard ensures margins increase monotonically.
  */
-// Module-level caches for deterministic generation and cross-world dedup.
-const _worldGenCache = new Map<number, LevelSpec[]>();
-const _globalLayoutFPs = new Set<string>();
+// Canonical campaign cache.
+// We build the full 4-world campaign in a fixed order so every player gets
+// the same 200 levels regardless of which world gets opened first.
+let _campaignCache: Map<number, LevelSpec[]> | null = null;
 
 export function generateWorld(worldNum: number): LevelSpec[] {
-  // Return cached result for deterministic repeated calls
-  if (_worldGenCache.has(worldNum)) return _worldGenCache.get(worldNum)!;
+  if (!_campaignCache) {
+    _campaignCache = buildCanonicalCampaign();
+  }
+  return _campaignCache.get(worldNum) ?? [];
+}
 
+export function generateSeededLevel(worldNum: number, levelNum: number, baseSeed: number): LevelSpec {
+  return generateValidLevel(worldNum, levelNum, baseSeed);
+}
+
+function buildCanonicalCampaign(): Map<number, LevelSpec[]> {
+  const campaign = new Map<number, LevelSpec[]>();
+  const globalLayoutFPs = new Set<string>();
+
+  for (let worldNum = 1; worldNum <= 4; worldNum++) {
+    campaign.set(worldNum, buildWorldLevels(worldNum, globalLayoutFPs));
+  }
+
+  return campaign;
+}
+
+function buildWorldLevels(worldNum: number, globalLayoutFPs: Set<string>): LevelSpec[] {
   const baseSeed = worldNum * 100_000;
   const levels: LevelSpec[] = [];
 
@@ -1052,8 +1072,8 @@ export function generateWorld(worldNum: number): LevelSpec[] {
       );
       const fp = candidate.walls.map(([x, y]) => `${x},${y}`).sort().join("|");
       const fpKey = `${candidate.grid.w}x${candidate.grid.h}:${fp}`;
-      if (!_globalLayoutFPs.has(fpKey)) {
-        _globalLayoutFPs.add(fpKey);
+      if (!globalLayoutFPs.has(fpKey)) {
+        globalLayoutFPs.add(fpKey);
         level = candidate;
         break;
       }
@@ -1108,8 +1128,11 @@ export function generateWorld(worldNum: number): LevelSpec[] {
     prevMargin = finalMargin;
   }
 
-  _worldGenCache.set(worldNum, levels);
   return levels;
+}
+
+export function resetCampaignCache(): void {
+  _campaignCache = null;
 }
 
 // Side-channel for template tracking (Phase 1B)

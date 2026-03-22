@@ -13,8 +13,19 @@ function swVersionPlugin(): Plugin {
       const swPath = path.resolve(__dirname, "dist/sw.js");
       if (!fs.existsSync(swPath)) return;
       const hash = crypto.randomBytes(8).toString("hex");          // 16-char hex
+      const buildAssets = fs.existsSync(path.resolve(__dirname, "dist/assets"))
+        ? fs.readdirSync(path.resolve(__dirname, "dist/assets"))
+            .filter((file) => file.endsWith(".js") || file.endsWith(".css"))
+            .map((file) => `/assets/${file}`)
+        : [];
       const src = fs.readFileSync(swPath, "utf-8");
-      fs.writeFileSync(swPath, src.replace(/__BUILD_HASH__/g, hash), "utf-8");
+      fs.writeFileSync(
+        swPath,
+        src
+          .replace(/__BUILD_HASH__/g, hash)
+          .replace("__BUILD_ASSETS__", JSON.stringify(buildAssets)),
+        "utf-8",
+      );
       console.log(`\n  ✅ sw.js stamped with build hash: ${hash}`);
     },
   };

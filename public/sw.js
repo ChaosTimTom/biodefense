@@ -7,6 +7,7 @@
 const CACHE_VERSION = "bio-defence-__BUILD_HASH__";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
+const BUILD_ASSETS = __BUILD_ASSETS__;
 
 // App shell files — cached on install
 const APP_SHELL = [
@@ -14,6 +15,7 @@ const APP_SHELL = [
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  ...BUILD_ASSETS,
 ];
 
 // ── Install: pre-cache the app shell ──

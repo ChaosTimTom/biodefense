@@ -6,7 +6,7 @@
  * MUST lose without player intervention (doing nothing always loses).
  */
 import { describe, it, expect } from "vitest";
-import { generateWorld } from "@sim/generator";
+import { generateWorld, resetCampaignCache } from "@sim/generator";
 import { createGameState } from "@sim/board";
 import { advanceTurn, applyAction } from "@sim/step";
 import {
@@ -161,6 +161,32 @@ describe("Generator determinism", () => {
     // Compare full serialization — seeds, walls, or tools must differ
     expect(JSON.stringify(l1w1)).not.toBe(JSON.stringify(l1w2));
   }, 20000);
+
+  it("campaign generation is independent of world access order", () => {
+    resetCampaignCache();
+    const world2First = generateWorld(2);
+    const world1After = generateWorld(1);
+
+    resetCampaignCache();
+    const world1First = generateWorld(1);
+    const world2After = generateWorld(2);
+
+    expect(world1After).toEqual(world1First);
+    expect(world2First).toEqual(world2After);
+  }, 200000);
+
+  it("all four worlds expose a fixed 50-level campaign", () => {
+    resetCampaignCache();
+    for (const world of [1, 2, 3, 4]) {
+      const levels = generateWorld(world);
+      expect(levels).toHaveLength(50);
+      const expectedIds = Array.from({ length: 50 }, (_, index) => (world - 1) * 50 + index + 1);
+      expect(levels.map((level) => level.id)).toEqual(expectedIds);
+      expect(levels[0].world).toBe(world);
+      expect(levels[49].world).toBe(world);
+      expect(levels[49].boss).toBeTruthy();
+    }
+  }, 200000);
 });
 
 // ── Difficulty progression ──────────────────────────
