@@ -14,6 +14,11 @@ import { ScoresScene } from "./game/scenes/ScoresScene";
 const DEVICE_DPR = window.devicePixelRatio ?? 1;
 const TEXT_DPR = Math.ceil(Math.min(DEVICE_DPR, 3));
 const GAME_RESOLUTION = Math.min(Math.max(DEVICE_DPR, 1), 2);
+const MAX_GAME_WIDTH = 460;
+const MIN_GAME_WIDTH = 360;
+const MIN_GAME_HEIGHT = 720;
+const GAME_WIDTH = Math.min(MAX_GAME_WIDTH, Math.max(MIN_GAME_WIDTH, window.innerWidth || 400));
+const GAME_HEIGHT = Math.max(MIN_GAME_HEIGHT, window.innerHeight || 720);
 if (TEXT_DPR > 1) {
   const F = Phaser.GameObjects.GameObjectFactory
     .prototype as unknown as Record<string, Function>;
@@ -28,8 +33,8 @@ if (TEXT_DPR > 1) {
 const config = {
   type: Phaser.AUTO,
   parent: "game-container",
-  width: 400,
-  height: 720,
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
   backgroundColor: "#0a0a1a",
   scale: {
     mode: Phaser.Scale.FIT,

@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "assets:generate": "node scripts/generate-gemini-assets.mjs",
+    "assets:25d": "node scripts/generate-25d-assets.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "cap:sync": "vite build && cap sync",

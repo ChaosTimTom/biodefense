@@ -1,0 +1,4627 @@
+[
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "Swarming Invasion",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 40,
+    "startedAt": "2026-03-21T22:31:53.592Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 6077232,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6078086,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6078686,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "switch",
+            "timestamp": 6082248,
+            "fromX": 1,
+            "fromY": 6,
+            "toX": 3,
+            "toY": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 4,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:17.420Z",
+    "durationMs": 6083828,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5640,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 4,
+    "thinkTimeMs": [
+      6083826
+    ]
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:28.569Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:48.438Z",
+    "durationMs": 19868,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:48.753Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:53.746Z",
+    "durationMs": 4993,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:54.053Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:54.593Z",
+    "durationMs": 541,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:54.903Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:55.245Z",
+    "durationMs": 342,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:55.570Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:55.905Z",
+    "durationMs": 336,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:56.236Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:56.558Z",
+    "durationMs": 321,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:56.870Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:13:57.179Z",
+    "durationMs": 310,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Silent Breach",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 18,
+    "startedAt": "2026-03-22T00:13:57.486Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 235988,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 236776,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "totalActions": 2,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T00:17:56.313Z",
+    "durationMs": 238826,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5520,
+    "toolsPlaced": {
+      "penicillin": 2
+    },
+    "avgActionsPerTurn": 2,
+    "thinkTimeMs": [
+      238825
+    ]
+  },
+  {
+    "levelId": 100001,
+    "world": 1,
+    "levelNum": 1,
+    "title": "Endless Round 1",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 42,
+    "startedAt": "2026-03-22T00:58:57.264Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 7.9,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 13843,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 25321,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 27397,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 38771,
+            "fromX": 2,
+            "fromY": 6,
+            "toX": 7,
+            "toY": 6
+          },
+          {
+            "type": "undo",
+            "timestamp": 40427
+          },
+          {
+            "type": "switch",
+            "timestamp": 51261,
+            "fromX": 5,
+            "fromY": 1,
+            "toX": 7,
+            "toY": 6
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 4.1,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 64142,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 66676,
+            "tool": "wall",
+            "x": 8,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 70312,
+            "tool": "wall",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 82786,
+            "fromX": 3,
+            "fromY": 7,
+            "toX": 5,
+            "toY": 4
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 88169,
+            "tool": "penicillin",
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 92090,
+            "fromX": 5,
+            "fromY": 7,
+            "toX": 8,
+            "toY": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 11,
+    "totalUndos": 1,
+    "endedAt": "2026-03-22T01:00:31.467Z",
+    "durationMs": 94203,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 7.9,
+    "stars": 3,
+    "score": 2957,
+    "toolsPlaced": {
+      "penicillin": 5,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3.7,
+    "thinkTimeMs": [
+      53167,
+      31301,
+      9734
+    ]
+  },
+  {
+    "levelId": 100002,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Endless Round 2",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 6,
+    "parTurns": 4,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T01:00:34.201Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 8.5,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 10876,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 19324,
+            "tool": "fluconazole",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 27278,
+            "tool": "fluconazole",
+            "x": 2,
+            "y": 7
+          },
+          {
+            "type": "switch",
+            "timestamp": 41522,
+            "fromX": 0,
+            "fromY": 4,
+            "toX": 2,
+            "toY": 5
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 5.6,
+        "pathogenCount": 4,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 54462,
+            "tool": "penicillin",
+            "x": 7,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 69067,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 78237,
+            "tool": "fluconazole",
+            "x": 3,
+            "y": 6
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 4.3,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 1
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 82675,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 88957,
+            "tool": "wall",
+            "x": 7,
+            "y": 0
+          }
+        ]
+      },
+      {
+        "turn": 4,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 96920,
+            "tool": "penicillin",
+            "x": 7,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 102347,
+            "tool": "fluconazole",
+            "x": 8,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 104513,
+            "tool": "wall",
+            "x": 6,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "totalActions": 12,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:02:20.338Z",
+    "durationMs": 106137,
+    "result": "win",
+    "turnsUsed": 4,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 8.5,
+    "stars": 3,
+    "score": 3098,
+    "toolsPlaced": {
+      "penicillin": 5,
+      "fluconazole": 4,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      44716,
+      35018,
+      11300,
+      15101
+    ]
+  },
+  {
+    "levelId": 100003,
+    "world": 1,
+    "levelNum": 3,
+    "title": "Endless Round 3",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 6,
+    "parTurns": 4,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T01:02:23.071Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 8,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 15661,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 28729,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 33227,
+            "tool": "fluconazole",
+            "x": 8,
+            "y": 3
+          },
+          {
+            "type": "switch",
+            "timestamp": 50590,
+            "fromX": 5,
+            "fromY": 6,
+            "toX": 4,
+            "toY": 1
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 2.3,
+        "pathogenCount": 2,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 66146,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 69536,
+            "tool": "fluconazole",
+            "x": 9,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 73944,
+            "tool": "wall",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 77408,
+            "fromX": 3,
+            "fromY": 5,
+            "toX": 2,
+            "toY": 2
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 1
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 84282,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 86666,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 88819,
+            "tool": "wall",
+            "x": 7,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 92882,
+            "fromX": 5,
+            "fromY": 5,
+            "toX": 5,
+            "toY": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 12,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:03:57.875Z",
+    "durationMs": 94803,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 8,
+    "stars": 3,
+    "score": 4329,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 3,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 4,
+    "thinkTimeMs": [
+      52500,
+      26501,
+      15801
+    ]
+  },
+  {
+    "levelId": 100004,
+    "world": 1,
+    "levelNum": 4,
+    "title": "Endless Round 4",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T01:04:00.608Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 5.4,
+        "pathogenCount": 5,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 9476,
+            "tool": "fluconazole",
+            "x": 2,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 15752,
+            "tool": "fluconazole",
+            "x": 1,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 18684,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 30760,
+            "fromX": 8,
+            "fromY": 3,
+            "toX": 4,
+            "toY": 8
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 37711,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 9
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 39413,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 45583,
+            "tool": "fluconazole",
+            "x": 8,
+            "y": 8
+          }
+        ]
+      }
+    ],
+    "totalActions": 7,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:04:51.859Z",
+    "durationMs": 51251,
+    "result": "win",
+    "turnsUsed": 2,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 5.4,
+    "stars": 3,
+    "score": 5870,
+    "toolsPlaced": {
+      "fluconazole": 3,
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3.5,
+    "thinkTimeMs": [
+      32566,
+      18684
+    ]
+  },
+  {
+    "levelId": 100005,
+    "world": 2,
+    "levelNum": 5,
+    "title": "Endless Round 5",
+    "gridW": 13,
+    "gridH": 12,
+    "seedCount": 6,
+    "germTypes": [
+      "influenza",
+      "coccus",
+      "retrovirus"
+    ],
+    "turnLimit": 8,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T01:04:54.593Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 8.5,
+        "pathogenCount": 13,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 21796,
+            "tool": "penicillin",
+            "x": 8,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 37919,
+            "tool": "tamiflu",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 50173,
+            "tool": "zidovudine",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "switch",
+            "timestamp": 66293,
+            "fromX": 6,
+            "fromY": 0,
+            "toX": 6,
+            "toY": 7
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 17.6,
+        "pathogenCount": 27,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 94594,
+            "tool": "tamiflu",
+            "x": 6,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 100816,
+            "tool": "zidovudine",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 108442,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 121322,
+            "fromX": 9,
+            "fromY": 6,
+            "toX": 6,
+            "toY": 8
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 24.2,
+        "pathogenCount": 37,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 170225,
+            "tool": "penicillin",
+            "x": 10,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 188609,
+            "tool": "tamiflu",
+            "x": 2,
+            "y": 10
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 194545,
+            "tool": "zidovudine",
+            "x": 2,
+            "y": 11
+          },
+          {
+            "type": "switch",
+            "timestamp": 205222,
+            "fromX": 9,
+            "fromY": 10,
+            "toX": 11,
+            "toY": 7
+          }
+        ]
+      },
+      {
+        "turn": 4,
+        "infectionPct": 27.5,
+        "pathogenCount": 42,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 226726,
+            "tool": "tamiflu",
+            "x": 4,
+            "y": 9
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 233826,
+            "tool": "zidovudine",
+            "x": 2,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 236343,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 8
+          }
+        ]
+      },
+      {
+        "turn": 5,
+        "infectionPct": 12.4,
+        "pathogenCount": 19,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 246936,
+            "tool": "tamiflu",
+            "x": 6,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 250286,
+            "tool": "zidovudine",
+            "x": 10,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 252356,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          }
+        ]
+      },
+      {
+        "turn": 6,
+        "infectionPct": 15,
+        "pathogenCount": 23,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 264812,
+            "tool": "tamiflu",
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 271328,
+            "tool": "zidovudine",
+            "x": 11,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 275823,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 7
+          },
+          {
+            "type": "switch",
+            "timestamp": 283935,
+            "fromX": 9,
+            "fromY": 10,
+            "toX": 12,
+            "toY": 5
+          }
+        ]
+      },
+      {
+        "turn": 7,
+        "infectionPct": 8.5,
+        "pathogenCount": 13,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 293212,
+            "tool": "tamiflu",
+            "x": 9,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 296417,
+            "tool": "zidovudine",
+            "x": 9,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 300953,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 7
+          },
+          {
+            "type": "switch",
+            "timestamp": 306119,
+            "fromX": 10,
+            "fromY": 10,
+            "toX": 12,
+            "toY": 2
+          }
+        ]
+      },
+      {
+        "turn": 8,
+        "infectionPct": 2,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 1,
+          "zidovudine": 1,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 324180,
+            "tool": "zidovudine",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 333964,
+            "tool": "tamiflu",
+            "x": 8,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 338980,
+            "tool": "penicillin",
+            "x": 7,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 343396,
+            "fromX": 10,
+            "fromY": 10,
+            "toX": 4,
+            "toY": 4
+          }
+        ]
+      }
+    ],
+    "totalActions": 30,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:10:39.808Z",
+    "durationMs": 345215,
+    "result": "lose",
+    "turnsUsed": 8,
+    "finalInfectionPct": 2,
+    "peakInfectionPct": 27.5,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {
+      "penicillin": 8,
+      "tamiflu": 8,
+      "zidovudine": 8
+    },
+    "avgActionsPerTurn": 3.8,
+    "thinkTimeMs": [
+      69017,
+      56735,
+      82470,
+      30418,
+      16234,
+      30634,
+      22218,
+      37485
+    ]
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Containment Drill",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 33,
+    "startedAt": "2026-03-22T01:18:50.554Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 5011,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6719,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 8189,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 4
+          }
+        ]
+      }
+    ],
+    "totalActions": 3,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:18:59.822Z",
+    "durationMs": 9268,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5400,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      9267
+    ]
+  },
+  {
+    "levelId": 3,
+    "world": 1,
+    "levelNum": 3,
+    "title": "Cell Blockade",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 34,
+    "startedAt": "2026-03-22T01:19:05.671Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 4603,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6711,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 9567,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 14845,
+            "fromX": 4,
+            "fromY": 5,
+            "toX": 3,
+            "toY": 3
+          }
+        ]
+      }
+    ],
+    "totalActions": 4,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:19:21.923Z",
+    "durationMs": 16252,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5400,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 4,
+    "thinkTimeMs": [
+      16251
+    ]
+  },
+  {
+    "levelId": 4,
+    "world": 1,
+    "levelNum": 4,
+    "title": "Single Front",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 23,
+    "startedAt": "2026-03-22T01:19:26.638Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 3616,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6622,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 7776,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 10880,
+            "fromX": 7,
+            "fromY": 3,
+            "toX": 2,
+            "toY": 4
+          }
+        ]
+      }
+    ],
+    "totalActions": 4,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:19:38.673Z",
+    "durationMs": 12035,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5640,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 4,
+    "thinkTimeMs": [
+      12034
+    ]
+  },
+  {
+    "levelId": 5,
+    "world": 1,
+    "levelNum": 5,
+    "title": "Soft Divide",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 14,
+    "startedAt": "2026-03-22T01:19:45.089Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 7919,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 8863,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 9665,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 5
+          }
+        ]
+      }
+    ],
+    "totalActions": 3,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:19:55.940Z",
+    "durationMs": 10851,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5640,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      10850
+    ]
+  },
+  {
+    "levelId": 6,
+    "world": 1,
+    "levelNum": 6,
+    "title": "Pressure Test",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T01:20:00.606Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 10.9,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 3859,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 5528,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6676,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "switch",
+            "timestamp": 13776,
+            "fromX": 8,
+            "fromY": 4,
+            "toX": 7,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 19991,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 26919,
+            "tool": "wall",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 27527,
+            "tool": "wall",
+            "x": 8,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "totalActions": 7,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:20:29.625Z",
+    "durationMs": 29019,
+    "result": "win",
+    "turnsUsed": 2,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 10.9,
+    "stars": 3,
+    "score": 3981,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3.5,
+    "thinkTimeMs": [
+      16050,
+      12967
+    ]
+  },
+  {
+    "levelId": 7,
+    "world": 1,
+    "levelNum": 7,
+    "title": "Breather Line",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 15,
+    "startedAt": "2026-03-22T01:20:34.474Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 2399,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 3247,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "totalActions": 2,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T01:20:39.775Z",
+    "durationMs": 5301,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5760,
+    "toolsPlaced": {
+      "penicillin": 2
+    },
+    "avgActionsPerTurn": 2,
+    "thinkTimeMs": [
+      5300
+    ]
+  },
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "First Contact",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 27,
+    "startedAt": "2026-03-22T02:44:32.717Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T02:47:14.716Z",
+    "durationMs": 161999,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "First Contact",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 27,
+    "startedAt": "2026-03-22T02:48:21.241Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T02:48:30.432Z",
+    "durationMs": 9191,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "First Contact",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 27,
+    "startedAt": "2026-03-22T02:48:30.757Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T02:48:32.073Z",
+    "durationMs": 1316,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "First Contact",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 27,
+    "startedAt": "2026-03-22T02:54:07.103Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T02:54:14.159Z",
+    "durationMs": 7057,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 1,
+    "world": 1,
+    "levelNum": 1,
+    "title": "First Contact",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 27,
+    "startedAt": "2026-03-22T03:26:22.503Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 18567,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 23486,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 26927,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 4
+          }
+        ]
+      }
+    ],
+    "totalActions": 3,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T03:26:52.055Z",
+    "durationMs": 29552,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5640,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      29551
+    ]
+  },
+  {
+    "levelId": 2,
+    "world": 1,
+    "levelNum": 2,
+    "title": "Containment Drill",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 33,
+    "startedAt": "2026-03-22T04:56:07.259Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 34263,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 35943,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 46259,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "totalActions": 3,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T04:56:57.228Z",
+    "durationMs": 49970,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5400,
+    "toolsPlaced": {
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      49968
+    ]
+  },
+  {
+    "levelId": 3,
+    "world": 1,
+    "levelNum": 3,
+    "title": "Cell Blockade",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 34,
+    "startedAt": "2026-03-22T05:03:54.159Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:07:16.965Z",
+    "durationMs": 202806,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 3,
+    "world": 1,
+    "levelNum": 3,
+    "title": "Cell Blockade",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 34,
+    "startedAt": "2026-03-22T05:07:19.532Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:07:24.109Z",
+    "durationMs": 4577,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 3,
+    "world": 1,
+    "levelNum": 3,
+    "title": "Cell Blockade",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 3,
+    "parTurns": 2,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 34,
+    "startedAt": "2026-03-22T05:07:24.416Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:07:27.385Z",
+    "durationMs": 2969,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 3.3,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  },
+  {
+    "levelId": 6,
+    "world": 1,
+    "levelNum": 6,
+    "title": "Pressure Test",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T05:08:22.035Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 10.9,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 2165,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 2823,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 4787,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 12127,
+            "fromX": 6,
+            "fromY": 5,
+            "toX": 6,
+            "toY": 2
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 9.7,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 17835,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 20587,
+            "tool": "wall",
+            "x": 7,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 23763,
+            "tool": "wall",
+            "x": 2,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 29873,
+            "fromX": 2,
+            "fromY": 8,
+            "toX": 1,
+            "toY": 7
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 35991,
+            "tool": "penicillin",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 41659,
+            "fromX": 4,
+            "fromY": 7,
+            "toX": 0,
+            "toY": 7
+          }
+        ]
+      }
+    ],
+    "totalActions": 10,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:09:05.270Z",
+    "durationMs": 43234,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 10.9,
+    "stars": 3,
+    "score": 2912,
+    "toolsPlaced": {
+      "penicillin": 5,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3.3,
+    "thinkTimeMs": [
+      13482,
+      17901,
+      11851
+    ]
+  },
+  {
+    "levelId": 7,
+    "world": 1,
+    "levelNum": 7,
+    "title": "Breather Line",
+    "gridW": 8,
+    "gridH": 8,
+    "seedCount": 2,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 4,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 15,
+    "startedAt": "2026-03-22T05:09:09.936Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 4277,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 5993,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "totalActions": 2,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:09:18.904Z",
+    "durationMs": 8968,
+    "result": "win",
+    "turnsUsed": 1,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 0,
+    "stars": 3,
+    "score": 5760,
+    "toolsPlaced": {
+      "penicillin": 2
+    },
+    "avgActionsPerTurn": 2,
+    "thinkTimeMs": [
+      8967
+    ]
+  },
+  {
+    "levelId": 8,
+    "world": 1,
+    "levelNum": 8,
+    "title": "Open Vein",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T05:09:24.320Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 8.3,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 2826,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 3721,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 5922,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 12020,
+            "fromX": 5,
+            "fromY": 8,
+            "toX": 6,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 10,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 21426,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 27356,
+            "tool": "wall",
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 28564,
+            "tool": "wall",
+            "x": 6,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 36196,
+            "fromX": 1,
+            "fromY": 3,
+            "toX": 1,
+            "toY": 5
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 5.7,
+        "pathogenCount": 4,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 42920,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 62524,
+            "fromX": 5,
+            "fromY": 6,
+            "toX": 5,
+            "toY": 4
+          }
+        ]
+      },
+      {
+        "turn": 4,
+        "infectionPct": 4.3,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 70869,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 76657,
+            "fromX": 3,
+            "fromY": 4,
+            "toX": 1,
+            "toY": 6
+          }
+        ]
+      },
+      {
+        "turn": 5,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 84567,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 90369,
+            "fromX": 4,
+            "fromY": 5,
+            "toX": 6,
+            "toY": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 14,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:10:56.557Z",
+    "durationMs": 92237,
+    "result": "win",
+    "turnsUsed": 5,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 10,
+    "stars": 1,
+    "score": 1950,
+    "toolsPlaced": {
+      "penicillin": 7,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 2.8,
+    "thinkTimeMs": [
+      13317,
+      24417,
+      26118,
+      17967,
+      10417
+    ]
+  },
+  {
+    "levelId": 9,
+    "world": 1,
+    "levelNum": 9,
+    "title": "Crosswind",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T05:11:01.123Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 7.7,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 2669,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 5412,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 9296,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 14214,
+            "fromX": 7,
+            "fromY": 2,
+            "toX": 5,
+            "toY": 0
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 9.2,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 26586,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 30850,
+            "tool": "wall",
+            "x": 6,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 32790,
+            "tool": "wall",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 38977,
+            "fromX": 3,
+            "fromY": 7,
+            "toX": 3,
+            "toY": 6
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 56393,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 60613,
+            "fromX": 2,
+            "fromY": 7,
+            "toX": 1,
+            "toY": 5
+          }
+        ]
+      }
+    ],
+    "totalActions": 10,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:12:03.442Z",
+    "durationMs": 62319,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 9.2,
+    "stars": 3,
+    "score": 2937,
+    "toolsPlaced": {
+      "penicillin": 5,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3.3,
+    "thinkTimeMs": [
+      15684,
+      25351,
+      21284
+    ]
+  },
+  {
+    "levelId": 10,
+    "world": 1,
+    "levelNum": 10,
+    "title": "Agar Lock",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T05:12:08.342Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 7.7,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 3726,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 5576,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 7744,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 16904,
+            "fromX": 3,
+            "fromY": 8,
+            "toX": 6,
+            "toY": 0
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 6.6,
+        "pathogenCount": 5,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 20865,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 24597,
+            "tool": "wall",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 26967,
+            "tool": "wall",
+            "x": 6,
+            "y": 7
+          },
+          {
+            "type": "switch",
+            "timestamp": 31031,
+            "fromX": 7,
+            "fromY": 2,
+            "toX": 6,
+            "toY": 4
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 2.6,
+        "pathogenCount": 2,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 38687,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 44287,
+            "fromX": 6,
+            "fromY": 3,
+            "toX": 8,
+            "toY": 7
+          }
+        ]
+      },
+      {
+        "turn": 4,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 48011,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 8
+          },
+          {
+            "type": "switch",
+            "timestamp": 51489,
+            "fromX": 7,
+            "fromY": 4,
+            "toX": 5,
+            "toY": 6
+          }
+        ]
+      }
+    ],
+    "totalActions": 12,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:13:01.144Z",
+    "durationMs": 52802,
+    "result": "win",
+    "turnsUsed": 4,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 7.7,
+    "stars": 1,
+    "score": 1973,
+    "toolsPlaced": {
+      "penicillin": 6,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      18317,
+      14084,
+      13267,
+      7134
+    ]
+  },
+  {
+    "levelId": 11,
+    "world": 1,
+    "levelNum": 11,
+    "title": "Mold Bloom",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus"
+    ],
+    "turnLimit": 5,
+    "parTurns": 3,
+    "objectiveType": "contain",
+    "objectiveMaxPct": 45,
+    "startedAt": "2026-03-22T05:13:05.860Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 6.1,
+        "pathogenCount": 4,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 7480,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 8694,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 9865,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 15158,
+            "fromX": 7,
+            "fromY": 2,
+            "toX": 6,
+            "toY": 0
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 4.6,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 1
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 18441,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 23015,
+            "tool": "wall",
+            "x": 4,
+            "y": 4
+          },
+          {
+            "type": "switch",
+            "timestamp": 26845,
+            "fromX": 2,
+            "fromY": 1,
+            "toX": 1,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 0,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 0
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 30137,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 32537,
+            "tool": "wall",
+            "x": 3,
+            "y": 6
+          },
+          {
+            "type": "switch",
+            "timestamp": 36817,
+            "fromX": 1,
+            "fromY": 2,
+            "toX": 1,
+            "toY": 4
+          }
+        ]
+      }
+    ],
+    "totalActions": 10,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T05:13:43.979Z",
+    "durationMs": 38118,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 6.1,
+    "stars": 3,
+    "score": 2984,
+    "toolsPlaced": {
+      "penicillin": 5,
+      "wall": 2
+    },
+    "avgActionsPerTurn": 3.3,
+    "thinkTimeMs": [
+      16700,
+      11517,
+      9900
+    ]
+  },
+  {
+    "levelId": 12,
+    "world": 1,
+    "levelNum": 12,
+    "title": "Cross Pattern",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T06:25:12.062Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 6.8,
+        "pathogenCount": 5,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 9718,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 15579,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 23623,
+            "tool": "fluconazole",
+            "x": 4,
+            "y": 4
+          },
+          {
+            "type": "switch",
+            "timestamp": 76688,
+            "fromX": 7,
+            "fromY": 4,
+            "toX": 1,
+            "toY": 5
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 1.4,
+        "pathogenCount": 1,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 81404,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 84538,
+            "tool": "fluconazole",
+            "x": 1,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 88076,
+            "tool": "fluconazole",
+            "x": 4,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 93848,
+            "fromX": 7,
+            "fromY": 3,
+            "toX": 5,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 103850,
+            "tool": "fluconazole",
+            "x": 3,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 107110,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 10,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T06:27:02.049Z",
+    "durationMs": 109987,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 6.8,
+    "stars": 3,
+    "score": 4547,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 4
+    },
+    "avgActionsPerTurn": 3.3,
+    "thinkTimeMs": [
+      78519,
+      16634,
+      14834
+    ]
+  },
+  {
+    "levelId": 13,
+    "world": 1,
+    "levelNum": 13,
+    "title": "Branching Risk",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T06:28:45.553Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 10.7,
+        "pathogenCount": 8,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 3356,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 4572,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 11356,
+            "tool": "fluconazole",
+            "x": 3,
+            "y": 7
+          },
+          {
+            "type": "switch",
+            "timestamp": 18606,
+            "fromX": 8,
+            "fromY": 6,
+            "toX": 3,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 9.3,
+        "pathogenCount": 7,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 25480,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 28816,
+            "tool": "fluconazole",
+            "x": 3,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 44907,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 0
+          },
+          {
+            "type": "switch",
+            "timestamp": 57733,
+            "fromX": 4,
+            "fromY": 8,
+            "toX": 1,
+            "toY": 5
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 62015,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 0
+          }
+        ]
+      }
+    ],
+    "totalActions": 9,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T06:29:53.522Z",
+    "durationMs": 67969,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 10.7,
+    "stars": 3,
+    "score": 4570,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      20750,
+      38435,
+      8784
+    ]
+  },
+  {
+    "levelId": 14,
+    "world": 1,
+    "levelNum": 14,
+    "title": "Quadrant Hold",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T18:39:45.652Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 4.2,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 6389,
+            "tool": "penicillin",
+            "x": 2,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 9771,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 12747,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 29029,
+            "fromX": 4,
+            "fromY": 8,
+            "toX": 5,
+            "toY": 0
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 2.8,
+        "pathogenCount": 2,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 37239,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 43036,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 44909,
+            "tool": "fluconazole",
+            "x": 5,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 60165,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 2
+          }
+        ]
+      }
+    ],
+    "totalActions": 8,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T18:41:07.738Z",
+    "durationMs": 82087,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 4.2,
+    "stars": 3,
+    "score": 4696,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 3
+    },
+    "avgActionsPerTurn": 2.7,
+    "thinkTimeMs": [
+      31601,
+      25451,
+      25035
+    ]
+  },
+  {
+    "levelId": 15,
+    "world": 1,
+    "levelNum": 15,
+    "title": "Cleanup Sweep",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T18:41:13.587Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 9,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 5254,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 6326,
+            "tool": "fluconazole",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 8802,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 16598,
+            "fromX": 6,
+            "fromY": 8,
+            "toX": 5,
+            "toY": 6
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 22603,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 25753,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 31577,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 6
+          }
+        ]
+      }
+    ],
+    "totalActions": 7,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T18:41:55.806Z",
+    "durationMs": 42219,
+    "result": "win",
+    "turnsUsed": 2,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 9,
+    "stars": 3,
+    "score": 5784,
+    "toolsPlaced": {
+      "fluconazole": 3,
+      "penicillin": 3
+    },
+    "avgActionsPerTurn": 3.5,
+    "thinkTimeMs": [
+      18634,
+      23584
+    ]
+  },
+  {
+    "levelId": 16,
+    "world": 1,
+    "levelNum": 16,
+    "title": "Diagonal Net",
+    "gridW": 9,
+    "gridH": 9,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T18:42:00.439Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 10.3,
+        "pathogenCount": 8,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 9969,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 13484,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 26838,
+            "tool": "fluconazole",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 33592,
+            "fromX": 3,
+            "fromY": 8,
+            "toX": 4,
+            "toY": 1
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 2.6,
+        "pathogenCount": 2,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 39364,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 0
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 45714,
+            "tool": "fluconazole",
+            "x": 4,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 49787,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 8
+          },
+          {
+            "type": "switch",
+            "timestamp": 55116,
+            "fromX": 2,
+            "fromY": 3,
+            "toX": 4,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 1
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 67555,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 70801,
+            "tool": "fluconazole",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 75051,
+            "tool": "wall",
+            "x": 6,
+            "y": 3
+          }
+        ]
+      }
+    ],
+    "totalActions": 11,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T18:43:17.309Z",
+    "durationMs": 76870,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 10.3,
+    "stars": 3,
+    "score": 4382,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 4,
+      "wall": 1
+    },
+    "avgActionsPerTurn": 3.7,
+    "thinkTimeMs": [
+      35968,
+      21551,
+      19351
+    ]
+  },
+  {
+    "levelId": 17,
+    "world": 1,
+    "levelNum": 17,
+    "title": "Glass Corridor",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T20:01:26.188Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 3.6,
+        "pathogenCount": 3,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 7316,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 13314,
+            "tool": "penicillin",
+            "x": 6,
+            "y": 8
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 18720,
+            "tool": "fluconazole",
+            "x": 5,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 26330,
+            "fromX": 1,
+            "fromY": 6,
+            "toX": 5,
+            "toY": 9
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 32380,
+            "tool": "fluconazole",
+            "x": 1,
+            "y": 2
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 34494,
+            "tool": "fluconazole",
+            "x": 6,
+            "y": 1
+          }
+        ]
+      }
+    ],
+    "totalActions": 6,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T20:02:02.806Z",
+    "durationMs": 36618,
+    "result": "win",
+    "turnsUsed": 2,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 3.6,
+    "stars": 3,
+    "score": 6034,
+    "toolsPlaced": {
+      "penicillin": 2,
+      "fluconazole": 3
+    },
+    "avgActionsPerTurn": 3,
+    "thinkTimeMs": [
+      27867,
+      8750
+    ]
+  },
+  {
+    "levelId": 18,
+    "world": 1,
+    "levelNum": 18,
+    "title": "Twin Vectors",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 7,
+    "parTurns": 5,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T20:03:10.608Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 5.2,
+        "pathogenCount": 5,
+        "toolsRemaining": {
+          "penicillin": 2,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 3
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 9304,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 14590,
+            "tool": "fluconazole",
+            "x": 3,
+            "y": 8
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 15812,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 8
+          },
+          {
+            "type": "switch",
+            "timestamp": 19994,
+            "fromX": 5,
+            "fromY": 0,
+            "toX": 3,
+            "toY": 3
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 25070,
+            "tool": "penicillin",
+            "x": 1,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 26472,
+            "tool": "penicillin",
+            "x": 5,
+            "y": 3
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 33310,
+            "tool": "wall",
+            "x": 4,
+            "y": 5
+          },
+          {
+            "type": "switch",
+            "timestamp": 39592,
+            "fromX": 0,
+            "fromY": 3,
+            "toX": 1,
+            "toY": 3
+          }
+        ]
+      }
+    ],
+    "totalActions": 8,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T20:03:51.943Z",
+    "durationMs": 41335,
+    "result": "win",
+    "turnsUsed": 2,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 5.2,
+    "stars": 3,
+    "score": 5995,
+    "toolsPlaced": {
+      "penicillin": 3,
+      "fluconazole": 2,
+      "wall": 1
+    },
+    "avgActionsPerTurn": 4,
+    "thinkTimeMs": [
+      21900,
+      19434
+    ]
+  },
+  {
+    "levelId": 19,
+    "world": 1,
+    "levelNum": 19,
+    "title": "Mixed Culture",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 8,
+    "parTurns": 6,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-22T20:04:38.627Z",
+    "turns": [
+      {
+        "turn": 1,
+        "infectionPct": 6.5,
+        "pathogenCount": 6,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 2,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 18072,
+            "tool": "penicillin",
+            "x": 4,
+            "y": 6
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 22382,
+            "tool": "penicillin",
+            "x": 3,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 25600,
+            "tool": "fluconazole",
+            "x": 7,
+            "y": 2
+          },
+          {
+            "type": "switch",
+            "timestamp": 32924,
+            "fromX": 7,
+            "fromY": 6,
+            "toX": 2,
+            "toY": 6
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "infectionPct": 2.2,
+        "pathogenCount": 2,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 2
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 44704,
+            "tool": "fluconazole",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 51721,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 58849,
+            "tool": "fluconazole",
+            "x": 6,
+            "y": 1
+          },
+          {
+            "type": "switch",
+            "timestamp": 65147,
+            "fromX": 4,
+            "fromY": 4,
+            "toX": 3,
+            "toY": 4
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "infectionPct": 0,
+        "pathogenCount": 0,
+        "toolsRemaining": {
+          "penicillin": 1,
+          "tetracycline": 0,
+          "streptomycin": 0,
+          "tamiflu": 0,
+          "zidovudine": 0,
+          "interferon": 0,
+          "fluconazole": 1,
+          "nystatin": 0,
+          "amphotericin": 0,
+          "wall": 1
+        },
+        "actionsThisTurn": [
+          {
+            "type": "place_tool",
+            "timestamp": 80172,
+            "tool": "penicillin",
+            "x": 0,
+            "y": 4
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 85013,
+            "tool": "fluconazole",
+            "x": 1,
+            "y": 7
+          },
+          {
+            "type": "place_tool",
+            "timestamp": 87367,
+            "tool": "wall",
+            "x": 2,
+            "y": 5
+          }
+        ]
+      }
+    ],
+    "totalActions": 11,
+    "totalUndos": 0,
+    "endedAt": "2026-03-22T20:06:14.698Z",
+    "durationMs": 96070,
+    "result": "win",
+    "turnsUsed": 3,
+    "finalInfectionPct": 0,
+    "peakInfectionPct": 6.5,
+    "stars": 3,
+    "score": 5725,
+    "toolsPlaced": {
+      "penicillin": 4,
+      "fluconazole": 4,
+      "wall": 1
+    },
+    "avgActionsPerTurn": 3.7,
+    "thinkTimeMs": [
+      34568,
+      32285,
+      29218
+    ]
+  },
+  {
+    "levelId": 20,
+    "world": 1,
+    "levelNum": 20,
+    "title": "Pinned Growth",
+    "gridW": 10,
+    "gridH": 10,
+    "seedCount": 4,
+    "germTypes": [
+      "coccus",
+      "mold"
+    ],
+    "turnLimit": 8,
+    "parTurns": 6,
+    "objectiveType": "clear_all",
+    "startedAt": "2026-03-23T04:55:28.786Z",
+    "turns": [],
+    "totalActions": 0,
+    "totalUndos": 0,
+    "endedAt": "2026-03-23T04:55:37.434Z",
+    "durationMs": 8648,
+    "result": "abandon",
+    "turnsUsed": 0,
+    "finalInfectionPct": 4.5,
+    "peakInfectionPct": 0,
+    "stars": 0,
+    "score": 0,
+    "toolsPlaced": {},
+    "avgActionsPerTurn": 0,
+    "thinkTimeMs": []
+  }
+]

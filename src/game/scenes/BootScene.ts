@@ -7,6 +7,8 @@ import Phaser from "phaser";
 import { genToolIcons, genLockIcon } from "../ui/UIFactory";
 import { ALL_PATHOGEN_TYPES, ALL_MEDICINE_TYPES } from "../../sim/constants";
 import { APP_THEME } from "../theme";
+import { RENDER_25D_MANIFEST } from "../render25dAssets";
+import { TILE_BG_TEXTURES, worldTileTexture } from "../config";
 
 export class BootScene extends Phaser.Scene {
   private fontReady = false;
@@ -98,18 +100,24 @@ export class BootScene extends Phaser.Scene {
 
     // ── Game assets (dynamic: all pathogen + medicine types) ──
     for (const g of ALL_PATHOGEN_TYPES) {
-      this.load.image(g, `assets/germs/${g}.png`);
+      this.load.image(g, RENDER_25D_MANIFEST.pathogens[g] ?? `assets/germs/${g}.png`);
     }
     for (const m of ALL_MEDICINE_TYPES) {
-      this.load.image(m, `assets/germs/${m}.png`);
+      this.load.image(m, RENDER_25D_MANIFEST.medicines[m] ?? `assets/germs/${m}.png`);
     }
-    this.load.image("tile_empty", "assets/tiles/tile_empty.png");
-    this.load.image("tile_wall", "assets/tiles/tile_wall.png");
+    this.load.image(TILE_BG_TEXTURES.empty ?? "tile_empty", RENDER_25D_MANIFEST.tiles.empty ?? "assets/tiles/tile_empty.png");
+    this.load.image(TILE_BG_TEXTURES.wall ?? "tile_wall", RENDER_25D_MANIFEST.tiles.wall ?? "assets/tiles/tile_wall.png");
 
     // World-specific tiles
     for (let w = 1; w <= 4; w++) {
-      this.load.image(`tile_empty_w${w}`, `assets/tiles/tile_empty_w${w}.png`);
-      this.load.image(`tile_wall_w${w}`, `assets/tiles/tile_wall_w${w}.png`);
+      this.load.image(
+        worldTileTexture("empty", w),
+        RENDER_25D_MANIFEST.tiles.perWorld[w]?.empty ?? `assets/tiles/tile_empty_w${w}.png`,
+      );
+      this.load.image(
+        worldTileTexture("wall", w),
+        RENDER_25D_MANIFEST.tiles.perWorld[w]?.wall ?? `assets/tiles/tile_wall_w${w}.png`,
+      );
     }
 
     // World backgrounds

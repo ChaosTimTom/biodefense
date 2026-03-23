@@ -5,6 +5,8 @@
 // ═══════════════════════════════════════════════════
 
 import type { PathogenType, MedicineType, ToolId, TileKind } from "../sim/types";
+import type { LayoutProfile } from "./theme";
+import { RENDER_25D_MANIFEST } from "./render25dAssets";
 
 // ── Grid Layout ──────────────────────────────────
 
@@ -89,15 +91,21 @@ export const MEDICINE_TEXTURES: Record<MedicineType, string> = {
   amphotericin: "amphotericin",
 };
 
+function manifestTextureKey(baseKey: string, src?: string): string {
+  const match = src?.match(/[?&]v=([^&]+)/);
+  return match ? `${baseKey}__${match[1]}` : baseKey;
+}
+
 /** Background tile texture keyed by TileKind */
 export const TILE_BG_TEXTURES: Partial<Record<TileKind, string>> = {
-  empty: "tile_empty",
-  wall:  "tile_wall",
+  empty: manifestTextureKey("tile_empty", RENDER_25D_MANIFEST.tiles.empty),
+  wall:  manifestTextureKey("tile_wall", RENDER_25D_MANIFEST.tiles.wall),
 };
 
 /** World-specific tile texture lookup */
 export function worldTileTexture(kind: "empty" | "wall", world: number): string {
-  return `tile_${kind}_w${world}`;
+  const src = RENDER_25D_MANIFEST.tiles.perWorld[world]?.[kind];
+  return manifestTextureKey(`tile_${kind}_w${world}`, src);
 }
 
 export const PATHOGEN_NAMES: Record<PathogenType, string> = {
@@ -237,15 +245,24 @@ export const UI = {
 export interface LayoutZones {
   canvasW: number;
   canvasH: number;
+  profile: LayoutProfile;
   headerH: number;
   gridOffsetX: number;
   gridOffsetY: number;
   statusBarY: number;
   toolPaletteY: number;
   controlsY: number;
+  boardWidth: number;
+  boardHeight: number;
   tileSize: number;
   tileGap: number;
   tileRadius: number;
+  precisionPlacement: boolean;
+  showHintText: boolean;
+  denseBoard: boolean;
+  statusH: number;
+  paletteH: number;
+  controlsH: number;
 }
 
 export function computeLayout(
@@ -254,26 +271,33 @@ export function computeLayout(
   gridCols: number,
   gridRows: number,
 ): LayoutZones {
-  const headerH = 74;
-  const gridTopGap = 8;
-  const statusH = 60;
-  const paletteH = 84;
-  const controlsH = 48;
-  const statusGap = 10;
-  const paletteGap = 10;
-  const controlsGap = 10;
-  const bottomPad = 12;
-  const bottomTotal =
-    gridTopGap +
-    statusGap +
-    statusH +
-    paletteGap +
-    paletteH +
-    controlsGap +
-    controlsH +
-    bottomPad;
+  const denseBoard = gridCols >= 14 || gridRows >= 14;
+  const compact = canvasH <= 760 || denseBoard;
+  const tall = canvasH >= 860 && !compact;
+  const safeTop = tall ? 12 : 8;
+  const safeBottom = tall ? 18 : 12;
+  const profile: LayoutProfile = {
+    safeTop,
+    safeBottom,
+    contentWidth: canvasW - GRID_PADDING * 2,
+    compact,
+  };
 
-  const availH = canvasH - headerH - bottomTotal - GRID_PADDING * 2;
+  const headerH = compact ? 62 : tall ? 86 : 74;
+  const gridTopGap = compact ? 4 : 8;
+  const statusH = compact ? 54 : 60;
+  const paletteH = compact ? 72 : 84;
+  const controlsH = compact ? 46 : 48;
+  const statusGap = compact ? 8 : 10;
+  const paletteGap = compact ? 8 : 10;
+  const controlsGap = compact ? 8 : 10;
+  const bottomPad = safeBottom;
+  const gridTop = safeTop + headerH + gridTopGap;
+  const controlsY = canvasH - bottomPad - controlsH;
+  const toolPaletteY = controlsY - controlsGap - paletteH;
+  const statusBarY = toolPaletteY - paletteGap - statusH;
+  const gridBottom = statusBarY - statusGap;
+  const availH = gridBottom - gridTop;
   const availW = canvasW - GRID_PADDING * 2;
 
   // Compute the largest tile size that fits both axes
@@ -282,28 +306,35 @@ export function computeLayout(
   const maxTileW = Math.floor((availW - (gridCols - 1) * tileGap) / gridCols);
   const tileSize = Math.min(TILE_SIZE, maxTileH, maxTileW);
   const tileRadius = Math.round(TILE_RADIUS * (tileSize / TILE_SIZE));
+  const precisionPlacement = tileSize < 30 || denseBoard;
+  const showHintText = !compact;
 
   const gw = gridPixelWidth(gridCols, tileSize, tileGap);
   const gh = gridPixelHeight(gridRows, tileSize, tileGap);
 
   const gridOffsetX = Math.round((canvasW - gw) / 2);
-  const gridOffsetY = Math.round(headerH + gridTopGap);
-
-  const statusBarY = gridOffsetY + gh + statusGap;
-  const toolPaletteY = statusBarY + statusH + paletteGap;
-  const controlsY = toolPaletteY + paletteH + controlsGap;
+  const gridOffsetY = Math.round(gridTop + Math.max(0, (availH - gh) / 2));
 
   return {
     canvasW,
     canvasH,
+    profile,
     headerH,
     gridOffsetX,
     gridOffsetY,
     statusBarY,
     toolPaletteY,
     controlsY,
+    boardWidth: gw,
+    boardHeight: gh,
     tileSize,
     tileGap,
     tileRadius,
+    precisionPlacement,
+    showHintText,
+    denseBoard,
+    statusH,
+    paletteH,
+    controlsH,
   };
 }

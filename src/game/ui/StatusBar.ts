@@ -7,7 +7,10 @@ import { APP_THEME } from "../theme";
 
 const BAR_H = 12;
 const BAR_RADIUS = 6;
-const PANEL_H = 60;
+
+interface StatusBarOptions {
+  compact?: boolean;
+}
 
 export class StatusBar {
   private container: Phaser.GameObjects.Container;
@@ -21,32 +24,36 @@ export class StatusBar {
   private barX: number;
   private barY: number;
   private barW: number;
+  private compact: boolean;
+  private panelH: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, width: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, width: number, options: StatusBarOptions = {}) {
+    this.compact = options.compact ?? false;
+    this.panelH = this.compact ? 54 : 60;
     this.container = scene.add.container(0, 0).setDepth(20);
 
     this.panel = scene.add.graphics();
     this.panel.fillStyle(0x08131f, 0.84);
-    this.panel.fillRoundedRect(x, y, width, PANEL_H, 18);
+    this.panel.fillRoundedRect(x, y, width, this.panelH, 18);
     this.panel.lineStyle(1, 0xffffff, 0.08);
-    this.panel.strokeRoundedRect(x, y, width, PANEL_H, 18);
+    this.panel.strokeRoundedRect(x, y, width, this.panelH, 18);
 
     this.turnText = scene.add.text(x + 12, y + 8, "Turn 0", {
-      fontSize: "11px",
+      fontSize: this.compact ? "10px" : "11px",
       color: APP_THEME.colors.textPrimary,
       fontFamily: APP_THEME.fonts.body,
       fontStyle: "bold",
     });
 
     this.actionsText = scene.add.text(x + width - 12, y + 8, "", {
-      fontSize: "10px",
+      fontSize: this.compact ? "9px" : "10px",
       color: APP_THEME.colors.textSecondary,
       fontFamily: APP_THEME.fonts.body,
       fontStyle: "bold",
     }).setOrigin(1, 0);
 
     this.barX = x + 12;
-    this.barY = y + 28;
+    this.barY = y + (this.compact ? 26 : 28);
     this.barW = Math.max(40, width - 84);
 
     this.barBg = scene.add.graphics();
@@ -55,15 +62,15 @@ export class StatusBar {
 
     this.barFill = scene.add.graphics();
 
-    this.pctText = scene.add.text(x + width - 12, y + 25, "0%", {
-      fontSize: "11px",
+    this.pctText = scene.add.text(x + width - 12, y + (this.compact ? 23 : 25), "0%", {
+      fontSize: this.compact ? "10px" : "11px",
       color: APP_THEME.colors.danger,
       fontFamily: APP_THEME.fonts.body,
       fontStyle: "bold",
     }).setOrigin(1, 0);
 
-    this.objectiveText = scene.add.text(x + 12, y + 43, "", {
-      fontSize: "10px",
+    this.objectiveText = scene.add.text(x + 12, y + (this.compact ? 39 : 43), "", {
+      fontSize: this.compact ? "9px" : "10px",
       color: APP_THEME.colors.textMuted,
       fontFamily: APP_THEME.fonts.body,
       wordWrap: { width: width - 24 },

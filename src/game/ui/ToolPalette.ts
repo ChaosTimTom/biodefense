@@ -10,13 +10,14 @@ import { APP_THEME } from "../theme";
 import { TOOL_NAMES, TOOL_TEXTURES } from "../config";
 
 const ALL_TOOLS: ToolId[] = ALL_TOOL_IDS;
-const BTN_W = 62;
-const BTN_H = 58;
-const BTN_GAP = 8;
 const BTN_RADIUS = 16;
 
 export interface ToolPaletteEvents {
   onSelectTool: (tool: ToolId | null) => void;
+}
+
+interface ToolPaletteOptions {
+  compact?: boolean;
 }
 
 export class ToolPalette {
@@ -36,12 +37,26 @@ export class ToolPalette {
   private events: ToolPaletteEvents;
   private centerX: number;
   private baseY: number;
+  private compact: boolean;
+  private btnW: number;
+  private btnH: number;
+  private btnGap: number;
 
-  constructor(scene: Phaser.Scene, centerX: number, y: number, events: ToolPaletteEvents) {
+  constructor(
+    scene: Phaser.Scene,
+    centerX: number,
+    y: number,
+    events: ToolPaletteEvents,
+    options: ToolPaletteOptions = {},
+  ) {
     this.scene = scene;
     this.centerX = centerX;
     this.baseY = y;
     this.events = events;
+    this.compact = options.compact ?? false;
+    this.btnW = this.compact ? 58 : 62;
+    this.btnH = this.compact ? 54 : 58;
+    this.btnGap = this.compact ? 6 : 8;
     this.container = scene.add.container(0, 0).setDepth(20);
     this.stripBg = scene.add.graphics();
     this.container.add(this.stripBg);
@@ -51,45 +66,45 @@ export class ToolPalette {
     this.clear();
     this.visibleTools = ALL_TOOLS.filter((tool) => tools[tool] > 0);
 
-    const totalW = this.visibleTools.length * BTN_W + Math.max(0, this.visibleTools.length - 1) * BTN_GAP;
+    const totalW = this.visibleTools.length * this.btnW + Math.max(0, this.visibleTools.length - 1) * this.btnGap;
     const startX = this.centerX - totalW / 2;
 
     this.stripBg.fillStyle(0x08131f, 0.86);
-    this.stripBg.fillRoundedRect(startX - 10, this.baseY - 8, totalW + 20, BTN_H + 16, 22);
+    this.stripBg.fillRoundedRect(startX - 10, this.baseY - 8, totalW + 20, this.btnH + 16, 22);
     this.stripBg.lineStyle(1, 0xffffff, 0.08);
-    this.stripBg.strokeRoundedRect(startX - 10, this.baseY - 8, totalW + 20, BTN_H + 16, 22);
+    this.stripBg.strokeRoundedRect(startX - 10, this.baseY - 8, totalW + 20, this.btnH + 16, 22);
 
     this.visibleTools.forEach((tool, index) => {
-      const bx = startX + index * (BTN_W + BTN_GAP);
+      const bx = startX + index * (this.btnW + this.btnGap);
       const by = this.baseY;
       const bg = this.scene.add.graphics();
       this.drawButtonBg(bg, bx, by, false, tools[tool] > 0);
 
       const iconKey = TOOL_TEXTURES[tool].normal;
       const icon = this.scene.textures.exists(iconKey)
-        ? this.scene.add.image(bx + BTN_W / 2, by + 20, iconKey).setDisplaySize(22, 22)
-        : this.scene.add.text(bx + BTN_W / 2, by + 18, tool.slice(0, 3).toUpperCase(), {
+        ? this.scene.add.image(bx + this.btnW / 2, by + (this.compact ? 18 : 20), iconKey).setDisplaySize(this.compact ? 20 : 22, this.compact ? 20 : 22)
+        : this.scene.add.text(bx + this.btnW / 2, by + (this.compact ? 17 : 18), tool.slice(0, 3).toUpperCase(), {
             fontSize: "12px",
             color: APP_THEME.colors.textPrimary,
             fontFamily: APP_THEME.fonts.body,
             fontStyle: "bold",
           }).setOrigin(0.5);
 
-      const label = this.scene.add.text(bx + BTN_W / 2, by + 37, TOOL_NAMES[tool].slice(0, 4).toUpperCase(), {
-        fontSize: "7px",
+      const label = this.scene.add.text(bx + this.btnW / 2, by + (this.compact ? 34 : 37), TOOL_NAMES[tool].slice(0, 4).toUpperCase(), {
+        fontSize: this.compact ? "6px" : "7px",
         color: APP_THEME.colors.textMuted,
         fontFamily: APP_THEME.fonts.body,
         fontStyle: "bold",
       }).setOrigin(0.5);
 
-      const count = this.scene.add.text(bx + BTN_W / 2, by + 49, `${tools[tool]}`, {
-        fontSize: "12px",
+      const count = this.scene.add.text(bx + this.btnW / 2, by + (this.compact ? 46 : 49), `${tools[tool]}`, {
+        fontSize: this.compact ? "11px" : "12px",
         color: APP_THEME.colors.textPrimary,
         fontFamily: APP_THEME.fonts.body,
         fontStyle: "bold",
       }).setOrigin(0.5);
 
-      const zone = this.scene.add.rectangle(bx + BTN_W / 2, by + BTN_H / 2, BTN_W, BTN_H)
+      const zone = this.scene.add.rectangle(bx + this.btnW / 2, by + this.btnH / 2, this.btnW, this.btnH)
         .setInteractive({ useHandCursor: true })
         .setAlpha(0.001);
 
@@ -157,8 +172,8 @@ export class ToolPalette {
 
   private getButtonX(tool: ToolId): number {
     const idx = this.visibleTools.indexOf(tool);
-    const totalW = this.visibleTools.length * BTN_W + Math.max(0, this.visibleTools.length - 1) * BTN_GAP;
-    return this.centerX - totalW / 2 + idx * (BTN_W + BTN_GAP);
+    const totalW = this.visibleTools.length * this.btnW + Math.max(0, this.visibleTools.length - 1) * this.btnGap;
+    return this.centerX - totalW / 2 + idx * (this.btnW + this.btnGap);
   }
 
   private drawButtonBg(
@@ -169,9 +184,9 @@ export class ToolPalette {
     enabled: boolean,
   ): void {
     g.fillStyle(selected ? 0x123247 : 0x102131, enabled ? 0.96 : 0.58);
-    g.fillRoundedRect(x, y, BTN_W, BTN_H, BTN_RADIUS);
+    g.fillRoundedRect(x, y, this.btnW, this.btnH, BTN_RADIUS);
     g.lineStyle(1.5, selected ? 0x00e5ff : 0xffffff, selected ? 0.95 : 0.06);
-    g.strokeRoundedRect(x, y, BTN_W, BTN_H, BTN_RADIUS);
+    g.strokeRoundedRect(x, y, this.btnW, this.btnH, BTN_RADIUS);
   }
 
   private showToolTooltip(tool: ToolId, bx: number, by: number): void {
@@ -189,7 +204,7 @@ export class ToolPalette {
     this.tooltipText.setAlpha(1);
 
     const tx = Phaser.Math.Clamp(
-      bx + BTN_W / 2 - this.tooltipText.width / 2,
+      bx + this.btnW / 2 - this.tooltipText.width / 2,
       8,
       this.scene.cameras.main.width - this.tooltipText.width - 8,
     );

@@ -45,12 +45,12 @@ import { SettingsOverlay } from "../ui/SettingsOverlay";
 import { OnboardingOverlay } from "../ui/OnboardingOverlay";
 import { tweenWinBurst, tweenLoseShake } from "../animation/tweens";
 import { playCue, triggerHaptic } from "../feedback";
-import { syncSceneMusic } from "../music";
+import { refreshSceneMusic, syncSceneMusic } from "../music";
 import { advanceEndlessRun, generateEndlessLevel, type EndlessRunState } from "../../sim/endless";
 import { APP_THEME, getWorldTheme } from "../theme";
 import { addButton, addWorldBackground, fadeIn, genPanelTex, getBossSplashKey } from "../ui/UIFactory";
 import { devTracker, DEV_MODE } from "../devTracker";
-import { updateEndlessResult } from "../save";
+import { loadSave, updateEndlessResult, updatePreferences } from "../save";
 
 export class LevelScene extends Phaser.Scene {
   // State
@@ -63,8 +63,7 @@ export class LevelScene extends Phaser.Scene {
   // Switch mode
   private switchMode = false;
   private switchFrom: { x: number; y: number } | null = null;
-  private switchBtn!: Phaser.GameObjects.Text;
-  private switchBtnZone!: Phaser.GameObjects.Rectangle;
+  private pendingPlacement: { tool: ToolId; x: number; y: number } | null = null;
 
   // UI components
   private grid!: Grid;
@@ -81,9 +80,11 @@ export class LevelScene extends Phaser.Scene {
   private titleText!: Phaser.GameObjects.Text;
   private subtitleText!: Phaser.GameObjects.Text;
   private backBtn!: Phaser.GameObjects.Text;
+  private homeBtn!: Phaser.GameObjects.Text;
+  private muteBtn!: Phaser.GameObjects.Text;
   private rulesBtn!: Phaser.GameObjects.Text;
   private settingsBtn!: Phaser.GameObjects.Text;
-  private hintText!: Phaser.GameObjects.Text;
+  private hintText?: Phaser.GameObjects.Text;
 
   // Flags
   private animating = false;
@@ -107,6 +108,9 @@ export class LevelScene extends Phaser.Scene {
     this.levelSpec = data.levelSpec;
     this.animating = false;
     this.selectedTool = null;
+    this.pendingPlacement = null;
+    this.switchMode = false;
+    this.switchFrom = null;
   }
 
   create(): void {
@@ -124,6 +128,18 @@ export class LevelScene extends Phaser.Scene {
     devTracker.startSession(spec);
 
     const worldTheme = getWorldTheme(spec.world ?? 1);
+    const headerShellH = layout.headerH - layout.profile.safeTop;
+    const headerCenterY = layout.profile.safeTop + headerShellH / 2;
+    const headerTitleY = layout.profile.safeTop + (layout.profile.compact ? 8 : 10);
+    const headerSubtitleY = headerTitleY + (layout.profile.compact ? 18 : 20);
+    const headerHintY = headerSubtitleY + (layout.profile.compact ? 16 : 18);
+    const showHintText = layout.showHintText || Boolean(spec.boss);
+    const headerTitleSize = layout.profile.compact ? "16px" : "18px";
+    const headerSubtitleSize = layout.profile.compact ? "10px" : "11px";
+    const headerHintSize = layout.profile.compact ? "9px" : "10px";
+    const leftIconY = layout.profile.safeTop + 4;
+    const homeX = 56;
+    const muteX = w - 84;
 
     // ── Background ──
     addWorldBackground(this, spec.world ?? 1);
@@ -131,11 +147,19 @@ export class LevelScene extends Phaser.Scene {
     fadeIn(this, 250);
 
     // ── Header ──
-    genPanelTex(this, "level_header_shell", w - 16, 62, 22, "rgba(8,18,31,0.84)", "rgba(255,255,255,0.08)");
-    this.add.image(w / 2, 32, "level_header_shell").setDepth(2);
+    genPanelTex(
+      this,
+      "level_header_shell",
+      w - 16,
+      headerShellH,
+      layout.profile.compact ? 20 : 22,
+      "rgba(8,18,31,0.84)",
+      "rgba(255,255,255,0.08)",
+    );
+    this.add.image(w / 2, headerCenterY, "level_header_shell").setDepth(2);
 
     this.backBtn = this.add
-      .text(12, 8, "←", {
+      .text(12, layout.profile.safeTop + 4, "←", {
         fontSize: "18px",
         color: APP_THEME.colors.textSecondary,
         fontFamily: APP_THEME.fonts.body,
@@ -143,7 +167,7 @@ export class LevelScene extends Phaser.Scene {
       })
       .setDepth(3);
 
-    this.add.rectangle(24, 22, 48, 44)
+    this.add.rectangle(24, headerCenterY, 48, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
       .on("pointerdown", () => {
         playCue("ui_tap");
@@ -153,9 +177,25 @@ export class LevelScene extends Phaser.Scene {
       .on("pointerover", () => this.backBtn.setColor(worldTheme.accent))
       .on("pointerout", () => this.backBtn.setColor(APP_THEME.colors.textSecondary));
 
+    this.homeBtn = this.add
+      .text(homeX, leftIconY, "⌂", {
+        fontSize: "18px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(3);
+
+    this.add.rectangle(homeX, headerCenterY, 44, 44)
+      .setInteractive({ useHandCursor: true }).setAlpha(0.001)
+      .on("pointerdown", () => this.goHome())
+      .on("pointerover", () => this.homeBtn.setColor(worldTheme.accent))
+      .on("pointerout", () => this.homeBtn.setColor(APP_THEME.colors.textSecondary));
+
     this.titleText = this.add
-      .text(w / 2, 8, spec.title || `Level ${spec.id}`, {
-        fontSize: "15px",
+      .text(w / 2, headerTitleY, spec.title || `Level ${spec.id}`, {
+        fontSize: headerTitleSize,
         color: APP_THEME.colors.textPrimary,
         fontFamily: APP_THEME.fonts.display,
         fontStyle: "bold",
@@ -164,8 +204,8 @@ export class LevelScene extends Phaser.Scene {
       .setDepth(3);
 
     this.subtitleText = this.add
-      .text(w / 2, 26, `${worldTheme.titleGlyph} ${worldTheme.name}  •  Level ${spec.id}`, {
-        fontSize: "9px",
+      .text(w / 2, headerSubtitleY, `${worldTheme.titleGlyph} ${worldTheme.name}  •  Level ${spec.id}`, {
+        fontSize: headerSubtitleSize,
         color: worldTheme.accent,
         fontFamily: APP_THEME.fonts.body,
         fontStyle: "bold",
@@ -179,11 +219,11 @@ export class LevelScene extends Phaser.Scene {
     }
 
     // ── Star Display ──
-    this.starDisplay = new StarDisplay(this, w - 108, 12);
+    this.starDisplay = new StarDisplay(this, w - 164, headerTitleY + 4);
 
     // ── Rules "?" Button ──
     this.rulesBtn = this.add
-      .text(w - 20, 8, "?", {
+      .text(w - 20, layout.profile.safeTop + 4, "?", {
         fontSize: "13px",
         color: worldTheme.accent,
         fontFamily: APP_THEME.fonts.body,
@@ -194,12 +234,12 @@ export class LevelScene extends Phaser.Scene {
       .setOrigin(1, 0);
     this.rulesBtn.setDepth(3);
 
-    this.add.rectangle(w - 24, 22, 44, 44)
+    this.add.rectangle(w - 24, headerCenterY, 44, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
       .on("pointerdown", () => this.rulesOverlay.toggle());
 
     this.settingsBtn = this.add
-      .text(w - 52, 8, "⚙", {
+      .text(w - 52, layout.profile.safeTop + 4, "⚙", {
         fontSize: "15px",
         color: APP_THEME.colors.textSecondary,
         fontFamily: APP_THEME.fonts.body,
@@ -207,17 +247,34 @@ export class LevelScene extends Phaser.Scene {
       .setOrigin(1, 0)
       .setDepth(3);
 
-    this.add.rectangle(w - 56, 22, 44, 44)
+    this.add.rectangle(w - 56, headerCenterY, 44, 44)
       .setInteractive({ useHandCursor: true }).setAlpha(0.001)
       .on("pointerdown", () => this.settingsOverlay.toggle())
       .on("pointerover", () => this.settingsBtn.setColor(worldTheme.accent))
       .on("pointerout", () => this.settingsBtn.setColor(APP_THEME.colors.textSecondary));
 
+    this.muteBtn = this.add
+      .text(muteX, leftIconY, "", {
+        fontSize: "15px",
+        color: APP_THEME.colors.textSecondary,
+        fontFamily: APP_THEME.fonts.body,
+        fontStyle: "bold",
+      })
+      .setOrigin(1, 0)
+      .setDepth(3);
+
+    this.add.rectangle(muteX - 4, headerCenterY, 44, 44)
+      .setInteractive({ useHandCursor: true }).setAlpha(0.001)
+      .on("pointerdown", () => this.toggleMute())
+      .on("pointerover", () => this.muteBtn.setColor(worldTheme.accent))
+      .on("pointerout", () => this.updateMuteBtnVisual());
+
     // ── Level Hint ──
     const hintMsg = spec.hint || "";
-    this.hintText = this.add
-      .text(w / 2, 46, hintMsg, {
-        fontSize: "8px",
+    if (showHintText) {
+      this.hintText = this.add
+      .text(w / 2, headerHintY, hintMsg, {
+        fontSize: headerHintSize,
         color: APP_THEME.colors.textMuted,
         fontFamily: APP_THEME.fonts.body,
         wordWrap: { width: w - 60 },
@@ -225,9 +282,10 @@ export class LevelScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0)
       .setDepth(3);
+    }
 
-    const boardWidth = gridPixelWidth(spec.grid.w, layout.tileSize, layout.tileGap);
-    const boardHeight = gridPixelHeight(spec.grid.h, layout.tileSize, layout.tileGap);
+    const boardWidth = layout.boardWidth;
+    const boardHeight = layout.boardHeight;
     const boardShellKey = `level_board_shell_${boardWidth}x${boardHeight}`;
     genPanelTex(
       this,
@@ -262,15 +320,21 @@ export class LevelScene extends Phaser.Scene {
     );
 
     // ── Status Bar ──
-    this.statusBar = new StatusBar(this, 16, layout.statusBarY, w - 32);
+    this.statusBar = new StatusBar(this, 16, layout.statusBarY, w - 32, {
+      compact: layout.profile.compact,
+    });
     this.updateStatusBar();
 
     // ── Tool Palette ──
     this.toolPalette = new ToolPalette(this, w / 2, layout.toolPaletteY, {
       onSelectTool: (tool) => {
+        if (this.switchMode && tool !== null) this.exitSwitchMode();
         this.selectedTool = tool;
+        this.pendingPlacement = null;
         this.refreshPreview();
       },
+    }, {
+      compact: layout.profile.compact,
     });
     this.toolPalette.build(this.gameState.tools);
 
@@ -279,27 +343,11 @@ export class LevelScene extends Phaser.Scene {
       onStep: () => this.doStep(),
       onUndo: () => this.doUndo(),
       onReset: () => this.doReset(),
+      onSwitch: () => this.toggleSwitchMode(),
+    }, {
+      compact: layout.profile.compact,
     });
     this.turnControls.setUndoEnabled(false);
-
-    // ── Switch Button (move medicine/wall to empty) ──
-    this.switchBtn = this.add
-      .text(w - 34, layout.toolPaletteY + 22, "⇄", {
-        fontSize: "16px",
-        color: APP_THEME.colors.textSecondary,
-        fontFamily: APP_THEME.fonts.body,
-        backgroundColor: "#102131",
-        padding: { x: 8, y: 4 },
-      })
-      .setOrigin(0.5)
-      .setDepth(50);
-
-    this.switchBtnZone = this.add
-      .rectangle(w - 34, layout.toolPaletteY + 22, 42, 40)
-      .setInteractive({ useHandCursor: true })
-      .setAlpha(0.001)
-      .setDepth(51);
-    this.switchBtnZone.on("pointerdown", () => this.toggleSwitchMode());
 
     // ── Preview Overlay ──
     this.previewOverlay = new PreviewOverlay(
@@ -321,6 +369,8 @@ export class LevelScene extends Phaser.Scene {
       } else {
         this.toolPalette.selectTool(null);
         this.selectedTool = null;
+        this.pendingPlacement = null;
+        this.refreshPreview();
       }
     });
     this.input.keyboard?.on("keydown-S", () => this.toggleSwitchMode());
@@ -382,6 +432,7 @@ export class LevelScene extends Phaser.Scene {
     }
     this.switchMode = true;
     this.switchFrom = null;
+    this.pendingPlacement = null;
     playCue("ui_toggle");
     triggerHaptic("soft");
     // Deselect any tool
@@ -398,17 +449,33 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private updateSwitchBtnVisual(): void {
-    const canSwitch = this.gameState.switchesUsedThisTurn < this.gameState.switchesPerTurn;
-    if (this.switchMode) {
-      this.switchBtn.setColor(APP_THEME.colors.accent);
-      this.switchBtn.setBackgroundColor("#153145");
-    } else if (!canSwitch) {
-      this.switchBtn.setColor(APP_THEME.colors.textMuted);
-      this.switchBtn.setBackgroundColor("#0d1826");
-    } else {
-      this.switchBtn.setColor(APP_THEME.colors.textSecondary);
-      this.switchBtn.setBackgroundColor("#102131");
+    const remaining = Math.max(0, this.gameState.switchesPerTurn - this.gameState.switchesUsedThisTurn);
+    this.turnControls.setSwitchState(this.switchMode, remaining);
+  }
+
+  private updateMuteBtnVisual(): void {
+    if (!this.muteBtn) return;
+    const enabled = loadSave().preferences.audioEnabled;
+    this.muteBtn.setText(enabled ? "🔊" : "🔇");
+    this.muteBtn.setColor(enabled ? APP_THEME.colors.textSecondary : APP_THEME.colors.danger);
+  }
+
+  private toggleMute(): void {
+    const save = loadSave();
+    const enabled = !save.preferences.audioEnabled;
+    updatePreferences({ audioEnabled: enabled });
+    refreshSceneMusic(this);
+    if (enabled) {
+      playCue("ui_toggle");
     }
+    triggerHaptic("soft");
+    this.updateMuteBtnVisual();
+  }
+
+  private goHome(): void {
+    playCue("ui_tap");
+    devTracker.endSession("abandon", this.gameState, 0, 0);
+    this.scene.start("Title");
   }
 
   private handleTileClick(x: number, y: number): void {
@@ -424,9 +491,7 @@ export class LevelScene extends Phaser.Scene {
           return;
         }
         this.switchFrom = { x, y };
-        this.grid.render(this.gameState.board);
-        this.renderBossMarkers();
-        this.grid.highlightTile(x, y, 0x00e5ff);
+        this.renderAll();
         return;
       } else {
         // Second click: select target (must be empty)
@@ -447,8 +512,8 @@ export class LevelScene extends Phaser.Scene {
         triggerHaptic("medium");
         this.exitSwitchMode();
         this.turnControls.setUndoEnabled(canUndo(this.history));
+        this.pendingPlacement = null;
         this.renderAll();
-        this.updateSwitchBtnVisual();
         return;
       }
     }
@@ -466,6 +531,18 @@ export class LevelScene extends Phaser.Scene {
       return;
     }
 
+    if (this.layout.precisionPlacement) {
+      const pending = this.pendingPlacement;
+      if (!pending || pending.tool !== this.selectedTool || pending.x !== x || pending.y !== y) {
+        this.pendingPlacement = { tool: this.selectedTool, x, y };
+        playCue("ui_toggle");
+        triggerHaptic("soft");
+        this.showFloatingHint(x, y, "Tap again to place");
+        this.renderAll();
+        return;
+      }
+    }
+
     pushHistory(this.history, this.gameState);
 
     const action: Action = { type: "place_tool", tool: this.selectedTool, x, y };
@@ -473,6 +550,7 @@ export class LevelScene extends Phaser.Scene {
     devTracker.recordAction(action);
     playCue("tool_place");
     triggerHaptic("soft");
+    this.pendingPlacement = null;
 
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
@@ -514,7 +592,7 @@ export class LevelScene extends Phaser.Scene {
       this.hideTooltip();
     }
 
-    if (this.selectedTool) {
+    if (this.selectedTool && !this.layout.precisionPlacement) {
       const valid = canPlaceTool(this.gameState, this.selectedTool, x, y);
       this.grid.render(this.gameState.board);
       this.grid.showPlacementHint(x, y, valid);
@@ -533,8 +611,7 @@ export class LevelScene extends Phaser.Scene {
   private handleTileOut(): void {
     if (this.animating) return;
     this.hideTooltip();
-    this.grid.render(this.gameState.board);
-    this.refreshPreview();
+    this.renderAll();
   }
 
   private doStep(): void {
@@ -552,6 +629,7 @@ export class LevelScene extends Phaser.Scene {
     this.gameState.turn++;
     this.gameState.toolsUsedThisTurn = 0;
     this.gameState.switchesUsedThisTurn = 0;
+    this.pendingPlacement = null;
     if (this.switchMode) this.exitSwitchMode();
 
     // Per-turn tool grant (v5.0 drip-feed)
@@ -682,6 +760,7 @@ export class LevelScene extends Phaser.Scene {
     devTracker.recordUndo();
     playCue("ui_tap");
     this.gameState = prev;
+    this.pendingPlacement = null;
     this.toolPalette.updateCounts(this.gameState.tools);
     this.turnControls.setUndoEnabled(canUndo(this.history));
     this.renderAll();
@@ -692,6 +771,7 @@ export class LevelScene extends Phaser.Scene {
     playCue("ui_tap");
     clearHistory(this.history);
     this.gameState = cloneState(this.initialState);
+    this.pendingPlacement = null;
 
     this.toolPalette.updateCounts(this.gameState.tools);
     this.toolPalette.selectTool(null);
@@ -707,10 +787,23 @@ export class LevelScene extends Phaser.Scene {
   private renderAll(): void {
     this.grid.render(this.gameState.board);
     this.renderBossMarkers();
+    if (this.switchFrom) {
+      this.grid.highlightTile(this.switchFrom.x, this.switchFrom.y, 0x00e5ff);
+    }
+    if (this.pendingPlacement && this.selectedTool === this.pendingPlacement.tool) {
+      const valid = canPlaceTool(this.gameState, this.pendingPlacement.tool, this.pendingPlacement.x, this.pendingPlacement.y);
+      this.grid.showPlacementHint(this.pendingPlacement.x, this.pendingPlacement.y, valid);
+      this.grid.highlightTile(
+        this.pendingPlacement.x,
+        this.pendingPlacement.y,
+        valid ? 0x00e5ff : 0xff5252,
+      );
+    }
     this.updateStatusBar();
     this.updateActionsIndicator();
     this.refreshPreview();
     this.updateSwitchBtnVisual();
+    this.updateMuteBtnVisual();
     this.updateBossHint();
   }
 
@@ -741,6 +834,10 @@ export class LevelScene extends Phaser.Scene {
   private refreshPreview(): void {
     if (this.gameState.isOver) {
       this.previewOverlay.clear();
+      return;
+    }
+    if (this.pendingPlacement && this.selectedTool === this.pendingPlacement.tool) {
+      this.previewOverlay.showPreview(this.gameState, this.pendingPlacement);
       return;
     }
     this.previewOverlay.showPreview(this.gameState);
@@ -971,6 +1068,9 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private updateBossHint(): void {
+    if (!this.hintText) {
+      return;
+    }
     if (!this.levelSpec.boss) {
       this.hintText.setText(this.levelSpec.hint || "");
       return;

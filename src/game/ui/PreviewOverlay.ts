@@ -58,11 +58,20 @@ export class PreviewOverlay {
     for (const { x, y, type } of shown) {
       const px = tileX(x, this.offsetX, this.ts, this.tg);
       const py = tileY(y, this.offsetY, this.ts, this.tg);
+      const inset = Math.max(2, Math.round(this.ts * 0.06));
+      const boxSize = this.ts - inset * 2;
+      const dangerOutline = 0xff2a2a;
 
-      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.3);
-      this.graphics.fillRoundedRect(px + 2, py + 2, this.ts - 4, this.ts - 4, 4);
+      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.12);
+      this.graphics.fillRect(px + inset, py + inset, boxSize, boxSize);
 
-      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.5);
+      this.graphics.lineStyle(3, dangerOutline, 0.92);
+      this.graphics.strokeRect(px + inset, py + inset, boxSize, boxSize);
+
+      this.graphics.lineStyle(1, 0x7a0f12, 0.34);
+      this.graphics.strokeRect(px + inset + 1.5, py + inset + 1.5, boxSize - 3, boxSize - 3);
+
+      this.graphics.fillStyle(PATHOGEN_COLORS[type], 0.52);
       this.graphics.fillCircle(px + this.ts - 8, py + 8, 4);
     }
 
@@ -70,9 +79,11 @@ export class PreviewOverlay {
       const [x, y] = key.split(",").map(Number);
       const px = tileX(x, this.offsetX, this.ts, this.tg);
       const py = tileY(y, this.offsetY, this.ts, this.tg);
+      const inset = Math.max(3, Math.round(this.ts * 0.08));
+      const boxSize = this.ts - inset * 2;
 
       this.graphics.lineStyle(2, UI.accentCyan, 0.9);
-      this.graphics.strokeRoundedRect(px + 3, py + 3, this.ts - 6, this.ts - 6, 5);
+      this.graphics.strokeRect(px + inset, py + inset, boxSize, boxSize);
     }
   }
 

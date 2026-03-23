@@ -4,6 +4,8 @@ android/
 ios/
 .DS_Store
 *.log
+__pycache__/
+*.pyc
 .env
 .env.*
 backup_old/
